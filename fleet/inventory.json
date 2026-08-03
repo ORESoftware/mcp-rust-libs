@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-02",
+  "scope": "GitHub App installations visible to the connected workflow",
+  "summary": {
+    "visibleOrganizations": 28,
+    "existingStandaloneRustMcpRepositories": 24,
+    "missingStandaloneRustMcpRepositories": 5,
+    "knownOrganizationsNotCurrentlyExposed": 0
+  },
+  "existing": [
+    "3FA-app/3FA-mcp-server.rs",
+    "messaging-intel/msgint-mcp-server.rs",
+    "akrion-sim/akrion-mcp-server.rs",
+    "athlet-o/athleto-mcp-server.rs",
+    "benefactor-cc/benefactor-cc-mcp-server.rs",
+    "canonical-cloud/canonical-mcp-server.rs",
+    "claritas-viz/claritas-viz-mcp-server.rs",
+    "daedalus-fab/daedalus-fab-mcp-server.rs",
+    "declarative-migrations/declarative-migrations-mcp-server.rs",
+    "fiducia-cloud/fiducia-mcp-server.rs",
+    "anticaptrad/act-mcp-server.rs",
+    "quaestor-ledger/quaestor-ledger-mcp-server.rs",
+    "sagitta-stack/sagitta-mcp-server.rs",
+    "shared-auth/shared-auth-mcp-server.rs",
+    "scintilla-run/scintilla-mcp-server.rs",
+    "rust-ssr-demos/rust-ssr-mcp-server.rs",
+    "sonus-auris/sonus-auris-mcp-server.rs",
+    "usa-acc/usa-acc-mcp-server.rs",
+    "hypesiege/hypesiege-mcp-server.rs",
+    "StreemPilot/streempilot-mcp-server.rs",
+    "file-tunnel/ftnl-mcp-server.rs",
+    "discrete-event-systems/des-mcp-server.rs",
+    "drone-mngr/drone-mngr-mcp-server.rs",
+    "drone-mngr/laser-ptr-ctrl-mcp-server.rs"
+  ],
+  "missing": [
+    {"repository":"cliptown/cliptown-mcp-server.rs","linear":"DEN-162"},
+    {"repository":"opto-sync/opto-sync-mcp-server.rs","linear":"DEN-163"},
+    {"repository":"voxletra/vxl-mcp-server.rs","linear":"DEN-164"},
+    {"repository":"zed-pkg/zed-mcp-server.rs","linear":"DEN-165"},
+    {"repository":"zed-pkg-test/zed-pkg-test-mcp-server.rs","linear":"DEN-166"}
+  ],
+  "sharedRepository": "ORESoftware/mcp-rust-libs",
+  "fleetUmbrella": "DEN-161",
+  "sharedLibraryUmbrella": "DEN-957"
+}

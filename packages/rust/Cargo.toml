@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/ore-mcp-http",
+  "crates/ore-mcp-process",
+  "crates/ore-mcp-safety",
+  "crates/ore-mcp-testkit",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ORESoftware/mcp-rust-libs"
+authors = ["ORESoftware contributors"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+
+[workspace.dependencies]
+ore-mcp-http = { version = "0.1.0", path = "crates/ore-mcp-http" }
+ore-mcp-process = { version = "0.1.0", path = "crates/ore-mcp-process" }
+ore-mcp-safety = { version = "0.1.0", path = "crates/ore-mcp-safety" }
+ore-mcp-testkit = { version = "0.1.0", path = "crates/ore-mcp-testkit" }
