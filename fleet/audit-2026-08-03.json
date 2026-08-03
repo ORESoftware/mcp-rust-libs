@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "generatedAt": "2026-08-03",
   "protocolBaseline": {
     "stable": "2025-11-25",
     "nextReleaseCandidate": "2026-07-28",
-    "currentRmcp": "3.0.1",
+    "currentRmcp": "3.1.0",
     "streamableHttpSecurityFloor": "1.4.0",
-    "policy": "Declare and test the intended lifecycle. New migrations normally target signed rmcp 3.0.1; reviewed 2.2.x stdio servers may remain on the stable 2025-11-25 lifecycle until a breaking migration is justified."
+    "policy": "Declare and test the intended lifecycle. New migrations normally target an exact reviewed rmcp release, currently =3.1.0; reviewed 2.2.x stdio servers may remain on the stable 2025-11-25 lifecycle until a breaking migration is justified."
   },
   "scope": {
     "existingStandaloneRustServers": 24,
@@ -26,12 +26,13 @@
       "bounded subprocess capture",
       "real-binary stdio testkit",
       "static fleet audit ratchets",
-      "rmcp Streamable HTTP security-floor detection"
+      "rmcp Streamable HTTP security-floor detection",
+      "tracked deterministic Cargo.lock enforcement for deployable servers"
     ]
   },
   "repositories": [
     {"repository":"3FA-app/3FA-mcp-server.rs","status":"existing_hardening_pr","pullRequest":13},
-    {"repository":"messaging-intel/msgint-mcp-server.rs","status":"focused_hardening_pr_blocked_by_actions_provisioning","pullRequest":9,"sdkTarget":"rmcp 2.2.0 stable lifecycle"},
+    {"repository":"messaging-intel/msgint-mcp-server.rs","status":"focused_hardening_pr_blocked_before_actions_step_allocation","pullRequest":9,"sdkTarget":"rmcp 2.2.0 stable lifecycle"},
     {"repository":"athlet-o/athleto-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
     {"repository":"canonical-cloud/canonical-mcp-server.rs","status":"existing_hardening_pr","pullRequest":16},
     {"repository":"akrion-sim/akrion-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
@@ -44,14 +45,14 @@
     {"repository":"sagitta-stack/sagitta-mcp-server.rs","status":"existing_hardening_pr","pullRequest":14},
     {"repository":"scintilla-run/scintilla-mcp-server.rs","status":"existing_hardening_pr","pullRequest":13},
     {"repository":"sonus-auris/sonus-auris-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":8},
-    {"repository":"rust-ssr-demos/rust-ssr-mcp-server.rs","status":"focused_http_process_conformance_pr","pullRequest":5,"transport":"custom HTTP stable-lifecycle compatibility endpoint"},
-    {"repository":"shared-auth/shared-auth-mcp-server.rs","status":"existing_hardening_pr_with_exact_host_proxy_follow_up","pullRequest":3},
+    {"repository":"rust-ssr-demos/rust-ssr-mcp-server.rs","status":"focused_http_process_conformance_pr_blocked_before_actions_step_allocation","pullRequest":5,"transport":"custom HTTP stable-lifecycle compatibility endpoint"},
+    {"repository":"shared-auth/shared-auth-mcp-server.rs","status":"focused_exact_host_and_no_proxy_follow_up_materializing","pullRequest":12,"sdkTarget":"rmcp 2.2.0 stable lifecycle"},
     {"repository":"quaestor-ledger/quaestor-ledger-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":6},
     {"repository":"usa-acc/usa-acc-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
     {"repository":"file-tunnel/ftnl-mcp-server.rs","status":"focused_hardening_pr","pullRequest":1},
     {"repository":"discrete-event-systems/des-mcp-server.rs","status":"existing_hardening_pr","pullRequest":11},
-    {"repository":"StreemPilot/streempilot-mcp-server.rs","status":"focused_hardening_pr_lockfile_regeneration_required","pullRequest":2,"sdkTarget":"rmcp 3.0.1"},
-    {"repository":"hypesiege/hypesiege-mcp-server.rs","status":"focused_hardening_pr_lockfile_regeneration_required","pullRequest":2,"sdkTarget":"rmcp 3.0.1"},
+    {"repository":"StreemPilot/streempilot-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":2,"sdkTarget":"rmcp =3.1.0","ciRun":30834492360},
+    {"repository":"hypesiege/hypesiege-mcp-server.rs","status":"focused_hardening_pr_exact_lock_committed_workflow_approval_required","pullRequest":2,"sdkTarget":"rmcp =3.1.0"},
     {"repository":"drone-mngr/drone-mngr-mcp-server.rs","status":"focused_hardening_pr_action_approval_required","pullRequest":1},
     {"repository":"drone-mngr/laser-ptr-ctrl-mcp-server.rs","status":"focused_hardening_pr_action_approval_required","pullRequest":1}
   ],
@@ -73,6 +74,8 @@
     "read-only default or independent mutation gate plus target-bound confirmation and idempotency",
     "real-binary stdio or HTTP lifecycle tests",
     "read-only immutable-pinned GitHub Actions",
+    "tracked valid Cargo.lock for every deployable Rust server",
+    "exact reviewed SDK resolution when an SDK migration is in scope",
     "pinned reviewed mcp-rust-libs release rather than copied common modules"
   ]
 }
