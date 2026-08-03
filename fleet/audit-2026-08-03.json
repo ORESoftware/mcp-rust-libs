@@ -1,14 +1,17 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "generatedAt": "2026-08-03",
   "protocolBaseline": {
-    "production": "2025-11-25",
-    "nextDraft": "2026-07-28",
-    "policy": "Negotiate the current final protocol and preserve forward compatibility; do not force a draft fleet-wide."
+    "stable": "2025-11-25",
+    "nextReleaseCandidate": "2026-07-28",
+    "currentRmcp": "3.0.1",
+    "policy": "Declare and test the intended lifecycle. New migrations normally target signed rmcp 3.0.1; reviewed 2.2.x stdio servers may remain on the stable 2025-11-25 lifecycle until a breaking migration is justified."
   },
   "scope": {
     "existingStandaloneRustServers": 24,
     "missingStandaloneRustServers": 5,
+    "serversWithHardeningPullRequests": 12,
+    "inventoryOnlyPendingAudit": 12,
     "sharedRepository": "ORESoftware/mcp-rust-libs"
   },
   "sharedHardening": {
@@ -21,7 +24,8 @@
       "redirect denial",
       "bounded subprocess capture",
       "real-binary stdio testkit",
-      "static fleet audit ratchets"
+      "static fleet audit ratchets",
+      "rmcp Streamable HTTP security-floor detection"
     ]
   },
   "repositories": [
@@ -65,12 +69,14 @@
       "repository": "hypesiege/hypesiege-mcp-server.rs",
       "status": "focused_hardening_pr",
       "pullRequest": 2,
+      "sdkTarget": "rmcp 3.0.1",
       "focus": "replace handwritten JSON-RPC with official rmcp and adversarial stdio tests"
     },
     {
       "repository": "StreemPilot/streempilot-mcp-server.rs",
       "status": "focused_hardening_pr",
       "pullRequest": 2,
+      "sdkTarget": "rmcp 3.0.1",
       "focus": "official rmcp, exact bearer hosts, no redirects/proxies, bounded HTTP and output"
     },
     {
@@ -83,7 +89,7 @@
       "repository": "drone-mngr/laser-ptr-ctrl-mcp-server.rs",
       "status": "focused_hardening_pr",
       "pullRequest": 1,
-      "focus": "exact physical-control hosts, streamed response caps, device-bound emergency confirmation"
+      "focus": "exact physical-control hosts, streamed response caps, device-bound stop confirmation"
     },
     {
       "repository": "drone-mngr/drone-mngr-mcp-server.rs",
@@ -93,7 +99,10 @@
     },
     {
       "repository": "messaging-intel/msgint-mcp-server.rs",
-      "status": "inventory_only_pending_audit"
+      "status": "focused_hardening_pr",
+      "pullRequest": 9,
+      "sdkTarget": "rmcp 2.2.0 stable lifecycle",
+      "focus": "process-environment minimization, bounded output, real-binary privacy and schema conformance"
     },
     {
       "repository": "benefactor-cc/benefactor-cc-mcp-server.rs",
@@ -168,6 +177,7 @@
   ],
   "fleetAcceptance": [
     "official SDK or documented reviewed exception",
+    "declared and tested protocol lifecycle",
     "strict lifecycle negotiation and stdout purity",
     "deny_unknown_fields on tool inputs",
     "bounded request, upstream response, subprocess, and final tool output",
