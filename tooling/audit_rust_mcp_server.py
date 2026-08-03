@@ -184,7 +184,7 @@ def audit(root: Path) -> list[Finding]:
         token in production
         for token in ("Policy::none", "redirect::Policy::none", "RedirectPolicy::None")
     )
-    proxy_disabled = any(token in production for token in (".no_proxy()", "Proxy::custom"))
+    proxy_disabled = ".no_proxy()" in production
     exact_host_policy = any(
         token in production.lower()
         for token in ("allowed_hosts", "allowlisted_hosts", "host_allowlist", "exact host")
