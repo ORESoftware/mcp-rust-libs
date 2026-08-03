@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "generatedAt": "2026-08-03",
   "protocolBaseline": {
     "stable": "2025-11-25",
@@ -18,8 +18,9 @@
   "sharedHardening": {
     "repository": "ORESoftware/mcp-rust-libs",
     "pullRequest": 1,
-    "state": "open_draft_primary_ci_green_latest_cleanup_rerun_pending",
-    "lastGreenCiRun": 30835540990,
+    "state": "open_green_review_ready_release_not_yet_authorized",
+    "lastGreenCiRun": 30837404724,
+    "exactGreenHead": "7cf36dab399f442bc44994fbd8a2ae973842606c",
     "coverage": [
       "bounded UTF-8 output",
       "strict URL and exact-host policy",
