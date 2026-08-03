@@ -25,13 +25,25 @@ pub enum FrameAuditError {
     /// More frames were emitted than permitted.
     TooManyFrames,
     /// A non-empty line was not a JSON object.
-    NonJsonObject { line: usize },
+    NonJsonObject {
+        /// One-based line number.
+        line: usize,
+    },
     /// A line did not identify JSON-RPC 2.0 exactly.
-    MissingJsonRpcVersion { line: usize },
+    MissingJsonRpcVersion {
+        /// One-based line number.
+        line: usize,
+    },
     /// A frame was neither a response nor a notification/request.
-    InvalidEnvelopeShape { line: usize },
+    InvalidEnvelopeShape {
+        /// One-based line number.
+        line: usize,
+    },
     /// A NUL byte was present.
-    NulByte { line: usize },
+    NulByte {
+        /// One-based line number.
+        line: usize,
+    },
     /// The process returned no protocol frames.
     Empty,
 }
