@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Static, fail-closed audit for one Rust MCP server repository.
 
-The scanner intentionally reports review signals rather than pretending static
-text search proves security. High findings represent patterns that are unsafe by
-default for deployable MCP servers; medium findings require an explicit design
-review or a repository-local exception with evidence.
+The scanner emits review signals; it does not pretend source-text matching proves
+security. High findings are unsafe-by-default patterns for deployable MCP
+servers. Medium findings need an explicit repository-local design review or a
+bounded, evidence-backed exception.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from pathlib import Path
 
 RANK = {"info": 0, "low": 1, "medium": 2, "high": 3}
 STALE_PROTOCOLS = ("2024-11-05", "2025-03-26", "2025-06-18")
+RMCP_STREAMABLE_HTTP_SECURITY_FLOOR = (1, 4, 0)
 MUTATION_WORDS = re.compile(
     r"\b(?:create|update|delete|remove|assign|dispatch|execute|apply|start|stop|abort|arm|disarm|rotate|revoke|issue|publish|trigger|send|write|upload)_[a-z0-9_]+\b",
     re.IGNORECASE,
@@ -51,6 +52,17 @@ def dependency_version(value: object) -> str | None:
     return None
 
 
+def semver_tuple(value: str) -> tuple[int, int, int] | None:
+    match = re.search(r"(?<!\d)(\d+)\.(\d+)(?:\.(\d+))?", value)
+    if not match:
+        return None
+    return (
+        int(match.group(1)),
+        int(match.group(2)),
+        int(match.group(3) or 0),
+    )
+
+
 def rust_sources(root: Path) -> list[Path]:
     return sorted((root / "src").rglob("*.rs")) if (root / "src").is_dir() else []
 
@@ -64,7 +76,10 @@ def workflow_findings(root: Path) -> list[Finding]:
     workflows = sorted((root / ".github/workflows").glob("*.y*ml"))
     if not workflows:
         return [Finding("medium", "missing-ci", "no GitHub Actions workflow detected")]
-    mutable_action = re.compile(r"^\s*(?:-\s+)?uses:\s+[^\s#]+@(?:main|master|v\d+(?:\.\d+)*)\s*$", re.MULTILINE)
+    mutable_action = re.compile(
+        r"^\s*(?:-\s+)?uses:\s+[^\s#]+@(?:main|master|v\d+(?:\.\d+)*)\s*$",
+        re.MULTILINE,
+    )
     checkout = re.compile(r"uses:\s+actions/checkout@", re.IGNORECASE)
     for path in workflows:
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -112,19 +127,44 @@ def audit(root: Path) -> list[Finding]:
     if not sources:
         return [Finding("high", "missing-source", "src contains no Rust source files")]
 
+    streamable_http = any(
+        token in combined
+        for token in ("transport-streamable-http", "StreamableHttpService", "streamable_http")
+    )
     rmcp = dependency_version(dependencies.get("rmcp"))
     if rmcp is None:
         code = "handwritten-jsonrpc" if "jsonrpc" in combined.lower() else "missing-rmcp"
-        severity = "high" if code == "handwritten-jsonrpc" else "medium"
-        findings.append(Finding(severity, code, "official rmcp transport is not detected"))
+        findings.append(
+            Finding(
+                "high" if code == "handwritten-jsonrpc" else "medium",
+                code,
+                "official rmcp transport is not detected",
+            )
+        )
     else:
-        major = re.search(r"(?:^|[^0-9])(\d+)", rmcp)
-        if major and int(major.group(1)) < 3:
+        parsed = semver_tuple(rmcp)
+        if parsed is None:
             findings.append(
                 Finding(
                     "medium",
-                    "rmcp-major",
-                    f"rmcp {rmcp!r} requires a reviewed 3.x migration",
+                    "rmcp-version-unparsed",
+                    f"rmcp version requirement {rmcp!r} could not be compared with the security floor",
+                )
+            )
+        elif streamable_http and parsed < RMCP_STREAMABLE_HTTP_SECURITY_FLOOR:
+            findings.append(
+                Finding(
+                    "high",
+                    "rmcp-dns-rebinding-floor",
+                    f"Streamable HTTP uses rmcp {rmcp!r}; require >=1.4.0 or a reviewed equivalent Host-validation patch",
+                )
+            )
+        elif parsed < (1, 0, 0):
+            findings.append(
+                Finding(
+                    "medium",
+                    "rmcp-prestable",
+                    f"rmcp {rmcp!r} is pre-1.0 and needs a reviewed compatibility migration",
                 )
             )
 
@@ -214,10 +254,6 @@ def audit(root: Path) -> list[Finding]:
             )
         )
 
-    streamable_http = any(
-        token in combined
-        for token in ("transport-streamable-http", "StreamableHttpService", "streamable_http")
-    )
     if streamable_http and not bearer:
         findings.append(
             Finding(
@@ -312,7 +348,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     findings = audit(args.repo_root.resolve())
     report = {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "summary": {level: sum(item.severity == level for item in findings) for level in RANK},
         "findings": [dataclasses.asdict(item) for item in findings],
     }
