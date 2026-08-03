@@ -158,9 +158,7 @@ pub fn sanitize_external_message(value: &str, max_bytes: usize, secrets: &[&str]
 pub fn valid_header_value(value: &str, max_bytes: usize) -> bool {
     !value.is_empty()
         && value.len() <= max_bytes
-        && value
-            .bytes()
-            .all(|byte| matches!(byte, 0x21..=0x7e) && byte != b'\\')
+        && value.bytes().all(|byte| matches!(byte, 0x20..=0x7e))
 }
 
 /// Returns `true` for names that could identify secrets or users.
@@ -239,8 +237,8 @@ mod tests {
     fn external_messages_are_redacted_bounded_and_single_line() {
         let value = sanitize_external_message("token=supersecret\nfailed", 32, &["supersecret"]);
         assert_eq!(value, "token=[REDACTED] failed");
-        assert!(valid_header_value("Bearerabc123", 64));
-        assert!(!valid_header_value("bad header", 64));
+        assert!(valid_header_value("Bearer abc123", 64));
+        assert!(!valid_header_value("bad\nheader", 64));
     }
 
     #[test]
