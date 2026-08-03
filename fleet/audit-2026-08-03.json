@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "generatedAt": "2026-08-03",
   "protocolBaseline": {
     "stable": "2025-11-25",
@@ -11,8 +11,8 @@
   "scope": {
     "existingStandaloneRustServers": 24,
     "missingStandaloneRustServers": 5,
-    "serversWithHardeningPullRequests": 23,
-    "inventoryOnlyPendingAudit": 1,
+    "serversWithHardeningPullRequests": 24,
+    "inventoryOnlyPendingAudit": 0,
     "sharedRepository": "ORESoftware/mcp-rust-libs"
   },
   "sharedHardening": {
@@ -36,7 +36,7 @@
     {"repository":"canonical-cloud/canonical-mcp-server.rs","status":"existing_hardening_pr","pullRequest":16},
     {"repository":"akrion-sim/akrion-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
     {"repository":"benefactor-cc/benefactor-cc-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":14},
-    {"repository":"claritas-viz/claritas-viz-mcp-server.rs","status":"focused_hardening_pr","pullRequest":5},
+    {"repository":"claritas-viz/claritas-viz-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":5},
     {"repository":"anticaptrad/act-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":5,"transport":"bounded custom HTTP stable-lifecycle compatibility endpoint"},
     {"repository":"fiducia-cloud/fiducia-mcp-server.rs","status":"existing_hardening_pr","pullRequest":10},
     {"repository":"daedalus-fab/daedalus-fab-mcp-server.rs","status":"existing_hardening_pr","pullRequest":7},
@@ -44,7 +44,7 @@
     {"repository":"sagitta-stack/sagitta-mcp-server.rs","status":"existing_hardening_pr","pullRequest":14},
     {"repository":"scintilla-run/scintilla-mcp-server.rs","status":"existing_hardening_pr","pullRequest":13},
     {"repository":"sonus-auris/sonus-auris-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":8},
-    {"repository":"rust-ssr-demos/rust-ssr-mcp-server.rs","status":"inventory_only_pending_audit"},
+    {"repository":"rust-ssr-demos/rust-ssr-mcp-server.rs","status":"focused_http_process_conformance_pr","pullRequest":5,"transport":"custom HTTP stable-lifecycle compatibility endpoint"},
     {"repository":"shared-auth/shared-auth-mcp-server.rs","status":"existing_hardening_pr_with_exact_host_proxy_follow_up","pullRequest":3},
     {"repository":"quaestor-ledger/quaestor-ledger-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":6},
     {"repository":"usa-acc/usa-acc-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
