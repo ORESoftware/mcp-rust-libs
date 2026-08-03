@@ -31,10 +31,10 @@ class AuditTests(unittest.TestCase):
     def codes(self) -> set[str]:
         return {finding.code for finding in module.audit(self.root)}
 
-    def standard_manifest(self) -> None:
+    def standard_manifest(self, rmcp: str = "2.2.0") -> None:
         self.write(
             "Cargo.toml",
-            "[package]\nname='x'\nversion='0.1.0'\n[dependencies]\nrmcp='3.1'\n",
+            f"[package]\nname='x'\nversion='0.1.0'\n[dependencies]\nrmcp='{rmcp}'\n",
         )
         self.write("Cargo.lock", "# lock\n")
 
@@ -59,11 +59,37 @@ jobs:
             'fn x(){let _=env!("CARGO_BIN_EXE_x");let _="initialize";}\n',
         )
 
+    def test_semver_parser_handles_ranges_and_missing_patch(self) -> None:
+        self.assertEqual(module.semver_tuple("2.2"), (2, 2, 0))
+        self.assertEqual(module.semver_tuple("^1.4.0"), (1, 4, 0))
+        self.assertIsNone(module.semver_tuple("workspace"))
+
     def test_flags_handwritten_stale_stdout(self) -> None:
         self.write("Cargo.toml", "[package]\nname='x'\nversion='0.1.0'\n")
         self.write("src/main.rs", 'const V:&str="2024-11-05"; fn main(){println!("jsonrpc");}')
         codes = self.codes()
         self.assertTrue({"handwritten-jsonrpc", "stale-protocol", "stdout-pollution"} <= codes)
+
+    def test_flags_vulnerable_streamable_http_rmcp_floor(self) -> None:
+        self.standard_manifest("1.3.2")
+        self.write(
+            "src/lib.rs",
+            'fn x(){let _=StreamableHttpService::new;let _="Bearer ";let _="allowed_hosts";let _="Policy::none";let _=".no_proxy()";}',
+        )
+        self.assertIn("rmcp-dns-rebinding-floor", self.codes())
+
+    def test_pre_1_rmcp_is_review_signal_but_not_false_3x_requirement(self) -> None:
+        self.standard_manifest("0.16.0")
+        self.write("src/lib.rs", "pub fn x(){}\n")
+        codes = self.codes()
+        self.assertIn("rmcp-prestable", codes)
+        self.assertNotIn("rmcp-major", codes)
+
+    def test_rmcp_2_2_has_no_version_finding(self) -> None:
+        self.standard_manifest("2.2.0")
+        self.write("src/lib.rs", "pub fn x(){}\n")
+        codes = self.codes()
+        self.assertFalse(any(code.startswith("rmcp-") for code in codes), codes)
 
     def test_flags_unbounded_network_and_process_sinks(self) -> None:
         self.standard_manifest()
@@ -112,6 +138,7 @@ use serde::Deserialize;
         )
         codes = self.codes()
         self.assertTrue({"http-auth-boundary", "http-host-boundary"} <= codes)
+        self.assertNotIn("rmcp-dns-rebinding-floor", codes)
 
     def test_flags_mutable_actions_and_implicit_permissions(self) -> None:
         self.standard_manifest()
