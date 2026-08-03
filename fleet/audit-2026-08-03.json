@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "generatedAt": "2026-08-03",
   "protocolBaseline": {
     "stable": "2025-11-25",
@@ -18,7 +18,8 @@
   "sharedHardening": {
     "repository": "ORESoftware/mcp-rust-libs",
     "pullRequest": 1,
-    "state": "open_draft_action_approval_required",
+    "state": "open_draft_primary_ci_green_latest_cleanup_rerun_pending",
+    "lastGreenCiRun": 30835540990,
     "coverage": [
       "bounded UTF-8 output",
       "strict URL and exact-host policy",
@@ -46,13 +47,13 @@
     {"repository":"scintilla-run/scintilla-mcp-server.rs","status":"existing_hardening_pr","pullRequest":13},
     {"repository":"sonus-auris/sonus-auris-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":8},
     {"repository":"rust-ssr-demos/rust-ssr-mcp-server.rs","status":"focused_http_process_conformance_pr_blocked_before_actions_step_allocation","pullRequest":5,"transport":"custom HTTP stable-lifecycle compatibility endpoint"},
-    {"repository":"shared-auth/shared-auth-mcp-server.rs","status":"focused_exact_host_and_no_proxy_follow_up_materializing","pullRequest":12,"sdkTarget":"rmcp 2.2.0 stable lifecycle"},
+    {"repository":"shared-auth/shared-auth-mcp-server.rs","status":"focused_exact_host_and_no_proxy_source_committed_blocked_before_actions_step_allocation","pullRequest":12,"linearIssue":"DEN-1524","sdkTarget":"rmcp 2.2.0 stable lifecycle"},
     {"repository":"quaestor-ledger/quaestor-ledger-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":6},
     {"repository":"usa-acc/usa-acc-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
     {"repository":"file-tunnel/ftnl-mcp-server.rs","status":"focused_hardening_pr","pullRequest":1},
     {"repository":"discrete-event-systems/des-mcp-server.rs","status":"existing_hardening_pr","pullRequest":11},
     {"repository":"StreemPilot/streempilot-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":2,"sdkTarget":"rmcp =3.1.0","ciRun":30834492360},
-    {"repository":"hypesiege/hypesiege-mcp-server.rs","status":"focused_hardening_pr_exact_lock_committed_workflow_approval_required","pullRequest":2,"sdkTarget":"rmcp =3.1.0"},
+    {"repository":"hypesiege/hypesiege-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":2,"sdkTarget":"rmcp =3.1.0","ciRun":30835217486},
     {"repository":"drone-mngr/drone-mngr-mcp-server.rs","status":"focused_hardening_pr_action_approval_required","pullRequest":1},
     {"repository":"drone-mngr/laser-ptr-ctrl-mcp-server.rs","status":"focused_hardening_pr_action_approval_required","pullRequest":1}
   ],
