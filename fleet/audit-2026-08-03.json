@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-03",
+  "protocolBaseline": {
+    "production": "2025-11-25",
+    "nextDraft": "2026-07-28",
+    "policy": "Negotiate the current final protocol and preserve forward compatibility; do not force a draft fleet-wide."
+  },
+  "scope": {
+    "existingStandaloneRustServers": 24,
+    "missingStandaloneRustServers": 5,
+    "sharedRepository": "ORESoftware/mcp-rust-libs"
+  },
+  "sharedHardening": {
+    "repository": "ORESoftware/mcp-rust-libs",
+    "pullRequest": 1,
+    "state": "open_draft_action_approval_required",
+    "coverage": [
+      "bounded UTF-8 output",
+      "strict URL and host policy",
+      "redirect denial",
+      "bounded subprocess capture",
+      "real-binary stdio testkit",
+      "static fleet audit ratchets"
+    ]
+  },
+  "repositories": [
+    {
+      "repository": "3FA-app/3FA-mcp-server.rs",
+      "status": "existing_hardening_pr",
+      "pullRequest": 13,
+      "focus": "strict query contract, output policy, action hardening, Unicode-safe bounds"
+    },
+    {
+      "repository": "akrion-sim/akrion-mcp-server.rs",
+      "status": "existing_hardening_pr",
+      "pullRequest": 5,
+      "focus": "official rmcp, bounded tools, deterministic simulation fixtures"
+    },
+    {
+      "repository": "athlet-o/athleto-mcp-server.rs",
+      "status": "existing_hardening_pr",
+      "pullRequest": 5,
+      "focus": "strict schemas, bounded inputs/outputs, offline E2E fixtures"
+    },
+    {
+      "repository": "canonical-cloud/canonical-mcp-server.rs",
+      "status": "existing_hardening_pr",
+      "pullRequest": 16,
+      "focus": "strict config, path confinement, bounded tools, process E2E"
+    },
+    {
+      "repository": "fiducia-cloud/fiducia-mcp-server.rs",
+      "status": "existing_hardening_pr",
+      "pullRequest": 10,
+      "focus": "shared-auth tenant isolation, read-only-by-default operations, scope checks"
+    },
+    {
+      "repository": "shared-auth/shared-auth-mcp-server.rs",
+      "status": "existing_hardening_pr",
+      "pullRequest": 3,
+      "focus": "stdout purity, protocol conformance, JWKS metadata hygiene, hermetic tests"
+    },
+    {
+      "repository": "hypesiege/hypesiege-mcp-server.rs",
+      "status": "focused_hardening_pr",
+      "pullRequest": 2,
+      "focus": "replace handwritten JSON-RPC with official rmcp and adversarial stdio tests"
+    },
+    {
+      "repository": "StreemPilot/streempilot-mcp-server.rs",
+      "status": "focused_hardening_pr",
+      "pullRequest": 2,
+      "focus": "official rmcp, exact bearer hosts, no redirects/proxies, bounded HTTP and output"
+    },
+    {
+      "repository": "file-tunnel/ftnl-mcp-server.rs",
+      "status": "focused_hardening_pr",
+      "pullRequest": 1,
+      "focus": "bounded subprocess stdout/stderr, timeout kill-and-reap, hermetic tests"
+    },
+    {
+      "repository": "drone-mngr/laser-ptr-ctrl-mcp-server.rs",
+      "status": "focused_hardening_pr",
+      "pullRequest": 1,
+      "focus": "exact physical-control hosts, streamed response caps, device-bound emergency confirmation"
+    },
+    {
+      "repository": "drone-mngr/drone-mngr-mcp-server.rs",
+      "status": "focused_hardening_pr",
+      "pullRequest": 1,
+      "focus": "target-bound mutation confirmations, runtime route/position bounds, exact control hosts, HTTP auth hardening"
+    },
+    {
+      "repository": "messaging-intel/msgint-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "benefactor-cc/benefactor-cc-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "claritas-viz/claritas-viz-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "anticaptrad/act-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "daedalus-fab/daedalus-fab-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "declarative-migrations/declarative-migrations-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "sagitta-stack/sagitta-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "scintilla-run/scintilla-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "sonus-auris/sonus-auris-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "rust-ssr-demos/rust-ssr-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "quaestor-ledger/quaestor-ledger-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "usa-acc/usa-acc-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    },
+    {
+      "repository": "discrete-event-systems/des-mcp-server.rs",
+      "status": "inventory_only_pending_audit"
+    }
+  ],
+  "missingRepositories": [
+    {
+      "repository": "cliptown/cliptown-mcp-server.rs",
+      "linearIssue": "DEN-162"
+    },
+    {
+      "repository": "opto-sync/opto-sync-mcp-server.rs",
+      "linearIssue": "DEN-163"
+    },
+    {
+      "repository": "voxletra/vxl-mcp-server.rs",
+      "linearIssue": "DEN-164"
+    },
+    {
+      "repository": "zed-pkg/zed-mcp-server.rs",
+      "linearIssue": "DEN-165"
+    },
+    {
+      "repository": "zed-pkg-test/zed-pkg-test-mcp-server.rs",
+      "linearIssue": "DEN-166"
+    }
+  ],
+  "fleetAcceptance": [
+    "official SDK or documented reviewed exception",
+    "strict lifecycle negotiation and stdout purity",
+    "deny_unknown_fields on tool inputs",
+    "bounded request, upstream response, subprocess, and final tool output",
+    "exact host policy for every credentialed origin",
+    "redirect denial and no ambient proxy for bearer clients",
+    "read-only default or independent mutation gate plus target-bound confirmation and idempotency",
+    "real-binary stdio lifecycle tests",
+    "read-only immutable-pinned GitHub Actions",
+    "pinned reviewed mcp-rust-libs release rather than copied common modules"
+  ]
+}
