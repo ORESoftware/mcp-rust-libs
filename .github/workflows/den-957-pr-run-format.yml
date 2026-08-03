@@ -35,6 +35,21 @@ jobs:
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           workspaces: packages/rust
+      - name: Apply the audited Clippy repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('packages/rust/crates/ore-mcp-safety/src/lib.rs')
+          text = path.read_text(encoding='utf-8')
+          old = ".replace(|character: char| matches!(character, '-' | '.'), \"_\");"
+          new = ".replace(['-', '.'], \"_\");"
+          if text.count(old) != 1:
+              raise SystemExit('secret-key normalization repair anchor drifted')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
       - name: Canonicalize and validate all shared Rust crates
         working-directory: packages/rust
         shell: bash
@@ -53,5 +68,5 @@ jobs:
           test -n "$(git diff --cached --name-only)"
           git config user.name 'ORESoftware'
           git config user.email '11139560+ORESoftware@users.noreply.github.com'
-          git commit -m 'style(DEN-957): apply canonical Rust formatting'
+          git commit -m 'style(DEN-957): apply canonical Rust formatting and Clippy repair'
           git push origin HEAD:agent/den-957-initialize-shared-mcp-hardening
