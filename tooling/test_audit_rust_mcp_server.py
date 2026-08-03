@@ -72,6 +72,20 @@ jobs:
         codes = self.codes()
         self.assertTrue({"handwritten-jsonrpc", "stale-protocol", "stdout-pollution"} <= codes)
 
+    def test_test_only_jsonrpc_does_not_upgrade_missing_sdk_to_handwritten(self) -> None:
+        self.write("Cargo.toml", "[package]\nname='x'\nversion='0.1.0'\n")
+        self.write(
+            "src/lib.rs",
+            """
+#[cfg(test)]
+mod tests { #[test] fn fixture() { let _ = "jsonrpc"; } }
+pub fn production() {}
+""",
+        )
+        codes = self.codes()
+        self.assertIn("missing-rmcp", codes)
+        self.assertNotIn("handwritten-jsonrpc", codes)
+
     def test_flags_vulnerable_streamable_http_rmcp_floor(self) -> None:
         self.standard_manifest("1.3.2")
         self.write(
@@ -88,6 +102,33 @@ jobs:
         )
         self.assertIn("rmcp-dns-rebinding-floor", self.codes())
 
+    def test_test_only_streamable_http_does_not_create_production_findings(self) -> None:
+        self.standard_manifest("1.3.2")
+        self.write(
+            "src/lib.rs",
+            """
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn fixture() {
+        let _ = StreamableHttpService::new;
+        let _ = "transport-streamable-http";
+    }
+}
+pub fn production() {}
+""",
+        )
+        codes = self.codes()
+        self.assertFalse(
+            {
+                "rmcp-dns-rebinding-floor",
+                "http-auth-boundary",
+                "http-host-boundary",
+            }
+            & codes,
+            codes,
+        )
+
     def test_pre_1_rmcp_is_review_signal_but_not_false_3x_requirement(self) -> None:
         self.standard_manifest("0.16.0")
         self.write("src/lib.rs", "pub fn x(){}\n")
@@ -100,6 +141,39 @@ jobs:
         self.write("src/lib.rs", "pub fn x(){}\n")
         codes = self.codes()
         self.assertFalse(any(code.startswith("rmcp-") for code in codes), codes)
+
+    def test_pinned_git_rmcp_is_present_but_version_unparsed(self) -> None:
+        self.write(
+            "Cargo.toml",
+            """[package]
+name='x'
+version='0.1.0'
+[dependencies]
+rmcp={git='https://github.com/modelcontextprotocol/rust-sdk',rev='0123456789abcdef'}
+""",
+        )
+        self.write("Cargo.lock", "# lock\n")
+        self.write("src/lib.rs", "pub fn x(){}\n")
+        codes = self.codes()
+        self.assertIn("rmcp-version-unparsed", codes)
+        self.assertNotIn("missing-rmcp", codes)
+        self.assertNotIn("handwritten-jsonrpc", codes)
+
+    def test_workspace_rmcp_is_present_but_version_unparsed(self) -> None:
+        self.write(
+            "Cargo.toml",
+            """[package]
+name='x'
+version='0.1.0'
+[dependencies]
+rmcp={workspace=true}
+""",
+        )
+        self.write("Cargo.lock", "# lock\n")
+        self.write("src/lib.rs", "pub fn x(){}\n")
+        codes = self.codes()
+        self.assertIn("rmcp-version-unparsed", codes)
+        self.assertNotIn("missing-rmcp", codes)
 
     def test_flags_unbounded_network_and_process_sinks(self) -> None:
         self.standard_manifest()
@@ -139,6 +213,23 @@ use serde::Deserialize;
         self.assertTrue(
             {"permissive-tool-schema", "mutation-gate", "unbounded-tool-output"} <= codes
         )
+
+    def test_test_only_tool_schema_does_not_create_production_finding(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            """
+#[cfg(test)]
+mod tests {
+    use rmcp::{tool,handler::server::wrapper::Parameters};
+    use serde::Deserialize;
+    #[derive(Deserialize)] struct Input { value:String }
+    #[tool] async fn fixture(Parameters(_):Parameters<Input>) {}
+}
+pub fn production() {}
+""",
+        )
+        self.assertNotIn("permissive-tool-schema", self.codes())
 
     def test_flags_streamable_http_without_auth_or_host_boundary(self) -> None:
         self.standard_manifest()
