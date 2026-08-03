@@ -31,6 +31,34 @@ class AuditTests(unittest.TestCase):
     def codes(self) -> set[str]:
         return {finding.code for finding in module.audit(self.root)}
 
+    def standard_manifest(self) -> None:
+        self.write(
+            "Cargo.toml",
+            "[package]\nname='x'\nversion='0.1.0'\n[dependencies]\nrmcp='3.1'\n",
+        )
+        self.write("Cargo.lock", "# lock\n")
+
+    def standard_workflow(self) -> None:
+        self.write(
+            ".github/workflows/ci.yml",
+            """name: ci
+permissions:
+  contents: read
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+""",
+        )
+
+    def process_test(self) -> None:
+        self.write(
+            "tests/stdio_protocol.rs",
+            'fn x(){let _=env!("CARGO_BIN_EXE_x");let _="initialize";}\n',
+        )
+
     def test_flags_handwritten_stale_stdout(self) -> None:
         self.write("Cargo.toml", "[package]\nname='x'\nversion='0.1.0'\n")
         self.write("src/main.rs", 'const V:&str="2024-11-05"; fn main(){println!("jsonrpc");}')
@@ -38,17 +66,80 @@ class AuditTests(unittest.TestCase):
         self.assertTrue({"handwritten-jsonrpc", "stale-protocol", "stdout-pollution"} <= codes)
 
     def test_flags_unbounded_network_and_process_sinks(self) -> None:
-        self.write("Cargo.toml", "[package]\nname='x'\nversion='0.1.0'\n[dependencies]\nrmcp='3.0'\n")
-        self.write("src/lib.rs", "async fn x(r:reqwest::Response,c:tokio::process::Child){let _=r.text().await;let _=c.wait_with_output().await;}")
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            "async fn x(r:reqwest::Response,c:tokio::process::Child){let _=r.bytes().await;let _=c.wait_with_output().await;}",
+        )
         codes = self.codes()
         self.assertIn("unbounded-http-body", codes)
         self.assertIn("unbounded-subprocess-output", codes)
 
+    def test_flags_bearer_redirect_proxy_and_host_policy(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            'fn x(c:reqwest::Client,u:url::Url){let _=c.get(u).bearer_auth("secret");let _="base_url";}',
+        )
+        codes = self.codes()
+        self.assertTrue(
+            {"bearer-redirect-policy", "bearer-proxy-policy", "bearer-host-policy"} <= codes
+        )
+
+    def test_flags_permissive_mutation_and_unbounded_output(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            """
+use rmcp::{tool,handler::server::wrapper::Parameters};
+use serde::Deserialize;
+#[derive(Deserialize)] struct Input { value:String }
+#[tool] async fn create_job(Parameters(_):Parameters<Input>)->String {
+    serde_json::to_string_pretty(&serde_json::json!({"ok":true})).unwrap()
+}
+""",
+        )
+        codes = self.codes()
+        self.assertTrue(
+            {"permissive-tool-schema", "mutation-gate", "unbounded-tool-output"} <= codes
+        )
+
+    def test_flags_streamable_http_without_auth_or_host_boundary(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            "fn x(){let _=StreamableHttpService::new;let _=\"transport-streamable-http\";}",
+        )
+        codes = self.codes()
+        self.assertTrue({"http-auth-boundary", "http-host-boundary"} <= codes)
+
+    def test_flags_mutable_actions_and_implicit_permissions(self) -> None:
+        self.standard_manifest()
+        self.write("src/lib.rs", "#[cfg(test)] mod tests{#[test] fn ok(){}}\n")
+        self.process_test()
+        self.write(
+            ".github/workflows/ci.yml",
+            "jobs:\n  test:\n    steps:\n      - uses: actions/checkout@v4\n",
+        )
+        codes = self.codes()
+        self.assertTrue({"mutable-action-pin", "workflow-permissions", "checkout-credentials"} <= codes)
+
     def test_clean_server_has_no_medium_or_high_findings(self) -> None:
-        self.write("Cargo.toml", "[package]\nname='x'\nversion='0.1.0'\n[dependencies]\nrmcp='3.0'\n")
-        self.write("Cargo.lock", "# lock\n")
-        self.write("src/lib.rs", "pub fn bounded(){}\n#[cfg(test)] mod tests{#[test] fn ok(){}}\n")
-        self.write(".github/workflows/ci.yml", "name: ci\n")
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            """
+use serde::Deserialize;
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Input { value:String }
+const MAX_TOOL_OUTPUT_BYTES:usize=1024;
+pub fn bounded(){}
+#[cfg(test)] mod tests{#[test] fn ok(){}}
+""",
+        )
+        self.standard_workflow()
+        self.process_test()
         findings = module.audit(self.root)
         self.assertFalse(any(item.severity in {"medium", "high"} for item in findings), findings)
 
