@@ -1,0 +1,61 @@
+name: DEN-957 format and validate shared MCP crates
+
+on:
+  push:
+    branches:
+      - agent/den-957-initialize-shared-mcp-hardening
+    paths:
+      - '.github/workflows/den-957-format-and-validate.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: den-957-format-and-validate
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: github.repository == 'ORESoftware/mcp-rust-libs'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: agent/den-957-initialize-shared-mcp-hardening
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Refuse stale base
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = '5c5326f50f93f3c2d30072a4abf94f0840d0ef75'
+          test "$(git merge-base HEAD origin/main)" = '5c5326f50f93f3c2d30072a4abf94f0840d0ef75'
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: '1.97.1'
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          workspaces: packages/rust
+      - name: Canonical format and complete validation
+        working-directory: packages/rust
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace --all-targets
+          RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps
+      - name: Remove one-shot workflow and publish canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/den-957-format-and-validate.yml
+          git add -A
+          git diff --cached --check
+          git config user.name 'ORESoftware'
+          git config user.email '11139560+ORESoftware@users.noreply.github.com'
+          git commit -m 'style(DEN-957): apply canonical Rust formatting'
+          git push origin HEAD:agent/den-957-initialize-shared-mcp-hardening
