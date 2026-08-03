@@ -1,0 +1,16 @@
+[package]
+name = "ore-mcp-http"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Hardened diagnostic HTTP policy for ORESoftware MCP servers"
+
+[lints]
+workspace = true
+
+[dependencies]
+ore-mcp-safety = { workspace = true }
+url = "2.5"

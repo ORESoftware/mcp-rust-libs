@@ -1,0 +1,85 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust ${{ matrix.toolchain }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: ['1.88.0', '1.97.1']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          workspaces: packages/rust
+      - name: Format
+        working-directory: packages/rust
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        working-directory: packages/rust
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Unit and adversarial tests
+        working-directory: packages/rust
+        run: cargo test --workspace --all-targets
+      - name: Documentation
+        working-directory: packages/rust
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --workspace --no-deps
+
+  audit-tool:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Compile the fleet audit and dependency-state ratchets
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tooling/audit_rust_mcp_server.py \
+            tooling/test_audit_rust_mcp_server.py \
+            tooling/check_deployable_lockfile.py \
+            tooling/test_check_deployable_lockfile.py
+      - name: Run positive and adversarial audit fixtures
+        run: |
+          set -euo pipefail
+          python -m unittest -v \
+            tooling/test_audit_rust_mcp_server.py \
+            tooling/test_check_deployable_lockfile.py
+      - name: Validate machine-readable fleet inventory
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inventory = json.loads(Path('fleet/inventory.json').read_text())
+          summary = inventory['summary']
+          assert len(inventory['existing']) == summary['existingStandaloneRustMcpRepositories'] == 24
+          assert len(inventory['missing']) == summary['missingStandaloneRustMcpRepositories'] == 5
+          assert summary['knownOrganizationsNotCurrentlyExposed'] == 0
+          PY

@@ -1,0 +1,16 @@
+[package]
+name = "ore-mcp-process"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Bounded, timeout-aware subprocess capture for ORESoftware MCP tools"
+
+[lints]
+workspace = true
+
+[dependencies]
+ore-mcp-safety = { workspace = true }
+tokio = { version = "1.48", features = ["io-util", "macros", "process", "rt", "time"] }

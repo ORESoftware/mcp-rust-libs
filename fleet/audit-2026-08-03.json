@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 7,
+  "generatedAt": "2026-08-03",
+  "protocolBaseline": {
+    "stable": "2025-11-25",
+    "nextReleaseCandidate": "2026-07-28",
+    "currentRmcp": "3.1.0",
+    "streamableHttpSecurityFloor": "1.4.0",
+    "policy": "Declare and test the intended lifecycle. New migrations normally target an exact reviewed rmcp release, currently =3.1.0; reviewed 2.2.x stdio servers may remain on the stable 2025-11-25 lifecycle until a breaking migration is justified."
+  },
+  "scope": {
+    "existingStandaloneRustServers": 24,
+    "missingStandaloneRustServers": 5,
+    "serversWithHardeningPullRequests": 24,
+    "inventoryOnlyPendingAudit": 0,
+    "sharedRepository": "ORESoftware/mcp-rust-libs"
+  },
+  "sharedHardening": {
+    "repository": "ORESoftware/mcp-rust-libs",
+    "pullRequest": 1,
+    "state": "open_green_review_ready_release_not_yet_authorized",
+    "lastGreenCiRun": 30837404724,
+    "exactGreenHead": "7cf36dab399f442bc44994fbd8a2ae973842606c",
+    "coverage": [
+      "bounded UTF-8 output",
+      "strict URL and exact-host policy",
+      "redirect and ambient-proxy denial",
+      "bounded subprocess capture",
+      "real-binary stdio testkit",
+      "static fleet audit ratchets",
+      "rmcp Streamable HTTP security-floor detection",
+      "tracked deterministic Cargo.lock enforcement for deployable servers"
+    ]
+  },
+  "repositories": [
+    {"repository":"3FA-app/3FA-mcp-server.rs","status":"existing_hardening_pr","pullRequest":13},
+    {"repository":"messaging-intel/msgint-mcp-server.rs","status":"focused_hardening_pr_blocked_before_actions_step_allocation","pullRequest":9,"sdkTarget":"rmcp 2.2.0 stable lifecycle"},
+    {"repository":"athlet-o/athleto-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
+    {"repository":"canonical-cloud/canonical-mcp-server.rs","status":"existing_hardening_pr","pullRequest":16},
+    {"repository":"akrion-sim/akrion-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
+    {"repository":"benefactor-cc/benefactor-cc-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":14},
+    {"repository":"claritas-viz/claritas-viz-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":5},
+    {"repository":"anticaptrad/act-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":5,"transport":"bounded custom HTTP stable-lifecycle compatibility endpoint"},
+    {"repository":"fiducia-cloud/fiducia-mcp-server.rs","status":"existing_hardening_pr","pullRequest":10},
+    {"repository":"daedalus-fab/daedalus-fab-mcp-server.rs","status":"existing_hardening_pr","pullRequest":7},
+    {"repository":"declarative-migrations/declarative-migrations-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
+    {"repository":"sagitta-stack/sagitta-mcp-server.rs","status":"existing_hardening_pr","pullRequest":14},
+    {"repository":"scintilla-run/scintilla-mcp-server.rs","status":"existing_hardening_pr","pullRequest":13},
+    {"repository":"sonus-auris/sonus-auris-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":8},
+    {"repository":"rust-ssr-demos/rust-ssr-mcp-server.rs","status":"focused_http_process_conformance_pr_blocked_before_actions_step_allocation","pullRequest":5,"transport":"custom HTTP stable-lifecycle compatibility endpoint"},
+    {"repository":"shared-auth/shared-auth-mcp-server.rs","status":"focused_exact_host_and_no_proxy_source_committed_blocked_before_actions_step_allocation","pullRequest":12,"linearIssue":"DEN-1524","sdkTarget":"rmcp 2.2.0 stable lifecycle"},
+    {"repository":"quaestor-ledger/quaestor-ledger-mcp-server.rs","status":"existing_hardening_pr_with_residual_process_and_proxy_findings","pullRequest":6},
+    {"repository":"usa-acc/usa-acc-mcp-server.rs","status":"existing_hardening_pr","pullRequest":5},
+    {"repository":"file-tunnel/ftnl-mcp-server.rs","status":"focused_hardening_pr","pullRequest":1},
+    {"repository":"discrete-event-systems/des-mcp-server.rs","status":"existing_hardening_pr","pullRequest":11},
+    {"repository":"StreemPilot/streempilot-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":2,"sdkTarget":"rmcp =3.1.0","ciRun":30834492360},
+    {"repository":"hypesiege/hypesiege-mcp-server.rs","status":"focused_hardening_pr_green_review_ready","pullRequest":2,"sdkTarget":"rmcp =3.1.0","ciRun":30835217486},
+    {"repository":"drone-mngr/drone-mngr-mcp-server.rs","status":"focused_hardening_pr_action_approval_required","pullRequest":1},
+    {"repository":"drone-mngr/laser-ptr-ctrl-mcp-server.rs","status":"focused_hardening_pr_action_approval_required","pullRequest":1}
+  ],
+  "missingRepositories": [
+    {"repository":"cliptown/cliptown-mcp-server.rs","linearIssue":"DEN-162"},
+    {"repository":"opto-sync/opto-sync-mcp-server.rs","linearIssue":"DEN-163"},
+    {"repository":"voxletra/vxl-mcp-server.rs","linearIssue":"DEN-164"},
+    {"repository":"zed-pkg/zed-mcp-server.rs","linearIssue":"DEN-165"},
+    {"repository":"zed-pkg-test/zed-pkg-test-mcp-server.rs","linearIssue":"DEN-166"}
+  ],
+  "fleetAcceptance": [
+    "official SDK or documented reviewed exception",
+    "declared and tested protocol lifecycle",
+    "strict lifecycle negotiation and stdout purity",
+    "deny_unknown_fields or equivalent runtime schema closure",
+    "bounded request, upstream response, subprocess, and final tool output",
+    "exact host policy for every credentialed origin",
+    "redirect denial and no ambient proxy for bearer clients",
+    "read-only default or independent mutation gate plus target-bound confirmation and idempotency",
+    "real-binary stdio or HTTP lifecycle tests",
+    "read-only immutable-pinned GitHub Actions",
+    "tracked valid Cargo.lock for every deployable Rust server",
+    "exact reviewed SDK resolution when an SDK migration is in scope",
+    "pinned reviewed mcp-rust-libs release rather than copied common modules"
+  ]
+}
