@@ -187,9 +187,7 @@ mod tests {
         assert!(policy
             .validate_endpoint("http://127.0.0.1:8080/health")
             .is_ok());
-        assert!(policy
-            .validate_endpoint("http://[::1]:8080/health")
-            .is_ok());
+        assert!(policy.validate_endpoint("http://[::1]:8080/health").is_ok());
         assert!(policy
             .validate_endpoint("http://LOCALHOST.:8080/health")
             .is_ok());

@@ -46,9 +46,7 @@ impl ProcessLimits {
         if timeout.is_zero() {
             return Err(ProcessError::InvalidLimits);
         }
-        if !(MIN..=MAX).contains(&max_stdout_bytes)
-            || !(MIN..=MAX).contains(&max_stderr_bytes)
-        {
+        if !(MIN..=MAX).contains(&max_stdout_bytes) || !(MIN..=MAX).contains(&max_stderr_bytes) {
             return Err(ProcessError::InvalidLimits);
         }
         Ok(Self {
@@ -126,8 +124,12 @@ impl fmt::Display for ProcessError {
             Self::MissingPipe(pipe) => write!(formatter, "subprocess {pipe} pipe is unavailable"),
             Self::Wait(error) => write!(formatter, "failed to wait for subprocess: {error}"),
             Self::Read(error) => write!(formatter, "failed to read subprocess output: {error}"),
-            Self::StdoutTooLarge => formatter.write_str("subprocess stdout exceeded its byte limit"),
-            Self::StderrTooLarge => formatter.write_str("subprocess stderr exceeded its byte limit"),
+            Self::StdoutTooLarge => {
+                formatter.write_str("subprocess stdout exceeded its byte limit")
+            }
+            Self::StderrTooLarge => {
+                formatter.write_str("subprocess stderr exceeded its byte limit")
+            }
             Self::TimedOut => formatter.write_str("subprocess exceeded its wall-clock deadline"),
         }
     }
@@ -179,8 +181,16 @@ pub async fn run_bounded(
 
     let operation = async {
         let wait = async { child.wait().await.map_err(ProcessError::Wait) };
-        let stdout = read_pipe(stdout, limits.max_stdout_bytes, ProcessError::StdoutTooLarge);
-        let stderr = read_pipe(stderr, limits.max_stderr_bytes, ProcessError::StderrTooLarge);
+        let stdout = read_pipe(
+            stdout,
+            limits.max_stdout_bytes,
+            ProcessError::StdoutTooLarge,
+        );
+        let stderr = read_pipe(
+            stderr,
+            limits.max_stderr_bytes,
+            ProcessError::StderrTooLarge,
+        );
         tokio::try_join!(wait, stdout, stderr)
     };
 
@@ -245,23 +255,17 @@ mod tests {
 
     #[tokio::test]
     async fn kills_a_child_at_the_first_stdout_byte_over_the_limit() {
-        let limits = ProcessLimits::new(Duration::from_secs(5), 1024, 1024)
-            .expect("valid limits");
-        let error = run_bounded(
-            None,
-            "/bin/sh",
-            &["-c", "head -c 2048 /dev/zero"],
-            limits,
-        )
-        .await
-        .expect_err("overflow must fail");
+        let limits = ProcessLimits::new(Duration::from_secs(5), 1024, 1024).expect("valid limits");
+        let error = run_bounded(None, "/bin/sh", &["-c", "head -c 2048 /dev/zero"], limits)
+            .await
+            .expect_err("overflow must fail");
         assert!(matches!(error, ProcessError::StdoutTooLarge));
     }
 
     #[tokio::test]
     async fn kills_a_timed_out_child() {
-        let limits = ProcessLimits::new(Duration::from_millis(50), 1024, 1024)
-            .expect("valid limits");
+        let limits =
+            ProcessLimits::new(Duration::from_millis(50), 1024, 1024).expect("valid limits");
         let error = run_bounded(None, "/bin/sh", &["-c", "sleep 2"], limits)
             .await
             .expect_err("timeout must fail");

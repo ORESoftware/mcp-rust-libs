@@ -145,7 +145,13 @@ impl BoundedBytes {
 pub fn sanitize_external_message(value: &str, max_bytes: usize, secrets: &[&str]) -> String {
     let mut sanitized = value
         .chars()
-        .map(|character| if character.is_control() { ' ' } else { character })
+        .map(|character| {
+            if character.is_control() {
+                ' '
+            } else {
+                character
+            }
+        })
         .collect::<String>();
     for secret in secrets.iter().copied().filter(|secret| !secret.is_empty()) {
         sanitized = sanitized.replace(secret, "[REDACTED]");
@@ -164,9 +170,7 @@ pub fn valid_header_value(value: &str, max_bytes: usize) -> bool {
 /// Returns `true` for names that could identify secrets or users.
 #[must_use]
 pub fn is_sensitive_key(key: &str) -> bool {
-    let normalized = key
-        .to_ascii_lowercase()
-        .replace(|character: char| matches!(character, '-' | '.'), "_");
+    let normalized = key.to_ascii_lowercase().replace(['-', '.'], "_");
     [
         "authorization",
         "bearer",
@@ -244,6 +248,9 @@ mod tests {
     #[test]
     fn bounds_reject_unbounded_values() {
         assert_eq!(Bounds::new(10, 2048), Err(BoundError::TextOutOfRange));
-        assert_eq!(Bounds::new(2048, usize::MAX), Err(BoundError::JsonOutOfRange));
+        assert_eq!(
+            Bounds::new(2048, usize::MAX),
+            Err(BoundError::JsonOutOfRange)
+        );
     }
 }

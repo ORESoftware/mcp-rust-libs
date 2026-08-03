@@ -172,7 +172,8 @@ mod tests {
             audit_stdio_stdout_with_limits(b"12345", 4, 10),
             Err(FrameAuditError::OutputTooLarge)
         );
-        let frames = b"{\"jsonrpc\":\"2.0\",\"method\":\"one\"}\n{\"jsonrpc\":\"2.0\",\"method\":\"two\"}\n";
+        let frames =
+            b"{\"jsonrpc\":\"2.0\",\"method\":\"one\"}\n{\"jsonrpc\":\"2.0\",\"method\":\"two\"}\n";
         assert_eq!(
             audit_stdio_stdout_with_limits(frames, 1024, 1),
             Err(FrameAuditError::TooManyFrames)
