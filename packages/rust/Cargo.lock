@@ -177,6 +177,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ore-mcp-bootstrap"
+version = "0.1.0"
+dependencies = [
+ "ore-mcp-safety",
+]
+
+[[package]]
 name = "ore-mcp-http"
 version = "0.1.0"
 dependencies = [

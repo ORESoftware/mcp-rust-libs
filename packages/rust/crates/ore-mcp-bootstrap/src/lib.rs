@@ -11,8 +11,7 @@
 pub mod config {
     use std::{
         error::Error,
-        fmt,
-        io,
+        fmt, io,
         path::{Path, PathBuf},
     };
 
@@ -60,9 +59,8 @@ pub mod config {
     impl fmt::Display for ConfigError {
         fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
-                Self::InvalidPath => formatter.write_str(
-                    "path must be non-empty, bounded, and free of control characters",
-                ),
+                Self::InvalidPath => formatter
+                    .write_str("path must be non-empty, bounded, and free of control characters"),
                 Self::OverrideMissing(name) => write!(
                     formatter,
                     "{name} does not point to a readable regular file"
@@ -91,10 +89,7 @@ pub mod config {
     /// excessively large values.
     pub fn validate_path(value: &str) -> Result<PathBuf, ConfigError> {
         let value = value.trim();
-        if value.is_empty()
-            || value.len() > 4096
-            || value.chars().any(char::is_control)
-        {
+        if value.is_empty() || value.len() > 4096 || value.chars().any(char::is_control) {
             return Err(ConfigError::InvalidPath);
         }
         Ok(PathBuf::from(value))
@@ -108,10 +103,7 @@ pub mod config {
     /// larger than 1024 bytes, or contains control characters.
     pub fn validate_log_filter_text(value: &str) -> Result<&str, ConfigError> {
         let value = value.trim();
-        if value.is_empty()
-            || value.len() > 1024
-            || value.chars().any(char::is_control)
-        {
+        if value.is_empty() || value.len() > 1024 || value.chars().any(char::is_control) {
             return Err(ConfigError::InvalidLogFilter);
         }
         Ok(value)
@@ -382,9 +374,7 @@ pub mod runtime {
         fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
                 Self::ServiceName => formatter.write_str("invalid MCP service name"),
-                Self::ServiceNamespace => {
-                    formatter.write_str("invalid MCP service namespace")
-                }
+                Self::ServiceNamespace => formatter.write_str("invalid MCP service namespace"),
                 Self::Transport => formatter.write_str("invalid MCP transport label"),
             }
         }
@@ -447,8 +437,8 @@ mod tests {
 
     #[test]
     fn runtime_identity_is_stable_and_low_cardinality() {
-        let identity = runtime::ServerIdentity::stdio("example-mcp", "example-org")
-            .expect("valid identity");
+        let identity =
+            runtime::ServerIdentity::stdio("example-mcp", "example-org").expect("valid identity");
         assert_eq!(identity.transport(), runtime::STDIO_TRANSPORT);
         assert_eq!(
             identity.startup_attributes(),
