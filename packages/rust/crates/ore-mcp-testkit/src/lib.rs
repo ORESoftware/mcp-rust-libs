@@ -1,4 +1,5 @@
 //! Runtime-independent helpers for MCP process and fleet conformance tests.
+//! Includes raw stdio frame audits and semantic session response audits.
 
 #![forbid(unsafe_code)]
 
