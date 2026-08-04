@@ -38,10 +38,7 @@ impl BoundedBody {
     /// Returns [`BodyLimitError::DeclaredTooLarge`] when `content_length`
     /// exceeds `limit`, or [`BodyLimitError::InvalidLimit`] for an unsupported
     /// limit.
-    pub fn preflight(
-        limit: usize,
-        content_length: Option<u64>,
-    ) -> Result<Self, BodyLimitError> {
+    pub fn preflight(limit: usize, content_length: Option<u64>) -> Result<Self, BodyLimitError> {
         if content_length.is_some_and(|length| length > limit as u64) {
             return Err(BodyLimitError::DeclaredTooLarge);
         }
@@ -138,8 +135,8 @@ mod tests {
     #[test]
     fn exact_boundary_is_accepted() {
         let mut body = BoundedBody::new(1024).expect("valid limit");
-        body.push(&vec![7_u8; 512]).expect("first half");
-        body.push(&vec![8_u8; 512]).expect("second half");
+        body.push(&[7_u8; 512]).expect("first half");
+        body.push(&[8_u8; 512]).expect("second half");
         assert_eq!(body.len(), 1024);
         assert_eq!(body.limit(), 1024);
         assert_eq!(body.into_inner().len(), 1024);
@@ -148,9 +145,9 @@ mod tests {
     #[test]
     fn overflowing_chunk_is_not_partially_retained() {
         let mut body = BoundedBody::new(1024).expect("valid limit");
-        body.push(&vec![1_u8; 1000]).expect("prefix fits");
+        body.push(&[1_u8; 1000]).expect("prefix fits");
         assert_eq!(
-            body.push(&vec![2_u8; 25]),
+            body.push(&[2_u8; 25]),
             Err(BodyLimitError::StreamedTooLarge)
         );
         assert_eq!(body.len(), 1000);
@@ -158,10 +155,7 @@ mod tests {
 
     #[test]
     fn unsupported_limits_fail_closed() {
-        assert_eq!(
-            BoundedBody::new(1023),
-            Err(BodyLimitError::InvalidLimit)
-        );
+        assert_eq!(BoundedBody::new(1023), Err(BodyLimitError::InvalidLimit));
         assert_eq!(
             BoundedBody::new(16 * 1024 * 1024 + 1),
             Err(BodyLimitError::InvalidLimit)
