@@ -1,0 +1,42 @@
+name: fleet-pr-evidence
+
+on:
+  pull_request:
+    paths:
+      - fleet/inventory.json
+      - fleet/pr-evidence.json
+      - tooling/check_fleet_pr_evidence.py
+      - tooling/test_check_fleet_pr_evidence.py
+      - .github/workflows/fleet-pr-evidence.yml
+  push:
+    branches: [main]
+    paths:
+      - fleet/inventory.json
+      - fleet/pr-evidence.json
+      - tooling/check_fleet_pr_evidence.py
+      - tooling/test_check_fleet_pr_evidence.py
+      - .github/workflows/fleet-pr-evidence.yml
+  schedule:
+    - cron: "37 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Verify immutable PR purpose, head, and state
+        run: python tooling/check_fleet_pr_evidence.py --live
