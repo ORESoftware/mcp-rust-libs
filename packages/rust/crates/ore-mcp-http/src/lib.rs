@@ -2,6 +2,9 @@
 
 #![forbid(unsafe_code)]
 
+pub mod body;
+
+pub use body::{BodyLimitError, BoundedBody};
 use ore_mcp_safety::Bounds;
 use url::{Host, Url};
 

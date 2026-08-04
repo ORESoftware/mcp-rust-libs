@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+  "crates/ore-mcp-bootstrap",
   "crates/ore-mcp-http",
   "crates/ore-mcp-process",
   "crates/ore-mcp-safety",
@@ -23,6 +24,7 @@ missing_docs = "warn"
 all = "warn"
 
 [workspace.dependencies]
+ore-mcp-bootstrap = { version = "0.1.0", path = "crates/ore-mcp-bootstrap" }
 ore-mcp-http = { version = "0.1.0", path = "crates/ore-mcp-http" }
 ore-mcp-process = { version = "0.1.0", path = "crates/ore-mcp-process" }
 ore-mcp-safety = { version = "0.1.0", path = "crates/ore-mcp-safety" }
