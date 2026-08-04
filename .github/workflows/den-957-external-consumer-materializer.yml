@@ -25,30 +25,40 @@ jobs:
         with:
           toolchain: '1.97.0'
           components: rustfmt,clippy
-      - name: Clone and materialize Sonus Auris
+      - id: materialize
+        name: Clone, materialize, and validate Sonus Auris
+        continue-on-error: true
         run: |
-          set -euo pipefail
-          git clone --depth 1 --branch agent/den-957-shared-bootstrap \
-            https://github.com/sonus-auris/sonus-auris-mcp-server.rs.git target
-          python3 tooling/den957_materialize_consumer.py target
-          cd target
-          cargo generate-lockfile
-          cargo fmt --all
-          cargo clippy --locked --all-targets -- -D warnings
-          cargo test --locked --all-targets
-          RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps
-          cargo build --locked --release
-          git diff --check
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+          set -o pipefail
+          {
+            set -euo pipefail
+            git clone --depth 1 --branch agent/den-957-shared-bootstrap \
+              https://github.com/sonus-auris/sonus-auris-mcp-server.rs.git target
+            python3 tooling/den957_materialize_consumer.py target
+            cd target
+            cargo generate-lockfile
+            cargo fmt --all
+            cargo clippy --locked --all-targets -- -D warnings
+            cargo test --locked --all-targets
+            RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps
+            cargo build --locked --release
+            git diff --check
+          } 2>&1 | tee sonus-validation.log
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: den-957-sonus
           path: |
+            sonus-validation.log
             target/Cargo.toml
             target/Cargo.lock
             target/src/telemetry.rs
             target/tests/shared_bootstrap_contract.rs
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 1
+      - if: always()
+        name: Preserve Sonus validation conclusion
+        run: test '${{ steps.materialize.outcome }}' = success
 
   scintilla:
     runs-on: ubuntu-24.04
@@ -61,33 +71,43 @@ jobs:
         with:
           toolchain: '1.97.0'
           components: rustfmt,clippy
-      - name: Clone and materialize Scintilla
+      - id: materialize
+        name: Clone, materialize, and validate Scintilla
+        continue-on-error: true
         run: |
-          set -euo pipefail
-          git clone --depth 1 --branch agent/den-957-shared-bootstrap \
-            https://github.com/scintilla-run/scintilla-mcp-server.rs.git target
-          cd target
-          git submodule update --init --recursive
-          cd ..
-          python3 tooling/den957_materialize_consumer.py target
-          cd target
-          cargo generate-lockfile
-          cargo fmt --all
-          cargo clippy --locked --all-targets -- -D warnings
-          cargo test --locked --all-targets
-          cargo test --locked --doc
-          cargo build --locked --release
-          git diff --check
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+          set -o pipefail
+          {
+            set -euo pipefail
+            git clone --depth 1 --branch agent/den-957-shared-bootstrap \
+              https://github.com/scintilla-run/scintilla-mcp-server.rs.git target
+            cd target
+            git submodule update --init --recursive
+            cd ..
+            python3 tooling/den957_materialize_consumer.py target
+            cd target
+            cargo generate-lockfile
+            cargo fmt --all
+            cargo clippy --locked --all-targets -- -D warnings
+            cargo test --locked --all-targets
+            cargo test --locked --doc
+            cargo build --locked --release
+            git diff --check
+          } 2>&1 | tee scintilla-validation.log
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: den-957-scintilla
           path: |
+            scintilla-validation.log
             target/Cargo.toml
             target/Cargo.lock
             target/src/telemetry.rs
             target/tests/shared_bootstrap_contract.rs
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 1
+      - if: always()
+        name: Preserve Scintilla validation conclusion
+        run: test '${{ steps.materialize.outcome }}' = success
 
   quaestor:
     runs-on: ubuntu-24.04
@@ -100,27 +120,37 @@ jobs:
         with:
           toolchain: '1.97.0'
           components: rustfmt,clippy
-      - name: Clone and validate Quaestor
+      - id: materialize
+        name: Clone and validate Quaestor
+        continue-on-error: true
         run: |
-          set -euo pipefail
-          git clone --depth 1 --branch agent/den-957-adopt-bootstrap-a5c1 \
-            https://github.com/quaestor-ledger/quaestor-ledger-mcp-server.rs.git target
-          cd target
-          cargo generate-lockfile
-          cargo fmt --all
-          cargo clippy --locked --all-targets -- -D warnings
-          cargo test --locked --all-targets
-          RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps
-          cargo build --locked --release
-          git diff --check
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+          set -o pipefail
+          {
+            set -euo pipefail
+            git clone --depth 1 --branch agent/den-957-adopt-bootstrap-a5c1 \
+              https://github.com/quaestor-ledger/quaestor-ledger-mcp-server.rs.git target
+            cd target
+            cargo generate-lockfile
+            cargo fmt --all
+            cargo clippy --locked --all-targets -- -D warnings
+            cargo test --locked --all-targets
+            RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps
+            cargo build --locked --release
+            git diff --check
+          } 2>&1 | tee quaestor-validation.log
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: den-957-quaestor
           path: |
+            quaestor-validation.log
             target/Cargo.toml
             target/Cargo.lock
             target/src/lib.rs
             target/src/runtime.rs
             target/src/shared_bootstrap.rs
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 1
+      - if: always()
+        name: Preserve Quaestor validation conclusion
+        run: test '${{ steps.materialize.outcome }}' = success
