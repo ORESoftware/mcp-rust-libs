@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  live-evidence:
+  evidence:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -38,5 +38,15 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
-      - name: Verify immutable PR purpose, head, and state
-        run: python tooling/check_fleet_pr_evidence.py --live
+      - name: Validate committed fleet evidence
+        run: python tooling/check_fleet_pr_evidence.py
+      - name: Verify live cross-organization evidence when an app token is configured
+        env:
+          MCP_FLEET_GITHUB_TOKEN: ${{ secrets.MCP_FLEET_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${MCP_FLEET_GITHUB_TOKEN:-}" ]]; then
+            python tooling/check_fleet_pr_evidence.py --live
+          else
+            echo "::notice::Live cross-organization verification skipped because MCP_FLEET_GITHUB_TOKEN is not configured. Use a short-lived GitHub App installation token; repository-local GITHUB_TOKEN cannot read private PRs in other organizations."
+          fi
