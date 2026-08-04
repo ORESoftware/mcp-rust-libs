@@ -1,0 +1,15 @@
+[package]
+name = "ore-mcp-bootstrap"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Version-neutral startup, configuration, telemetry-policy, and runtime identity helpers for ORESoftware MCP servers"
+
+[lints]
+workspace = true
+
+[dependencies]
+ore-mcp-safety.workspace = true
