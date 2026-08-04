@@ -420,10 +420,7 @@ mod tests {
         let output = run_truncating(
             None,
             "/bin/sh",
-            &[
-                "-c",
-                "head -c 2048 /dev/zero; head -c 3072 /dev/zero >&2",
-            ],
+            &["-c", "head -c 2048 /dev/zero; head -c 3072 /dev/zero >&2"],
             limits,
         )
         .await
