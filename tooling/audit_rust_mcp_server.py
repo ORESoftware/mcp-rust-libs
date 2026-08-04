@@ -34,6 +34,11 @@ MUTATION_GATES = (
     "dry_run",
     "require_approval",
 )
+_CFG_TEST_ATTRIBUTE = re.compile(r"^\s*#\s*\[\s*cfg\s*\(\s*test\s*\)\s*\]\s*$")
+_WORKFLOW_STEP_START = re.compile(
+    r"^(?P<indent>\s*)-\s+(?:name|uses|run|id|if|shell)\s*:",
+    re.IGNORECASE,
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -63,12 +68,90 @@ def semver_tuple(value: str) -> tuple[int, int, int] | None:
     )
 
 
+def semver_is_prerelease(value: str) -> bool:
+    return bool(
+        re.search(
+            r"(?<!\d)\d+\.\d+(?:\.\d+)?-[0-9A-Za-z][0-9A-Za-z.-]*",
+            value,
+        )
+    )
+
+
 def rust_sources(root: Path) -> list[Path]:
     return sorted((root / "src").rglob("*.rs")) if (root / "src").is_dir() else []
 
 
+def _brace_delta(line: str) -> int:
+    """Return a conservative brace delta for a test-only Rust item.
+
+    This is intentionally not a Rust parser. It is used only after an exact
+    ``#[cfg(test)]`` attribute to preserve production source that follows the
+    test item. Any ambiguous or unterminated test item remains excluded rather
+    than allowing later source to be silently trusted.
+    """
+
+    return line.count("{") - line.count("}")
+
+
 def production_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="replace").split("#[cfg(test)]", 1)[0]
+    """Return source with exact ``#[cfg(test)]`` items removed.
+
+    The previous implementation truncated the file at the first test attribute,
+    allowing production code placed after an inline test module to evade every
+    production-only audit. This line-oriented, brace-aware scanner removes only
+    the attributed item and then resumes scanning later source.
+    """
+
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    production: list[str] = []
+    index = 0
+    while index < len(lines):
+        if _CFG_TEST_ATTRIBUTE.fullmatch(lines[index]) is None:
+            production.append(lines[index])
+            index += 1
+            continue
+
+        index += 1
+        while index < len(lines) and (
+            not lines[index].strip() or lines[index].lstrip().startswith("#[")
+        ):
+            index += 1
+
+        saw_brace = False
+        depth = 0
+        while index < len(lines):
+            line = lines[index]
+            if "{" in line:
+                saw_brace = True
+            depth += _brace_delta(line)
+            index += 1
+            if saw_brace and depth <= 0:
+                break
+            if not saw_brace and ";" in line:
+                break
+
+    return "\n".join(production)
+
+
+def workflow_steps(text: str) -> list[str]:
+    """Extract YAML step blocks without letting one checkout bless another."""
+
+    lines = text.splitlines()
+    starts: list[tuple[int, int]] = []
+    for index, line in enumerate(lines):
+        match = _WORKFLOW_STEP_START.match(line)
+        if match:
+            starts.append((index, len(match.group("indent"))))
+
+    steps: list[str] = []
+    for position, (start, indent) in enumerate(starts):
+        end = len(lines)
+        for next_start, next_indent in starts[position + 1 :]:
+            if next_indent <= indent:
+                end = next_start
+                break
+        steps.append("\n".join(lines[start:end]))
+    return steps
 
 
 def workflow_findings(root: Path) -> list[Finding]:
@@ -81,6 +164,10 @@ def workflow_findings(root: Path) -> list[Finding]:
         re.MULTILINE,
     )
     checkout = re.compile(r"uses:\s+actions/checkout@", re.IGNORECASE)
+    persisted_false = re.compile(
+        r"^\s*persist-credentials:\s*(?:false|'false'|\"false\")\s*$",
+        re.IGNORECASE | re.MULTILINE,
+    )
     for path in workflows:
         text = path.read_text(encoding="utf-8", errors="replace")
         relative = path.relative_to(root).as_posix()
@@ -102,15 +189,16 @@ def workflow_findings(root: Path) -> list[Finding]:
                     relative,
                 )
             )
-        if checkout.search(text) and "persist-credentials: false" not in text:
-            findings.append(
-                Finding(
-                    "low",
-                    "checkout-credentials",
-                    "checkout credentials are not explicitly discarded",
-                    relative,
+        for step in workflow_steps(text):
+            if checkout.search(step) and persisted_false.search(step) is None:
+                findings.append(
+                    Finding(
+                        "low",
+                        "checkout-credentials",
+                        "a checkout step does not explicitly discard credentials",
+                        relative,
+                    )
                 )
-            )
     return findings
 
 
@@ -151,12 +239,18 @@ def audit(root: Path) -> list[Finding]:
                     f"rmcp version requirement {rmcp!r} could not be compared with the security floor",
                 )
             )
-        elif streamable_http and parsed < RMCP_STREAMABLE_HTTP_SECURITY_FLOOR:
+        elif streamable_http and (
+            parsed < RMCP_STREAMABLE_HTTP_SECURITY_FLOOR
+            or (
+                parsed == RMCP_STREAMABLE_HTTP_SECURITY_FLOOR
+                and semver_is_prerelease(rmcp)
+            )
+        ):
             findings.append(
                 Finding(
                     "high",
                     "rmcp-dns-rebinding-floor",
-                    f"Streamable HTTP uses rmcp {rmcp!r}; require >=1.4.0 or a reviewed equivalent Host-validation patch",
+                    f"Streamable HTTP uses rmcp {rmcp!r}; require final >=1.4.0 or a reviewed equivalent Host-validation patch",
                 )
             )
         elif parsed < (1, 0, 0):

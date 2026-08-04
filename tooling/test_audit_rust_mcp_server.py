@@ -63,6 +63,8 @@ jobs:
         self.assertEqual(module.semver_tuple("2.2"), (2, 2, 0))
         self.assertEqual(module.semver_tuple("^1.4.0"), (1, 4, 0))
         self.assertIsNone(module.semver_tuple("workspace"))
+        self.assertTrue(module.semver_is_prerelease("^1.4.0-rc.1"))
+        self.assertFalse(module.semver_is_prerelease("^1.4.0"))
 
     def test_flags_handwritten_stale_stdout(self) -> None:
         self.write("Cargo.toml", "[package]\nname='x'\nversion='0.1.0'\n")
@@ -72,6 +74,14 @@ jobs:
 
     def test_flags_vulnerable_streamable_http_rmcp_floor(self) -> None:
         self.standard_manifest("1.3.2")
+        self.write(
+            "src/lib.rs",
+            'fn x(){let _=StreamableHttpService::new;let _="Bearer ";let _="allowed_hosts";let _="Policy::none";let _=".no_proxy()";}',
+        )
+        self.assertIn("rmcp-dns-rebinding-floor", self.codes())
+
+    def test_final_floor_prerelease_is_still_vulnerable(self) -> None:
+        self.standard_manifest("1.4.0-rc.1")
         self.write(
             "src/lib.rs",
             'fn x(){let _=StreamableHttpService::new;let _="Bearer ";let _="allowed_hosts";let _="Policy::none";let _=".no_proxy()";}',
@@ -150,6 +160,80 @@ use serde::Deserialize;
         )
         codes = self.codes()
         self.assertTrue({"mutable-action-pin", "workflow-permissions", "checkout-credentials"} <= codes)
+
+    def test_each_checkout_step_must_discard_its_own_credentials(self) -> None:
+        self.standard_manifest()
+        self.write("src/lib.rs", "#[cfg(test)] mod tests{#[test] fn ok(){}}\n")
+        self.process_test()
+        self.write(
+            ".github/workflows/ci.yml",
+            """name: ci
+permissions:
+  contents: read
+jobs:
+  test:
+    steps:
+      - name: Safe checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Unsafe second checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+""",
+        )
+        self.assertIn("checkout-credentials", self.codes())
+
+    def test_named_checkout_with_quoted_false_is_accepted(self) -> None:
+        self.standard_manifest()
+        self.write("src/lib.rs", "#[cfg(test)] mod tests{#[test] fn ok(){}}\n")
+        self.process_test()
+        self.write(
+            ".github/workflows/ci.yml",
+            """name: ci
+permissions:
+  contents: read
+jobs:
+  test:
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: "false"
+""",
+        )
+        self.assertNotIn("checkout-credentials", self.codes())
+
+    def test_production_after_cfg_test_module_is_still_scanned(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            """
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_only() { println!("test output"); }
+}
+
+pub fn production() { println!("production stdout"); }
+""",
+        )
+        self.assertIn("stdout-pollution", self.codes())
+
+    def test_stdout_inside_exact_cfg_test_module_is_ignored(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            """
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_only() { println!("test output"); }
+}
+
+pub fn production() {}
+""",
+        )
+        self.assertNotIn("stdout-pollution", self.codes())
 
     def test_clean_server_has_no_medium_or_high_findings(self) -> None:
         self.standard_manifest()
