@@ -1,0 +1,273 @@
+name: certify three Rust modularization heads
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/certify-three-rust-modularization-heads.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: certify-rust-modularization-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared-auth-mcp:
+    name: shared-auth MCP exact head
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Clone and verify immutable source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/shared-auth/shared-auth-mcp-server.rs.git target
+          cd target
+          git checkout --detach 9b9739d7aa5c7dd565c4119122556753d7662aa2
+          test "$(git rev-parse HEAD)" = 9b9739d7aa5c7dd565c4119122556753d7662aa2
+          test -z "$(git status --porcelain)"
+
+      - name: Install Rust 1.97
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.97.0
+          components: rustfmt,clippy
+
+      - name: Validate workflows
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 \
+            .github/workflows/ci.yml .github/workflows/repository-policy.yml
+
+      - name: Build and test
+        working-directory: target
+        shell: bash
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+          cargo clippy --locked --all-targets -- -D warnings
+          cargo test --locked --all-targets
+          cargo doc --locked --no-deps
+          cargo build --locked --release
+          git diff --check
+
+      - name: Enforce modular boundaries
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f src/lib.rs
+          test -f src/runtime.rs
+          test -f src/server.rs
+          test -f src/telemetry.rs
+          test -f MCP_TOOLS.md
+          test -f OBSERVABILITY.md
+          test -f tests/runtime_architecture.rs
+          test "$(wc -l < src/main.rs)" -le 8
+          git grep -qF 'pub async fn run_stdio' -- src/runtime.rs
+          git grep -qF '.serve(stdio())' -- src/runtime.rs
+          git grep -qF '#[tool(' -- src/server.rs
+          git grep -qF 'sanitize_traces_endpoint' -- src/telemetry.rs
+          if git grep -nE 'telemetry::init|SharedAuthDiagnostics|serve\(|info_span!' -- src/main.rs; then
+            exit 1
+          fi
+          if git grep -nE '(^|[^[:alnum:]_])print(ln)?!' -- src/main.rs src/runtime.rs src/telemetry.rs; then
+            exit 1
+          fi
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@065d6a08a14e61e89fb0a4c10eecdbdef39c7d8e
+        with:
+          tool: cargo-audit@0.22.2
+
+      - name: Audit dependencies
+        working-directory: target
+        run: cargo audit --deny warnings
+
+  scintilla-mcp:
+    name: Scintilla MCP exact head
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - name: Clone and verify immutable source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --recurse-submodules https://github.com/scintilla-run/scintilla-mcp-server.rs.git target
+          cd target
+          git checkout --detach c3fd209ce6fbdb0d4a961bfa54eb1c6d82f2caf4
+          git submodule update --init --recursive
+          test "$(git rev-parse HEAD)" = c3fd209ce6fbdb0d4a961bfa54eb1c6d82f2caf4
+          test -z "$(git status --porcelain)"
+
+      - name: Install Rust 1.97
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.97.0
+          components: rustfmt,clippy
+
+      - name: Validate workflows
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 \
+            .github/workflows/ci.yml \
+            .github/workflows/compatibility.yml \
+            .github/workflows/web-smoke.yml \
+            .github/workflows/alex-main-agent-routing-e2e.yml
+
+      - name: Build and test
+        working-directory: target
+        shell: bash
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+          cargo clippy --locked --all-targets -- -D warnings
+          cargo test --locked --all-targets
+          cargo test --locked --doc
+          cargo doc --locked --no-deps
+          cargo build --locked --release
+          git diff --check
+
+      - name: Enforce bootstrap and subprocess boundaries
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f src/bootstrap.rs
+          test -f src/runtime.rs
+          test -f BOOTSTRAP.md
+          test -f tests/bootstrap_architecture.rs
+          test "$(wc -l < src/main.rs)" -le 8
+          git grep -qF 'pub async fn run_stdio' -- src/bootstrap.rs
+          git grep -qF 'ScintillaMcp::new' -- src/bootstrap.rs
+          git grep -qF '.serve(stdio())' -- src/bootstrap.rs
+          git grep -qF 'lambda_base_url' -- src/runtime.rs
+          git grep -qF 'ROUTES' -- src/runtime.rs
+          git grep -qF 'run_cmd_with_limits' -- src/util.rs tests/process_and_validation_contract.rs
+          git grep -qF 'read_pipe_bounded' -- src/util.rs
+          if git grep -nF 'wait_with_output' -- src; then
+            exit 1
+          fi
+          if git grep -nE 'telemetry::init|ScintillaMcp::new|serve\(stdio\(\)\)|info_span!' -- src/main.rs; then
+            exit 1
+          fi
+          if git grep -nE 'serve\(stdio\(\)\)|telemetry::init' -- src/runtime.rs; then
+            exit 1
+          fi
+          if git grep -nE '(^|[^[:alnum:]_])print(ln)?!' -- src/main.rs src/bootstrap.rs src/telemetry.rs; then
+            exit 1
+          fi
+          make -C tools/flags-2-env all
+          tools/flags-2-env/build/flags2env audit .cli-flags.toml
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@c44f6b046f1c29ae5918b1e0bfdbb2f1813836fd
+        with:
+          tool: cargo-audit@0.22.2
+
+      - name: Audit dependencies
+        working-directory: target
+        run: cargo audit --deny warnings
+
+  messaging-intel-api:
+    name: Messaging Intel API exact head
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      MSGINT_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/msgint_test
+      MSGINT_CONSENT_POLICY_VERSION: research-consent-v2
+    services:
+      postgres:
+        image: postgres@sha256:a426e44bac0b759c95894d68e1a0ac03ecc20b619f498a91aae373bf06d8508d
+        env:
+          POSTGRES_DB: msgint_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d msgint_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Clone and verify immutable source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/messaging-intel/msgint-api-server.rs.git target
+          cd target
+          git checkout --detach faa6a8ddf3f1f0d541f2852a7890f222f42b690f
+          test "$(git rev-parse HEAD)" = faa6a8ddf3f1f0d541f2852a7890f222f42b690f
+          test -z "$(git status --porcelain)"
+
+      - name: Install Rust 1.97
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.97.0
+          components: rustfmt,clippy
+
+      - name: Install PostgreSQL client
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Validate contracts and schema
+        working-directory: target
+        shell: bash
+        env:
+          PGPASSWORD: postgres
+        run: |
+          set -euo pipefail
+          node scripts/sync-contracts.mjs --check
+          psql -h localhost -U postgres -d msgint_test -v ON_ERROR_STOP=1 \
+            -f vendor/msgint-interfaces/schema.sql
+          for migration in vendor/msgint-interfaces/migrations/*.sql; do
+            psql -h localhost -U postgres -d msgint_test -v ON_ERROR_STOP=1 -f "$migration"
+          done
+
+      - name: Build and test
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+          cargo clippy --locked --all-targets -- -D warnings
+          cargo test --locked --all-targets
+          git diff --check
+
+      - name: Enforce API runtime boundaries
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f src/server.rs
+          test -f src/telemetry.rs
+          test "$(wc -l < src/main.rs)" -le 8
+          git grep -qF 'pub async fn run' -- src/server.rs
+          git grep -qF 'TelemetryGuard' -- src/telemetry.rs
+          git grep -qF 'axum::serve' -- src/server.rs
+          git grep -qF 'Database::connect' -- src/server.rs
+          git grep -qF 'sea_orm' -- Cargo.toml
+          if git grep -nE 'Database::connect|axum::serve|TelemetryGuard|RateLimiters' -- src/main.rs; then
+            exit 1
+          fi
+          if git grep -nE 'sqlx::|PgPool|PgConnection' -- src; then
+            echo 'Direct SQLx access is forbidden; SeaORM remains authoritative.' >&2
+            exit 1
+          fi
