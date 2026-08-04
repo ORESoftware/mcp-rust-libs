@@ -1,8 +1,17 @@
 //! Runtime-independent helpers for MCP process and fleet conformance tests.
+//! Includes raw stdio frame audits and semantic session response audits.
 
 #![forbid(unsafe_code)]
 
+mod session;
+
 use std::{fmt, str};
+
+pub use session::{
+    audit_closed_world_tool_catalog_response, audit_initialize_response,
+    audit_text_tool_result_response, InitializeAudit, SessionAuditError, ToolCatalogAudit,
+    ToolResultAudit,
+};
 
 /// Summary from auditing one stdio process output stream.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
