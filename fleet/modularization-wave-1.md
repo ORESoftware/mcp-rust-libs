@@ -25,20 +25,26 @@ ten were selected because they combine:
 - meaningful process, proxy, database, cluster, or external-service surfaces;
 - representation of both OpenTelemetry 0.27 and 0.32 cohorts.
 
+Source inspection is authoritative over file names. `usa-acc` was removed after
+its `src/telemetry.rs` proved to be a Supabase product telemetry client rather
+than process OpenTelemetry bootstrap. 3FA was substituted because it carries
+the repeated stdio-safe OTEL template and its current open PR changes only
+routing metadata.
+
 ## Selected repositories
 
 | Order | Repository | OTEL cohort | First shared surface | Migration status |
 | ---: | --- | --- | --- | --- |
-| 1 | `benefactor-cc/benefactor-cc-mcp-server.rs` | 0.32 | config, telemetry policy, identity, HTTP body | queued after library merge |
-| 2 | `sonus-auris/sonus-auris-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | queued after library merge |
-| 3 | `fiducia-cloud/fiducia-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | queued after library merge |
-| 4 | `quaestor-ledger/quaestor-ledger-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | stack after hardening PR #6 |
-| 5 | `daedalus-fab/daedalus-fab-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | queued after library merge |
-| 6 | `athlet-o/athleto-mcp-server.rs` | 0.27 | config, telemetry policy, identity, HTTP body | queued after library merge |
-| 7 | `usa-acc/usa-acc-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | queued after library merge |
-| 8 | `akrion-sim/akrion-mcp-server.rs` | 0.32 | telemetry policy, identity, HTTP body | queued after library merge |
-| 9 | `discrete-event-systems/des-mcp-server.rs` | 0.32 | telemetry policy, identity, HTTP body | queued after library merge |
-| 10 | `scintilla-run/scintilla-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | queued after library merge |
+| 1 | `benefactor-cc/benefactor-cc-mcp-server.rs` | 0.32 | config, telemetry policy, identity, HTTP body | pilot PR #18 running |
+| 2 | `sonus-auris/sonus-auris-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | queued after pilot |
+| 3 | `fiducia-cloud/fiducia-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | stack after runtime PR #14 |
+| 4 | `quaestor-ledger/quaestor-ledger-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | stack after runtime PR #9 |
+| 5 | `daedalus-fab/daedalus-fab-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | queued after pilot |
+| 6 | `athlet-o/athleto-mcp-server.rs` | 0.27 | config, telemetry policy, identity, HTTP body | queued after pilot |
+| 7 | `3FA-app/3FA-mcp-server.rs` | 0.32 | telemetry policy, identity, HTTP body | queued after pilot |
+| 8 | `akrion-sim/akrion-mcp-server.rs` | 0.32 | telemetry policy, identity, HTTP body | queued after pilot |
+| 9 | `discrete-event-systems/des-mcp-server.rs` | 0.32 | telemetry policy, identity, HTTP body | queued after pilot |
+| 10 | `scintilla-run/scintilla-mcp-server.rs` | 0.27 | telemetry policy, identity, HTTP body | queued after pilot |
 
 ## Shared versus product-owned boundaries
 
@@ -68,8 +74,8 @@ ten were selected because they combine:
 
 ## Dependency and merge order
 
-1. Merge `ORESoftware/mcp-rust-libs` bootstrap/HTTP PR after Rust 1.88 and 1.97
-   formatting, Clippy, unit, adversarial, and documentation jobs pass.
+1. Shared bootstrap and HTTP policy merged as
+   `a5c1ba9c50493ac625dd2fb175af21263d0d2801`.
 2. Pin every consumer to that exact merge commit, never a branch or moving tag.
 3. Regenerate and commit each consumer `Cargo.lock` from the exact branch state.
 4. Run each repository's existing locked CI, architecture tests, and stdio
@@ -78,18 +84,22 @@ ten were selected because they combine:
    is green and mergeable, and there are no unresolved review requests.
 6. Update this table and Linear after each merge.
 
-No consumer may depend on the unmerged shared-library branch.
+No consumer may depend on an unmerged shared-library branch.
 
 ## Per-repository acceptance checks
 
 Every consumer PR must prove:
 
-- the dependency uses an exact 40-hex Git revision;
+- the dependency uses exact Git revision
+  `a5c1ba9c50493ac625dd2fb175af21263d0d2801`;
 - `Cargo.lock` resolves that same revision;
 - product tool names and count are unchanged, unless explicitly documented;
 - stdout remains reserved for MCP JSON-RPC;
 - resource attributes cannot expose secret-like values or override canonical
   service identity;
+- stricter local resource raw-size, count, reserved-key, and duplicate policies
+  remain in force while key/value/sensitive classification delegates to the
+  shared crate;
 - HTTP bodies fail before unbounded buffering;
 - bearer clients retain exact-host and no-redirect policy;
 - subprocess output remains bounded, timed out, killed, and reaped;
