@@ -216,17 +216,27 @@ def audit(root: Path) -> list[Finding]:
         return [Finding("high", "missing-source", "src contains no Rust source files")]
 
     streamable_http = any(
-        token in combined
+        token in production
         for token in ("transport-streamable-http", "StreamableHttpService", "streamable_http")
     )
-    rmcp = dependency_version(dependencies.get("rmcp"))
-    if rmcp is None:
-        code = "handwritten-jsonrpc" if "jsonrpc" in combined.lower() else "missing-rmcp"
+    rmcp_present = "rmcp" in dependencies
+    rmcp_value = dependencies.get("rmcp")
+    rmcp = dependency_version(rmcp_value)
+    if not rmcp_present:
+        code = "handwritten-jsonrpc" if "jsonrpc" in production.lower() else "missing-rmcp"
         findings.append(
             Finding(
                 "high" if code == "handwritten-jsonrpc" else "medium",
                 code,
                 "official rmcp transport is not detected",
+            )
+        )
+    elif rmcp is None:
+        findings.append(
+            Finding(
+                "medium",
+                "rmcp-version-unparsed",
+                f"rmcp dependency {rmcp_value!r} has no statically comparable published version",
             )
         )
     else:
@@ -356,7 +366,9 @@ def audit(root: Path) -> list[Finding]:
                 "Streamable HTTP transport has no obvious bearer authorization boundary",
             )
         )
-    if streamable_http and not any(token in combined for token in ("allowed_hosts", "with_allowed_hosts")):
+    if streamable_http and not any(
+        token in production for token in ("allowed_hosts", "with_allowed_hosts")
+    ):
         findings.append(
             Finding(
                 "medium",
@@ -365,8 +377,8 @@ def audit(root: Path) -> list[Finding]:
             )
         )
 
-    tool_inputs = "Parameters<" in combined or "#[tool" in combined
-    if tool_inputs and "deny_unknown_fields" not in combined:
+    tool_inputs = "Parameters<" in production or "#[tool" in production
+    if tool_inputs and "deny_unknown_fields" not in production:
         findings.append(
             Finding(
                 "medium",
