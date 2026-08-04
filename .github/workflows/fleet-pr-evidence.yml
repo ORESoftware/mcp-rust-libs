@@ -1,0 +1,52 @@
+name: fleet-pr-evidence
+
+on:
+  pull_request:
+    paths:
+      - fleet/inventory.json
+      - fleet/pr-evidence.json
+      - tooling/check_fleet_pr_evidence.py
+      - tooling/test_check_fleet_pr_evidence.py
+      - .github/workflows/fleet-pr-evidence.yml
+  push:
+    branches: [main]
+    paths:
+      - fleet/inventory.json
+      - fleet/pr-evidence.json
+      - tooling/check_fleet_pr_evidence.py
+      - tooling/test_check_fleet_pr_evidence.py
+      - .github/workflows/fleet-pr-evidence.yml
+  schedule:
+    - cron: "37 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Validate committed fleet evidence
+        run: python tooling/check_fleet_pr_evidence.py
+      - name: Verify live cross-organization evidence when an app token is configured
+        env:
+          MCP_FLEET_GITHUB_TOKEN: ${{ secrets.MCP_FLEET_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${MCP_FLEET_GITHUB_TOKEN:-}" ]]; then
+            python tooling/check_fleet_pr_evidence.py --live
+          else
+            echo "::notice::Live cross-organization verification skipped because MCP_FLEET_GITHUB_TOKEN is not configured. Use a short-lived GitHub App installation token; repository-local GITHUB_TOKEN cannot read private PRs in other organizations."
+          fi

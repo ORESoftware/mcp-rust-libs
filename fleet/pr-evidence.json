@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-04",
+  "scope": "Current ten-server Rust MCP modularization and hardening batch",
+  "expectedServerCount": 10,
+  "servers": [
+    {
+      "repository": "akrion-sim/akrion-mcp-server.rs",
+      "pullRequest": 10,
+      "purpose": "server-hardening",
+      "expectedState": "merged",
+      "expectedHeadSha": "adb93f56b03e5334fcbd6debb3ef49a2025b8fe3",
+      "expectedMergeSha": "ebc0ba715b89a0a9ea7e822ffb34c6e69dd2192a",
+      "titleMustContainAny": [
+        "audit",
+        "harden"
+      ],
+      "linear": "DEN-1248",
+      "note": "Bounds JSON bodies and prevents bearer-token redirect replay."
+    },
+    {
+      "repository": "daedalus-fab/daedalus-fab-mcp-server.rs",
+      "pullRequest": 3,
+      "purpose": "server-hardening",
+      "expectedState": "merged",
+      "expectedHeadSha": "41f72030013d548e3d50e91e05b39e633661085d",
+      "expectedMergeSha": "318c55dcce2959a00e07dafa5fad7ed33fa946d2",
+      "titleMustContainAny": [
+        "audit",
+        "harden"
+      ],
+      "linear": "DEN-1257",
+      "note": "Rejects path traversal in fabrication job URL segments."
+    },
+    {
+      "repository": "declarative-migrations/declarative-migrations-mcp-server.rs",
+      "pullRequest": 5,
+      "purpose": "server-hardening",
+      "expectedState": "merged",
+      "expectedHeadSha": "63547301e787e96bf888991d5e99a1bf29fc53b1",
+      "expectedMergeSha": "aa6c5af6b6ca38767336cadfe56905bad332dd1f",
+      "titleMustContainAny": [
+        "audit",
+        "harden"
+      ],
+      "linear": "DEN-1258",
+      "note": "Replaces a shell pipeline and disables credentialed redirects."
+    },
+    {
+      "repository": "fiducia-cloud/fiducia-mcp-server.rs",
+      "pullRequest": 10,
+      "purpose": "server-hardening",
+      "expectedState": "merged",
+      "expectedHeadSha": "ffddc0fbf84d7f96e31c9e863ed75e7a7cf911b7",
+      "expectedMergeSha": "7854ffa4a333363e4bc512801eb2e2b7ae6a5abc",
+      "titleMustContainAny": [
+        "audit",
+        "harden"
+      ],
+      "linear": "DEN-1248",
+      "note": "Bounds upstream bodies, blocks token redirects, and validates URL path parameters."
+    },
+    {
+      "repository": "sonus-auris/sonus-auris-mcp-server.rs",
+      "pullRequest": 8,
+      "purpose": "server-hardening",
+      "expectedState": "merged",
+      "expectedHeadSha": "3155c17f8a791c7afbdb6c979dfc5cb2005619de",
+      "expectedMergeSha": "c17f3f777a8e729be49e3213754f37ed51ed869f",
+      "titleMustContainAny": [
+        "audit",
+        "harden"
+      ],
+      "linear": "DEN-1251",
+      "note": "Bounds every upstream body and isolates token-bearing clients from redirects."
+    },
+    {
+      "repository": "messaging-intel/msgint-mcp-server.rs",
+      "pullRequest": 9,
+      "purpose": "server-hardening",
+      "expectedState": "open_draft",
+      "expectedHeadSha": "496dda201787f7bee5a0dd863841692b2ae4c9d8",
+      "titleMustContainAny": [
+        "harden subprocess"
+      ],
+      "linear": "DEN-779",
+      "note": "Exact head is runner-blocked before checkout; no green claim."
+    },
+    {
+      "repository": "shared-auth/shared-auth-mcp-server.rs",
+      "pullRequest": 12,
+      "purpose": "server-hardening",
+      "expectedState": "open_draft",
+      "expectedHeadSha": "a2b151b7201bfa6ffefd2d009fcfeb8b2d67a8c4",
+      "titleMustContainAny": [
+        "diagnostic origins",
+        "disable proxies"
+      ],
+      "linear": "DEN-1524",
+      "note": "Exact-host/no-proxy hardening is runner-blocked before checkout."
+    },
+    {
+      "repository": "scintilla-run/scintilla-mcp-server.rs",
+      "pullRequest": 7,
+      "purpose": "server-hardening",
+      "expectedState": "open_draft",
+      "expectedHeadSha": "990df179c9808050c36b1e29b1349e1e269656de",
+      "titleMustContainAny": [
+        "process",
+        "hardening"
+      ],
+      "note": "Semantic carry-forward of bounded subprocess handling; hosted jobs currently fail before checkout."
+    },
+    {
+      "repository": "discrete-event-systems/des-mcp-server.rs",
+      "pullRequest": 11,
+      "purpose": "server-hardening",
+      "expectedState": "open_ready",
+      "expectedHeadSha": "6fe96296b80b89a9bedc96b958cede5e450a6ad1",
+      "titleMustContainAny": [
+        "audit",
+        "harden"
+      ],
+      "linear": "DEN-1256",
+      "note": "UTF-8-safe truncation hardening; workflow is awaiting GitHub approval."
+    },
+    {
+      "repository": "rust-ssr-demos/rust-ssr-mcp-server.rs",
+      "pullRequest": 5,
+      "purpose": "server-hardening",
+      "expectedState": "open_draft",
+      "expectedHeadSha": "f62f5157cb39b2e423f34ff47304c9295a0c9fe3",
+      "titleMustContainAny": [
+        "conformance",
+        "graceful shutdown"
+      ],
+      "linear": "DEN-779",
+      "note": "Real-process HTTP conformance remains runner-blocked before checkout."
+    }
+  ],
+  "sharedCore": {
+    "repository": "ORESoftware/mcp-rust-libs",
+    "pullRequest": 4,
+    "purpose": "fleet-audit",
+    "expectedState": "merged",
+    "expectedHeadSha": "66f5fd2ea41309a3c636c9a857bc8128a2a0c99c",
+    "expectedMergeSha": "a1ac9254b36c032f41e789f478eabc6acc590dc1",
+    "titleMustContainAny": [
+      "production mcp signals",
+      "test fixtures"
+    ],
+    "linear": "DEN-957",
+    "note": "Separates deployable production signals from test-only fixtures."
+  }
+}

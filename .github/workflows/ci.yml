@@ -65,15 +65,19 @@ jobs:
             tooling/audit_rust_mcp_server.py \
             tooling/test_audit_rust_mcp_server.py \
             tooling/check_deployable_lockfile.py \
-            tooling/test_check_deployable_lockfile.py
+            tooling/test_check_deployable_lockfile.py \
+            tooling/check_fleet_pr_evidence.py \
+            tooling/test_check_fleet_pr_evidence.py
       - name: Run positive and adversarial audit fixtures
         run: |
           set -euo pipefail
           python -m unittest -v \
             tooling/test_audit_rust_mcp_server.py \
-            tooling/test_check_deployable_lockfile.py
-      - name: Validate machine-readable fleet inventory
+            tooling/test_check_deployable_lockfile.py \
+            tooling/test_check_fleet_pr_evidence.py
+      - name: Validate machine-readable fleet inventory and PR evidence
         run: |
+          set -euo pipefail
           python - <<'PY'
           import json
           from pathlib import Path
@@ -83,3 +87,4 @@ jobs:
           assert len(inventory['missing']) == summary['missingStandaloneRustMcpRepositories'] == 5
           assert summary['knownOrganizationsNotCurrentlyExposed'] == 0
           PY
+          python tooling/check_fleet_pr_evidence.py
