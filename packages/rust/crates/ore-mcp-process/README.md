@@ -46,6 +46,10 @@ assert!(output.stdout.bytes.len() <= 512 * 1024);
 let dropped = output.stdout.dropped_bytes;
 ```
 
+## Pilot adoption rule
+
+Consumer repositories must pin an immutable reviewed commit or release. A pilot must preserve its existing product-facing error strings, truncation markers, authorization gates, and final MCP response ceiling while replacing only the child-process capture implementation. Moving a product tool registry, credential, or business client into this crate is out of scope.
+
 Product repositories remain responsible for:
 
 - validating every program argument and working directory;
