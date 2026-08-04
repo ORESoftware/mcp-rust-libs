@@ -37,10 +37,12 @@ The initial consumer wave is:
 4. `quaestor-ledger/quaestor-ledger-mcp-server.rs`
 5. `daedalus-fab/daedalus-fab-mcp-server.rs`
 6. `athlet-o/athleto-mcp-server.rs`
-7. `usa-acc/usa-acc-mcp-server.rs`
+7. `3FA-app/3FA-mcp-server.rs`
 8. `akrion-sim/akrion-mcp-server.rs`
 9. `discrete-event-systems/des-mcp-server.rs`
 10. `scintilla-run/scintilla-mcp-server.rs`
+
+`usa-acc/usa-acc-mcp-server.rs` was removed from this bootstrap wave after source inspection showed that its `src/telemetry.rs` is a product Supabase telemetry client rather than the repeated process-OpenTelemetry bootstrap. It remains eligible for a later HTTP/body-policy migration.
 
 See [`fleet/modularization-wave-1.md`](fleet/modularization-wave-1.md) for ownership boundaries, dependency order, and per-repository validation requirements.
 
