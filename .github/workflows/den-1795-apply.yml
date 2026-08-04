@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - scripts/den-1795-apply.py
+      - scripts/den-1795-fix-test.py
       - .github/workflows/den-1795-apply.yml
 
 permissions:
@@ -28,7 +29,10 @@ jobs:
           toolchain: 1.88.0
           components: rustfmt, clippy
       - name: Apply exact source edits
-        run: python3 scripts/den-1795-apply.py
+        run: |
+          set -euo pipefail
+          python3 scripts/den-1795-apply.py
+          python3 scripts/den-1795-fix-test.py
       - name: Validate MSRV implementation
         working-directory: packages/rust
         run: |
