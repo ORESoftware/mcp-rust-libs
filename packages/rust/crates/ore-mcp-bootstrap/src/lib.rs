@@ -20,7 +20,7 @@ pub mod config {
     pub struct ConfigPathSpec {
         /// Environment variable that may override the configuration path.
         pub override_env: &'static str,
-        /// File name searched from the working directory and executable path.
+        /// File name searched from executable-owned installation paths.
         pub file_name: &'static str,
         /// Installation subdirectory below `../share` beside the executable.
         pub install_share_subdir: &'static str,
@@ -109,62 +109,107 @@ pub mod config {
         Ok(value)
     }
 
-    /// Returns option names without ever echoing their `=value` payloads.
+    fn safe_option_name(option: &str) -> bool {
+        option
+            .strip_prefix("--")
+            .or_else(|| option.strip_prefix('-'))
+            .is_some_and(|name| {
+                !name.is_empty()
+                    && name.chars().all(|character| {
+                        character.is_ascii_alphanumeric() || matches!(character, '-' | '_' | '.')
+                    })
+            })
+    }
+
+    fn redacted_option_name(option: &str) -> String {
+        let (name, has_value) = option
+            .split_once('=')
+            .map_or((option, false), |(name, _)| (name, true));
+        if !safe_option_name(name) {
+            return "<redacted-option>".to_string();
+        }
+        if has_value {
+            format!("{name}=<redacted>")
+        } else {
+            name.to_string()
+        }
+    }
+
+    /// Returns bounded option identifiers without echoing caller values.
+    ///
+    /// Valid inline values become `=<redacted>`. Tokens that are not ordinary
+    /// short or long option names become `<redacted-option>` so malformed URLs,
+    /// credentials, controls, and positional text cannot enter diagnostics.
     #[must_use]
     pub fn redacted_option_names(options: &[String]) -> String {
         options
             .iter()
-            .map(|option| {
-                option
-                    .split_once('=')
-                    .map_or(option.as_str(), |(name, _)| name)
-            })
+            .map(|option| redacted_option_name(option))
             .collect::<Vec<_>>()
             .join(", ")
     }
 
-    /// Finds one startup configuration through the reviewed fleet search order.
+    /// Resolves startup policy from explicit and executable-owned sources.
+    ///
+    /// This pure form is useful for package-layout tests and adapters that
+    /// already captured their process inputs. It deliberately has no current
+    /// working-directory argument because a service launcher or container
+    /// `WORKDIR` must not select executable policy.
     ///
     /// Search order:
     ///
-    /// 1. the explicit environment override;
-    /// 2. the current working directory;
-    /// 3. the executable directory;
-    /// 4. `../share/<install_share_subdir>` beside the executable.
+    /// 1. the explicit reviewed override;
+    /// 2. `../share/<install_share_subdir>` beside the executable;
+    /// 3. a supported colocated file beside the executable.
     ///
     /// # Errors
     ///
-    /// Returns a redacted error when the override is invalid or no candidate is
-    /// a regular file.
-    pub fn resolve_config_path(spec: ConfigPathSpec) -> Result<PathBuf, ConfigError> {
-        if let Some(raw) = std::env::var_os(spec.override_env).filter(|value| !value.is_empty()) {
-            let path = PathBuf::from(raw);
+    /// Returns a redacted error when the explicit override is missing or no
+    /// executable-owned candidate is a regular file.
+    pub fn resolve_config_path_from(
+        spec: ConfigPathSpec,
+        explicit: Option<PathBuf>,
+        executable: Option<PathBuf>,
+    ) -> Result<PathBuf, ConfigError> {
+        if let Some(path) = explicit {
             if path.is_file() {
                 return Ok(path);
             }
             return Err(ConfigError::OverrideMissing(spec.override_env));
         }
 
-        let mut candidates = Vec::with_capacity(3);
-        if let Ok(current) = std::env::current_dir() {
-            candidates.push(current.join(spec.file_name));
-        }
-        if let Ok(executable) = std::env::current_exe() {
-            if let Some(parent) = executable.parent() {
-                candidates.push(parent.join(spec.file_name));
-                candidates.push(
-                    parent
-                        .join("../share")
-                        .join(spec.install_share_subdir)
-                        .join(spec.file_name),
-                );
-            }
+        let mut candidates = Vec::with_capacity(2);
+        if let Some(parent) = executable.as_deref().and_then(Path::parent) {
+            candidates.push(
+                parent
+                    .join("../share")
+                    .join(spec.install_share_subdir)
+                    .join(spec.file_name),
+            );
+            candidates.push(parent.join(spec.file_name));
         }
 
         candidates
             .into_iter()
             .find(|candidate| candidate.is_file())
             .ok_or(ConfigError::NotFound(spec.override_env))
+    }
+
+    /// Finds one startup configuration through the reviewed fleet search order.
+    ///
+    /// Ambient process-CWD files are intentionally excluded. Use the explicit
+    /// override for source-tree development and deployment-specific locations.
+    ///
+    /// # Errors
+    ///
+    /// Returns a redacted error when the override is invalid or no packaged
+    /// candidate is a regular file.
+    pub fn resolve_config_path(spec: ConfigPathSpec) -> Result<PathBuf, ConfigError> {
+        let explicit = std::env::var_os(spec.override_env)
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from);
+        let executable = std::env::current_exe().ok();
+        resolve_config_path_from(spec, explicit, executable)
     }
 
     /// Returns whether a candidate is a regular file without following the
@@ -385,18 +430,108 @@ pub mod runtime {
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
     use super::{config, runtime, telemetry};
 
+    struct TempTree(PathBuf);
+
+    impl TempTree {
+        fn new(label: &str) -> Self {
+            let nonce = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("system clock")
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!(
+                "ore-mcp-bootstrap-{label}-{}-{nonce}",
+                std::process::id()
+            ));
+            fs::create_dir_all(&path).expect("temporary tree");
+            Self(path)
+        }
+    }
+
+    impl Drop for TempTree {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn write_contract(path: &Path) {
+        fs::create_dir_all(path.parent().expect("contract parent"))
+            .expect("create contract parent");
+        fs::write(path, "[parse]\nallow_unknown = false\n").expect("write contract");
+    }
+
     #[test]
-    fn option_values_are_never_echoable() {
+    fn option_values_and_malformed_tokens_are_never_echoable() {
         let options = vec![
             "--api-key=supersecret".to_string(),
             "--root=/tmp/repo".to_string(),
             "--flag".to_string(),
+            "--https://embedded-secret@example.invalid".to_string(),
+            "--bad\noption=value".to_string(),
         ];
         assert_eq!(
             config::redacted_option_names(&options),
-            "--api-key, --root, --flag"
+            "--api-key=<redacted>, --root=<redacted>, --flag, <redacted-option>, <redacted-option>"
+        );
+    }
+
+    #[test]
+    fn packaged_contract_precedes_colocated_and_ambient_files() {
+        let tree = TempTree::new("packaged");
+        let executable = tree.0.join("install/bin/example-mcp");
+        let packaged = tree.0.join("install/share/example-mcp/.cli-flags.toml");
+        let colocated = tree.0.join("install/bin/.cli-flags.toml");
+        let ambient = tree.0.join("attacker/.cli-flags.toml");
+        write_contract(&packaged);
+        write_contract(&colocated);
+        write_contract(&ambient);
+
+        let spec = config::ConfigPathSpec::cli_flags("EXAMPLE_FLAGS_CONFIG", "example-mcp");
+        let resolved = config::resolve_config_path_from(spec, None, Some(executable))
+            .expect("packaged contract");
+        assert_eq!(
+            fs::canonicalize(&resolved).expect("resolved canonical path"),
+            fs::canonicalize(&packaged).expect("packaged canonical path")
+        );
+        assert_ne!(
+            fs::canonicalize(&resolved).expect("resolved canonical path"),
+            fs::canonicalize(&ambient).expect("ambient canonical path")
+        );
+    }
+
+    #[test]
+    fn explicit_override_wins_and_missing_override_fails_closed() {
+        let tree = TempTree::new("explicit");
+        let executable = tree.0.join("install/bin/example-mcp");
+        let packaged = tree.0.join("install/share/example-mcp/.cli-flags.toml");
+        let explicit = tree.0.join("operator/reviewed.toml");
+        write_contract(&packaged);
+        write_contract(&explicit);
+
+        let spec = config::ConfigPathSpec::cli_flags("EXAMPLE_FLAGS_CONFIG", "example-mcp");
+        assert_eq!(
+            config::resolve_config_path_from(
+                spec,
+                Some(explicit.clone()),
+                Some(executable.clone())
+            )
+            .expect("explicit contract"),
+            explicit
+        );
+        assert_eq!(
+            config::resolve_config_path_from(
+                spec,
+                Some(tree.0.join("missing.toml")),
+                Some(executable)
+            ),
+            Err(config::ConfigError::OverrideMissing("EXAMPLE_FLAGS_CONFIG"))
         );
     }
 
