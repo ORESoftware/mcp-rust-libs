@@ -1,0 +1,22 @@
+[package]
+name = "ore-mcp-runtime"
+description = "Ordered, stdout-safe stdio lifecycle helpers for Rust MCP servers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+
+[features]
+default = ["rmcp-stdio"]
+rmcp-stdio = ["dep:rmcp", "dep:tracing"]
+
+[dependencies]
+ore-mcp-bootstrap.workspace = true
+rmcp = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
+
+[lints]
+workspace = true
