@@ -46,6 +46,19 @@ The initial consumer wave is:
 
 See [`fleet/modularization-wave-1.md`](fleet/modularization-wave-1.md) for ownership boundaries, dependency order, and per-repository validation requirements.
 
+## Zed dependency-graph migration wave
+
+A dated second wave covers four short-name servers published after the August 2 inventory:
+
+1. `apostille-me/apme-mcp-server.rs`
+2. `embedded-alerts/eal-mcp-server.rs`
+3. `evento-globolo/evgl-mcp-server.rs`
+4. `hacker-house-medellin/hhm-mcp-server.rs`
+
+Their initial Rust CI is green, but they repeat the same hand-written JSON-RPC dispatcher, advertise `2025-06-18`, and do not yet have resolver-generated Zed lock or frozen-install evidence. GitHub issue [#15](https://github.com/ORESoftware/mcp-rust-libs/issues/15) coordinates official-`rmcp` adoption, the final `2025-11-25` protocol baseline, shared Zed dependency-graph contracts, real-process conformance, and exact package provenance.
+
+See [`fleet/modularization-wave-2-zed-graph.md`](fleet/modularization-wave-2-zed-graph.md) and its [machine-readable record](fleet/modularization-wave-2-zed-graph.json). The historical August 2 inventory remains unchanged.
+
 ## Protocol policy
 
 Production follows the latest final MCP revision (`2025-11-25`). The `2026-07-28` lifecycle remains an opt-in preview until the upstream specification is final and both lifecycle paths pass fleet conformance. Hand-written transports and hard-coded `2024-11-05` servers are migration priorities.
