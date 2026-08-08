@@ -57,9 +57,6 @@ jobs:
                   '                key: sanitize_key(key),\n'
                   '            })'
               ),
-              'does not satisfy the shared conservative filter grammar.': (
-                  'does not satisfy the shared bounded, control-free filter policy.'
-              ),
               'flags2env applies declared defaults and schema conversions during this\n'
               '    /// step.': (
                   'flags2env applies schema conversions to the already resolved map during\n'
@@ -94,6 +91,15 @@ jobs:
               if old not in source:
                   raise SystemExit(f'expected source anchor missing: {old!r}')
               source = source.replace(old, new, 1)
+
+          phrase = 'shared conservative filter grammar'
+          if phrase not in source:
+              raise SystemExit(f'expected source phrase missing: {phrase!r}')
+          source = source.replace(
+              phrase,
+              'shared bounded, control-free filter policy',
+              1,
+          )
           source_path.write_text(source, encoding='utf-8')
 
           manifest_path = Path('packages/rust/crates/ore-mcp-config/Cargo.toml')
