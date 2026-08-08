@@ -167,6 +167,36 @@
       }
     }
   ],
+  "readinessMonitor": {
+    "qualification": "administrative-prerequisite-only",
+    "repository": "zed-pkg-test/.github",
+    "pullRequest": 15,
+    "pullRequestUrl": "https://github.com/zed-pkg-test/.github/pull/15",
+    "mergeCommit": "c5cfb3449ad271553bbc936b2545ae233458caac",
+    "workflowRunId": 31242538628,
+    "workflowJobId": 93065787772,
+    "workflowRunUrl": "https://github.com/zed-pkg-test/.github/actions/runs/31242538628",
+    "conclusion": "success",
+    "observedOrganizations": [
+      {
+        "organization": "benefactor-cc-test",
+        "httpStatus": 404
+      },
+      {
+        "organization": "daedalus-fab-test",
+        "httpStatus": 404
+      },
+      {
+        "organization": "athlet-o-test",
+        "httpStatus": 404
+      },
+      {
+        "organization": "akrion-sim-test",
+        "httpStatus": 404
+      }
+    ],
+    "notes": "The scheduled monitor fails when an organization appears so operators create mcp-contract-e2e and migrate it to the full byte-exact provenance harness. It is not source or Rust-test evidence."
+  },
   "gaps": [
     {
       "productionRepository": "benefactor-cc/benefactor-cc-mcp-server.rs",
