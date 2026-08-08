@@ -1,3 +1,4 @@
+# Retry after adding fail-open Tokio-runtime and exporter-panic containment.
 # Temporary, branch-scoped workflow. It generates the exact lock, validates the
 # shared telemetry implementation and full workspace, publishes only reviewable
 # source/dependency changes, and is removed through the repository API before PR.
@@ -32,10 +33,84 @@ jobs:
           toolchain: 1.88.0
           components: rustfmt, clippy
 
-      - name: Generate and validate exact telemetry dependency state
+      - name: Harden, generate, and validate exact telemetry dependency state
         shell: bash
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('packages/rust/crates/ore-mcp-telemetry/src/lib.rs')
+          source = path.read_text(encoding='utf-8')
+
+          replacement = r'''fn build_tracer_provider(
+    endpoint: &str,
+    resource: Resource,
+) -> Result<(TracerProvider, Tracer), ()> {
+    if tokio::runtime::Handle::try_current().is_err() {
+        return Err(());
+    }
+
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let exporter = opentelemetry_otlp::SpanExporter::builder()
+            .with_tonic()
+            .with_endpoint(endpoint)
+            .with_timeout(EXPORT_TIMEOUT)
+            .build()
+            .map_err(|_| ())?;
+        let provider = TracerProvider::builder()
+            .with_batch_exporter(exporter, runtime::Tokio)
+            .with_resource(resource)
+            .build();
+        use opentelemetry::trace::TracerProvider as _;
+        let tracer = provider.tracer("ore-mcp-telemetry");
+        Ok((provider, tracer))
+    }))
+    .unwrap_or(Err(()))
+}
+
+fn build_meter_provider(endpoint: &str, resource: Resource) -> Result<SdkMeterProvider, ()> {
+    if tokio::runtime::Handle::try_current().is_err() {
+        return Err(());
+    }
+
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let exporter = opentelemetry_otlp::MetricExporter::builder()
+            .with_tonic()
+            .with_endpoint(endpoint)
+            .with_timeout(EXPORT_TIMEOUT)
+            .build()
+            .map_err(|_| ())?;
+        let reader = PeriodicReader::builder(exporter, runtime::Tokio).build();
+        Ok(SdkMeterProvider::builder()
+            .with_reader(reader)
+            .with_resource(resource)
+            .build())
+    }))
+    .unwrap_or(Err(()))
+}
+
+fn shutdown_providers'''
+
+          source, count = re.subn(
+              r'fn build_tracer_provider\(.*?\nfn shutdown_providers',
+              replacement,
+              source,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f'expected exporter function block once, replaced {count}')
+
+          test_anchor = '''    #[test]\n    fn provider_build_failures_are_status_only_and_fail_open() {'''
+          test_insert = '''    #[test]\n    fn endpoint_without_tokio_runtime_fails_open_without_panicking() {\n        let endpoint = OtlpEndpoint::parse("https://collector.example:4317")\n            .expect("valid endpoint");\n        let resource = TelemetryConfig::new(identity(), "0.1.0", None)\n            .expect("valid configuration")\n            .resource();\n        let bundle = build_provider_bundle_with(\n            Some(&endpoint),\n            resource,\n            build_tracer_provider,\n            build_meter_provider,\n        );\n        assert_eq!(bundle.traces, ExporterState::BuildFailed);\n        assert_eq!(bundle.metrics, ExporterState::BuildFailed);\n        assert!(bundle.tracer_provider.is_none());\n        assert!(bundle.meter_provider.is_none());\n    }\n\n'''
+          if test_anchor not in source:
+              raise SystemExit('expected provider failure test anchor missing')
+          source = source.replace(test_anchor, test_insert + test_anchor, 1)
+          path.write_text(source, encoding='utf-8')
+          PY
+
           cd packages/rust
           cargo generate-lockfile
           cargo check -p ore-mcp-telemetry
@@ -48,6 +123,8 @@ jobs:
           grep -Fq 'name = "ore-mcp-telemetry"' Cargo.lock
           grep -Fq 'name = "opentelemetry-otlp"' Cargo.lock
           grep -Fq '.with_writer(std::io::stderr)' crates/ore-mcp-telemetry/src/lib.rs
+          grep -Fq 'Handle::try_current' crates/ore-mcp-telemetry/src/lib.rs
+          grep -Fq 'catch_unwind' crates/ore-mcp-telemetry/src/lib.rs
           ! grep -R -F 'std::env::var' crates/ore-mcp-telemetry
           ! grep -R -F 'std::io::stdout' crates/ore-mcp-telemetry
           cd ../..
@@ -60,5 +137,5 @@ jobs:
             packages/rust/Cargo.toml \
             packages/rust/Cargo.lock \
             packages/rust/crates/ore-mcp-telemetry
-          git commit -m 'feat(DEN-3100): commit shared telemetry core and exact lock'
+          git commit -m 'fix(DEN-3100): fail open outside a Tokio runtime'
           git push origin HEAD:agent/den-3100-ore-mcp-telemetry
