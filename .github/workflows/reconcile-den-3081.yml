@@ -1,0 +1,55 @@
+name: reconcile DEN-3081 branch
+
+on:
+  push:
+    branches:
+      - agent/den-3081-ore-mcp-config
+    paths:
+      - .github/workflows/reconcile-den-3081.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the exact branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/den-3081-ore-mcp-config
+          persist-credentials: true
+          show-progress: false
+
+      - name: Install the MSRV toolchain
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.88.0
+          components: rustfmt, clippy
+
+      - name: Reconcile and validate the shared config crate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd packages/rust
+          cargo check -p ore-mcp-config
+          cargo fmt --all
+          cargo fmt --all -- --check
+          cargo metadata --locked --format-version 1 >/dev/null
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          cargo test --locked --workspace --all-targets
+          RUSTDOCFLAGS='-D warnings' cargo doc --locked --workspace --no-deps
+          grep -Fq 'name = "ore-mcp-config"' Cargo.lock
+          grep -Fq 'git+https://github.com/ORESoftware/flags-2-env?rev=dada72e58fb976e95af43d1e35994ac33fe06f98#dada72e58fb976e95af43d1e35994ac33fe06f98' Cargo.lock
+          cd ../..
+          git diff --check
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add packages/rust/Cargo.lock packages/rust/crates/ore-mcp-config/src/lib.rs
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(DEN-3081): commit exact flags2env lock and formatting'
+            git push origin HEAD:agent/den-3081-ore-mcp-config
+          fi
