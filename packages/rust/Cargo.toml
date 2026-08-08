@@ -6,6 +6,7 @@ members = [
   "crates/ore-mcp-process",
   "crates/ore-mcp-safety",
   "crates/ore-mcp-testkit",
+  "crates/ore-mcp-zed-graph",
 ]
 
 [workspace.package]
@@ -29,3 +30,4 @@ ore-mcp-http = { version = "0.1.0", path = "crates/ore-mcp-http" }
 ore-mcp-process = { version = "0.1.0", path = "crates/ore-mcp-process" }
 ore-mcp-safety = { version = "0.1.0", path = "crates/ore-mcp-safety" }
 ore-mcp-testkit = { version = "0.1.0", path = "crates/ore-mcp-testkit" }
+ore-mcp-zed-graph = { version = "0.1.0", path = "crates/ore-mcp-zed-graph" }

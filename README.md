@@ -21,11 +21,12 @@ The `packages/rust` workspace contains narrow, version-neutral infrastructure:
 - `ore-mcp-safety` — UTF-8-safe truncation, bounded incremental bytes, error redaction, and header validation;
 - `ore-mcp-http` — exact URL parsing, loopback-only HTTP, bearer-host allowlists, no-redirect defaults, and incremental response-body bounds;
 - `ore-mcp-process` — concurrent bounded stdout/stderr capture with timeout, kill, and reap behavior;
-- `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio audits with byte and frame limits.
+- `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio audits with byte and frame limits;
+- `ore-mcp-zed-graph` — bounded package-coordinate validation plus the shared closed-world dependency-graph descriptor and result contract.
 
 The bootstrap and HTTP layers intentionally do not depend on a particular `rmcp`, OpenTelemetry, or concrete HTTP-client version. Servers in the OpenTelemetry 0.27 and 0.32 cohorts can share policy without a hidden fleet-wide SDK upgrade.
 
-Product tools, authorization, mutation gates, credentials, upstream business clients, concrete exporters, client timeouts, and domain policy remain in their owning repositories.
+Product tools, authorization, mutation gates, credentials, upstream business clients, concrete exporters, client timeouts, package coordinates, and domain policy remain in their owning repositories.
 
 ## First ten-server migration wave
 

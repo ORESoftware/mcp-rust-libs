@@ -1,0 +1,15 @@
+[package]
+name = "ore-mcp-zed-graph"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Validated Zed dependency-graph contracts and MCP tool results for ORESoftware servers"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde_json = "1"
