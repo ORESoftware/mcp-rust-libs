@@ -77,7 +77,9 @@ jobs:
             tooling/check_fleet_pr_evidence.py \
             tooling/test_check_fleet_pr_evidence.py \
             tooling/check_wave2_evidence.py \
-            tooling/test_check_wave2_evidence.py
+            tooling/test_check_wave2_evidence.py \
+            tooling/validate_api_docs_contract.py \
+            tooling/test_validate_api_docs_contract.py
       - name: Run positive and adversarial audit fixtures
         run: |
           set -euo pipefail
@@ -85,7 +87,16 @@ jobs:
             tooling/test_audit_rust_mcp_server.py \
             tooling/test_check_deployable_lockfile.py \
             tooling/test_check_fleet_pr_evidence.py \
-            tooling/test_check_wave2_evidence.py
+            tooling/test_check_wave2_evidence.py \
+            tooling/test_validate_api_docs_contract.py
+      - name: Validate API-docs and MCP discovery example
+        run: |
+          set -euo pipefail
+          python tooling/validate_api_docs_contract.py \
+            --manifest contracts/api-docs/example.manifest.json \
+            --openapi contracts/api-docs/example.openapi.json \
+            --expected-mcp-repository example/example-mcp-server.rs \
+            --operations
       - name: Validate machine-readable fleet inventory and PR evidence
         run: |
           set -euo pipefail
