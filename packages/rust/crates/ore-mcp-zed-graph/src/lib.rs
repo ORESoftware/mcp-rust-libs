@@ -8,7 +8,7 @@
 
 use std::{collections::BTreeSet, error::Error, fmt};
 
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 /// Stable MCP tool name used by dependency-graph servers.
 pub const TOOL_NAME: &str = "zed_dependency_graph";
@@ -250,9 +250,9 @@ fn coordinate_parts(value: &str) -> Option<(&str, &str)> {
 fn is_component(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= MAX_IDENTITY_BYTES
-        && value.bytes().all(|byte| {
-            byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.')
-        })
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
 }
 
 #[cfg(test)]
@@ -326,10 +326,7 @@ mod tests {
             "example-org",
             "example-org/example-mcp-server.rs",
             "example-mcp-server",
-            [
-                "example-org/example-clients",
-                "example-org/example-clients",
-            ],
+            ["example-org/example-clients", "example-org/example-clients"],
         )
         .expect_err("duplicate package should be rejected");
 
