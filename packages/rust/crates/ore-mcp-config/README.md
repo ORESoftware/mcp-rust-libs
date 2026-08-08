@@ -8,7 +8,7 @@ It does **not** parse command lines itself. The pinned flags2env revision owns `
 - merge dotenv, caller environment, dotenv overrides, and argv values in the documented order;
 - reject sensitive-looking argv keys so secrets remain environment-only;
 - preserve command/subcommand/source-order metadata;
-- validate log filters through `ore-mcp-bootstrap`;
+- validate log filters through `ore-mcp-bootstrap::config::validate_log_filter_text`;
 - avoid process-environment mutation; and
 - expose keys and counts, never values, in `Debug` or `Display` diagnostics.
 
@@ -21,6 +21,7 @@ use ore_mcp_config::StrictConfig;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 struct StartupConfig {
     org_root: String,
     rust_log: String,
@@ -41,7 +42,7 @@ Servers that want the current process environment can call `resolve_process(argv
 
 ## Environment-only policy
 
-The default policy rejects command-line values for keys recognized by `ore-mcp-bootstrap` as sensitive and for common credential-bearing connection keys such as `DATABASE_URL`, `REDIS_URL`, `BROKER_URL`, `AMQP_URL`, `NATS_URL`, `KAFKA_URL`, OTLP header bundles, and passphrases.
+The default policy rejects command-line values for keys recognized by `ore-mcp-safety` as sensitive and for common credential-bearing connection keys such as `DATABASE_URL`, `REDIS_URL`, `BROKER_URL`, `AMQP_URL`, `NATS_URL`, `KAFKA_URL`, OTLP header bundles, and passphrases.
 
 Ordinary operational values such as `API_URL`, `ORG_ROOT`, `RUST_LOG`, and server identity remain product-controlled. Product contracts should still omit every credential from `[flags.*]` and place secret names in `[env].ignore`.
 

@@ -9,7 +9,7 @@
 //! - caller-provided environment snapshots are merged in the documented source
 //!   order without mutating process environment;
 //! - sensitive-looking keys can never be supplied through argv;
-//! - log filters reuse [`ore_mcp_bootstrap::parse_log_filter`]; and
+//! - log filters reuse [`ore_mcp_bootstrap::config::validate_log_filter_text`]; and
 //! - public diagnostics expose keys and counts, never configuration values.
 
 #![forbid(unsafe_code)]
@@ -21,7 +21,8 @@ use std::{
 };
 
 use flags2env::{BundledFlags2Env, StructuredParse};
-use ore_mcp_bootstrap::{is_sensitive_key, parse_log_filter};
+use ore_mcp_bootstrap::config::validate_log_filter_text;
+use ore_mcp_safety::is_sensitive_key;
 use serde::de::DeserializeOwned;
 
 const ENVIRONMENT_ONLY_SUFFIXES: &[&str] = &[
@@ -67,7 +68,7 @@ impl StrictConfig {
     pub fn audit(&self) -> Result<(), ConfigError> {
         let config_path = self.config_path_str()?;
         BundledFlags2Env::new()
-            .audit_config(config_path)
+            .audit_config(Some(config_path))
             .map_err(|_| ConfigError::AuditFailed)
     }
 
@@ -121,8 +122,8 @@ impl StrictConfig {
 
     /// Coerces a previously resolved map into a typed Rust configuration.
     ///
-    /// flags2env applies declared defaults and schema conversions during this
-    /// step. Validation messages and deserialization details are summarized by
+    /// flags2env applies schema conversions to the already resolved map during
+    /// this step. Validation messages and deserialization details are summarized by
     /// count or category so supplied values cannot escape through diagnostics.
     ///
     /// # Errors
@@ -250,7 +251,7 @@ impl ResolvedConfig {
     /// # Errors
     ///
     /// Returns [`ConfigError::InvalidLogFilter`] when the selected filter does
-    /// not satisfy the shared conservative filter grammar.
+    /// not satisfy the shared bounded, control-free filter policy.
     pub fn validated_log_filter(
         &self,
         key: &str,
@@ -260,9 +261,11 @@ impl ResolvedConfig {
             .get(key)
             .filter(|value| !value.trim().is_empty())
             .unwrap_or(default_filter);
-        parse_log_filter(raw).map_err(|_| ConfigError::InvalidLogFilter {
-            key: sanitize_key(key),
-        })
+        validate_log_filter_text(raw)
+            .map(str::to_owned)
+            .map_err(|_| ConfigError::InvalidLogFilter {
+                key: sanitize_key(key),
+            })
     }
 }
 
@@ -342,7 +345,10 @@ impl fmt::Display for ConfigError {
                 write!(formatter, "unknown option(s): {}", options.join(", "))
             }
             Self::UnexpectedPositionals { count } => {
-                write!(formatter, "rejected {count} unexpected positional argument(s)")
+                write!(
+                    formatter,
+                    "rejected {count} unexpected positional argument(s)"
+                )
             }
             Self::SensitiveCliKeys { keys } => write!(
                 formatter,
@@ -350,7 +356,10 @@ impl fmt::Display for ConfigError {
                 keys.join(", ")
             ),
             Self::NonUnicodeEnvironment { count } => {
-                write!(formatter, "rejected {count} non-UTF-8 environment entry/entries")
+                write!(
+                    formatter,
+                    "rejected {count} non-UTF-8 environment entry/entries"
+                )
             }
             Self::CoercionFailed {
                 validation_errors: Some(count),
@@ -362,7 +371,10 @@ impl fmt::Display for ConfigError {
                 validation_errors: None,
             } => formatter.write_str("typed configuration coercion failed"),
             Self::InvalidLogFilter { key } => {
-                write!(formatter, "configuration key {key} contains an invalid log filter")
+                write!(
+                    formatter,
+                    "configuration key {key} contains an invalid log filter"
+                )
             }
         }
     }
@@ -381,9 +393,9 @@ impl std::error::Error for ConfigError {}
 pub fn is_environment_only_key(key: &str) -> bool {
     let normalized = normalize_key(key);
     is_sensitive_key(&normalized)
-        || ENVIRONMENT_ONLY_SUFFIXES.iter().any(|suffix| {
-            normalized == *suffix || normalized.ends_with(&format!("_{suffix}"))
-        })
+        || ENVIRONMENT_ONLY_SUFFIXES
+            .iter()
+            .any(|suffix| normalized == *suffix || normalized.ends_with(&format!("_{suffix}")))
 }
 
 fn validate_structured(parsed: &StructuredParse) -> Result<(), ConfigError> {
@@ -439,7 +451,11 @@ fn merge_structured(
     let provided_keys = provided_flags.keys().cloned().collect();
     let mut values = BTreeMap::new();
     values.extend(dotenv);
-    values.extend(environment.iter().map(|(key, value)| (key.clone(), value.clone())));
+    values.extend(
+        environment
+            .iter()
+            .map(|(key, value)| (key.clone(), value.clone())),
+    );
     values.extend(dotenv_overrides);
     values.extend(provided_flags);
 
@@ -494,6 +510,7 @@ mod tests {
     use super::*;
 
     #[derive(Debug, Deserialize, Eq, PartialEq)]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
     struct TypedConfig {
         test_root: String,
         test_count: i64,
@@ -562,7 +579,10 @@ default = "info,hyper=warn"
         let (_directory, path) = contract();
         let error = StrictConfig::new(path)
             .resolve(
-                &["server".to_string(), "--unknown=super-secret-value".to_string()],
+                &[
+                    "server".to_string(),
+                    "--unknown=super-secret-value".to_string(),
+                ],
                 &BTreeMap::new(),
             )
             .expect_err("unknown option must fail");
@@ -643,10 +663,7 @@ default = "info,hyper=warn"
         assert_eq!(resolved.command(), Some("serve"));
         assert_eq!(resolved.subcommands(), ["stdio"]);
         assert!(resolved.provided_keys().any(|key| key == "SHARED"));
-        assert_eq!(
-            resolved.source_order()["SHARED"],
-            ["dotenv", "env", "argv"]
-        );
+        assert_eq!(resolved.source_order()["SHARED"], ["dotenv", "env", "argv"]);
     }
 
     #[test]
@@ -678,16 +695,13 @@ default = "info,hyper=warn"
     fn coercion_failure_is_summarized_without_raw_value() {
         let (_directory, path) = contract();
         let config = StrictConfig::new(path);
+        let environment = BTreeMap::from([
+            ("TEST_ROOT".to_string(), "/srv/test".to_string()),
+            ("TEST_COUNT".to_string(), "not-a-number".to_string()),
+        ]);
         let resolved = config
-            .resolve(
-                &[
-                    "server".to_string(),
-                    "--root=/srv/test".to_string(),
-                    "--count=not-a-number".to_string(),
-                ],
-                &BTreeMap::new(),
-            )
-            .expect("parsing does not coerce types");
+            .resolve(&["server".to_string()], &environment)
+            .expect("explicit environment values are resolved before coercion");
         let error = config
             .coerce::<TypedConfig>(&resolved)
             .expect_err("integer coercion must fail");
@@ -740,7 +754,10 @@ default = "info,hyper=warn"
     #[test]
     fn parser_errors_are_counted_without_retaining_messages() {
         let parsed = StructuredParse {
-            errors: vec!["bad value secret-one".to_string(), "bad value secret-two".to_string()],
+            errors: vec![
+                "bad value secret-one".to_string(),
+                "bad value secret-two".to_string(),
+            ],
             ..StructuredParse::default()
         };
         let error = validate_structured(&parsed).expect_err("parser errors must fail");
