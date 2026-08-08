@@ -1,5 +1,5 @@
 # Temporary, branch-scoped reconciliation workflow. It patches the draft's
-# compile-time API drift, generates the exact lock, validates the full workspace,
+# API and contract drift, generates the exact lock, validates the full workspace,
 # and publishes only reviewable source/dependency changes. Remove before merge.
 name: reconcile DEN-3081 branch
 
@@ -57,6 +57,38 @@ jobs:
                   '                key: sanitize_key(key),\n'
                   '            })'
               ),
+              'does not satisfy the shared conservative filter grammar.': (
+                  'does not satisfy the shared bounded, control-free filter policy.'
+              ),
+              'flags2env applies declared defaults and schema conversions during this\n'
+              '    /// step.': (
+                  'flags2env applies schema conversions to the already resolved map during\n'
+                  '    /// this step.'
+              ),
+              '#[derive(Debug, Deserialize, Eq, PartialEq)]\n'
+              '    struct TypedConfig {': (
+                  '#[derive(Debug, Deserialize, Eq, PartialEq)]\n'
+                  '    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]\n'
+                  '    struct TypedConfig {'
+              ),
+              '        let resolved = config\n'
+              '            .resolve(\n'
+              '                &[\n'
+              '                    "server".to_string(),\n'
+              '                    "--root=/srv/test".to_string(),\n'
+              '                    "--count=not-a-number".to_string(),\n'
+              '                ],\n'
+              '                &BTreeMap::new(),\n'
+              '            )\n'
+              '            .expect("parsing does not coerce types");': (
+                  '        let environment = BTreeMap::from([\n'
+                  '            ("TEST_ROOT".to_string(), "/srv/test".to_string()),\n'
+                  '            ("TEST_COUNT".to_string(), "not-a-number".to_string()),\n'
+                  '        ]);\n'
+                  '        let resolved = config\n'
+                  '            .resolve(&["server".to_string()], &environment)\n'
+                  '            .expect("explicit environment values are resolved before coercion");'
+              ),
           }
           for old, new in replacements.items():
               if old not in source:
@@ -76,11 +108,32 @@ jobs:
 
           readme_path = Path('packages/rust/crates/ore-mcp-config/README.md')
           readme = readme_path.read_text(encoding='utf-8')
-          readme = readme.replace(
-              'keys recognized by `ore-mcp-bootstrap` as sensitive',
-              'keys recognized by `ore-mcp-safety` as sensitive',
-          )
+          readme_replacements = {
+              'validate log filters through `ore-mcp-bootstrap`;': (
+                  'validate log filters through '
+                  '`ore-mcp-bootstrap::config::validate_log_filter_text`;'
+              ),
+              '#[derive(Deserialize)]\nstruct StartupConfig {': (
+                  '#[derive(Deserialize)]\n'
+                  '#[serde(rename_all = "SCREAMING_SNAKE_CASE")]\n'
+                  'struct StartupConfig {'
+              ),
+              'keys recognized by `ore-mcp-bootstrap` as sensitive': (
+                  'keys recognized by `ore-mcp-safety` as sensitive'
+              ),
+          }
+          for old, new in readme_replacements.items():
+              if old not in readme:
+                  raise SystemExit(f'expected README anchor missing: {old!r}')
+              readme = readme.replace(old, new, 1)
           readme_path.write_text(readme, encoding='utf-8')
+
+          workspace_manifest_path = Path('packages/rust/Cargo.toml')
+          workspace_manifest = workspace_manifest_path.read_text(encoding='utf-8')
+          workspace_manifest_path.write_text(
+              workspace_manifest.rstrip('\n') + '\n',
+              encoding='utf-8',
+          )
           PY
 
           cd packages/rust
@@ -99,9 +152,10 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add \
+            packages/rust/Cargo.toml \
             packages/rust/Cargo.lock \
             packages/rust/crates/ore-mcp-config/Cargo.toml \
             packages/rust/crates/ore-mcp-config/README.md \
             packages/rust/crates/ore-mcp-config/src/lib.rs
-          git commit -m 'fix(DEN-3081): align adapter with reviewed bootstrap APIs'
+          git commit -m 'fix(DEN-3081): align adapter with exact flags2env contract'
           git push origin HEAD:agent/den-3081-ore-mcp-config
