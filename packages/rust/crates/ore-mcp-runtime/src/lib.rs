@@ -1,10 +1,11 @@
 //! Ordered, stdout-safe lifecycle helpers for Rust MCP servers.
 //!
 //! The crate owns only generic lifecycle concerns: bootstrap ordering,
-//! low-cardinality runtime metadata, and official `rmcp` stdio startup and
-//! shutdown. Product handlers, authorization, tool schemas, configuration
-//! parsing, telemetry provider construction, and repository-specific hooks
-//! remain in their owning server crates.
+//! low-cardinality runtime metadata, official `rmcp` stdio startup and
+//! shutdown, and optional exact protocol-version enforcement. Product handlers,
+//! authorization, tool schemas, configuration parsing, telemetry provider
+//! construction, and repository-specific hooks remain in their owning server
+//! crates.
 //!
 //! MCP owns stdout. This crate never prints, and callers must install a
 //! stderr-only tracing subscriber before serving a stdio transport.
@@ -15,7 +16,12 @@ use std::{error::Error, fmt};
 
 pub use ore_mcp_bootstrap::runtime::{IdentityError, ServerIdentity, STDIO_TRANSPORT};
 #[cfg(feature = "rmcp-stdio")]
-use rmcp::{transport::stdio, ServerHandler, ServiceExt};
+use rmcp::{
+    model::{ClientNotification, ClientRequest, ProtocolVersion, ServerInfo, ServerResult},
+    service::{NotificationContext, RequestContext, Service},
+    transport::stdio,
+    ErrorData as McpError, RoleServer, ServiceExt,
+};
 #[cfg(feature = "rmcp-stdio")]
 use tracing::Instrument;
 
@@ -206,6 +212,91 @@ pub const REQUIRED_BOOTSTRAP_ORDER: &[BootstrapPhase] = &[
     BootstrapPhase::FlushTelemetry,
 ];
 
+/// A service wrapper that rejects initialize requests for every protocol
+/// version except one exact version.
+///
+/// This is intentionally a service-level adapter rather than a handler hook.
+/// `rmcp` 2.2 reapplies protocol negotiation after the handler returns, so a
+/// handler's `ServerInfo.protocol_version` alone is not a version ceiling.
+#[cfg(feature = "rmcp-stdio")]
+#[derive(Clone, Debug)]
+pub struct ExactProtocol<S> {
+    inner: S,
+    protocol_version: ProtocolVersion,
+}
+
+#[cfg(feature = "rmcp-stdio")]
+impl<S> ExactProtocol<S> {
+    /// Wraps a service with an exact initialize-version requirement.
+    #[must_use]
+    pub fn new(inner: S, protocol_version: ProtocolVersion) -> Self {
+        Self {
+            inner,
+            protocol_version,
+        }
+    }
+
+    /// Returns whether a requested version is accepted.
+    #[must_use]
+    pub fn accepts(&self, requested: &ProtocolVersion) -> bool {
+        requested == &self.protocol_version
+    }
+
+    /// Returns the exact accepted protocol version.
+    #[must_use]
+    pub const fn protocol_version(&self) -> &ProtocolVersion {
+        &self.protocol_version
+    }
+
+    /// Returns the wrapped service.
+    #[must_use]
+    pub const fn inner(&self) -> &S {
+        &self.inner
+    }
+
+    /// Consumes the wrapper and returns the service.
+    #[must_use]
+    pub fn into_inner(self) -> S {
+        self.inner
+    }
+}
+
+#[cfg(feature = "rmcp-stdio")]
+impl<S> Service<RoleServer> for ExactProtocol<S>
+where
+    S: Service<RoleServer>,
+{
+    async fn handle_request(
+        &self,
+        request: ClientRequest,
+        context: RequestContext<RoleServer>,
+    ) -> Result<ServerResult, McpError> {
+        if let ClientRequest::InitializeRequest(initialize) = &request {
+            if !self.accepts(&initialize.params.protocol_version) {
+                return Err(McpError::invalid_request(
+                    "unsupported MCP protocol version",
+                    None,
+                ));
+            }
+        }
+        self.inner.handle_request(request, context).await
+    }
+
+    async fn handle_notification(
+        &self,
+        notification: ClientNotification,
+        context: NotificationContext<RoleServer>,
+    ) -> Result<(), McpError> {
+        self.inner.handle_notification(notification, context).await
+    }
+
+    fn get_info(&self) -> ServerInfo {
+        let mut info = self.inner.get_info();
+        info.protocol_version = self.protocol_version.clone();
+        info
+    }
+}
+
 /// A configured server that retains its telemetry guard until shutdown.
 pub struct PreparedStdio<G, S> {
     telemetry_guard: G,
@@ -241,7 +332,7 @@ impl<G, S> PreparedStdio<G, S> {
         (self.telemetry_guard, self.server, self.spec)
     }
 
-    /// Serves the prepared handler over stdin and stdout until shutdown.
+    /// Serves the prepared service over stdin and stdout until shutdown.
     ///
     /// The telemetry guard remains alive for the complete protocol lifetime and
     /// is dropped only after the service stops or returns an error.
@@ -253,7 +344,7 @@ impl<G, S> PreparedStdio<G, S> {
     #[cfg(feature = "rmcp-stdio")]
     pub async fn serve(self) -> Result<(), RuntimeError>
     where
-        S: ServerHandler,
+        S: Service<RoleServer>,
     {
         let Self {
             telemetry_guard,
@@ -314,7 +405,7 @@ pub async fn run_stdio<C, G, S, P, T, B>(
     build_server: B,
 ) -> Result<(), RuntimeError>
 where
-    S: ServerHandler,
+    S: Service<RoleServer>,
     P: FnOnce() -> Result<C, RuntimeError>,
     T: FnOnce(&C, &RuntimeSpec) -> Result<G, RuntimeError>,
     B: FnOnce(&C, &RuntimeSpec) -> Result<S, RuntimeError>,
@@ -324,7 +415,11 @@ where
         .await
 }
 
-/// Serves an already constructed MCP handler over stdin and stdout.
+/// Serves an already constructed MCP service over stdin and stdout.
+///
+/// Existing `ServerHandler` values remain compatible through `rmcp`'s blanket
+/// `Service<RoleServer>` implementation. Service-level adapters such as
+/// [`ExactProtocol`] can now be composed before serving.
 ///
 /// Callers that need ordering and telemetry-guard retention should prefer
 /// [`prepare_stdio`] or [`run_stdio`].
@@ -336,7 +431,7 @@ where
 #[cfg(feature = "rmcp-stdio")]
 pub async fn serve_stdio<S>(server: S, spec: RuntimeSpec) -> Result<(), RuntimeError>
 where
-    S: ServerHandler,
+    S: Service<RoleServer>,
 {
     tracing::info!(
         service.name = spec.identity.service_name(),
@@ -441,6 +536,18 @@ mod tests {
                 BootstrapPhase::FlushTelemetry,
             ]
         );
+    }
+
+    #[cfg(feature = "rmcp-stdio")]
+    #[test]
+    fn exact_protocol_accepts_only_the_configured_version() {
+        let wrapper = ExactProtocol::new(41_u8, ProtocolVersion::V_2025_11_25);
+        assert!(wrapper.accepts(&ProtocolVersion::V_2025_11_25));
+        assert!(!wrapper.accepts(&ProtocolVersion::V_2026_07_28));
+        assert!(!wrapper.accepts(&ProtocolVersion::V_2025_06_18));
+        assert_eq!(wrapper.protocol_version(), &ProtocolVersion::V_2025_11_25);
+        assert_eq!(wrapper.inner(), &41);
+        assert_eq!(wrapper.into_inner(), 41);
     }
 
     #[test]
