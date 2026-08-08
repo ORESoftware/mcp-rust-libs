@@ -15,7 +15,7 @@ use std::{error::Error, fmt};
 
 pub use ore_mcp_bootstrap::runtime::{IdentityError, ServerIdentity, STDIO_TRANSPORT};
 #[cfg(feature = "rmcp-stdio")]
-use rmcp::{ServerHandler, ServiceExt, transport::stdio};
+use rmcp::{transport::stdio, ServerHandler, ServiceExt};
 #[cfg(feature = "rmcp-stdio")]
 use tracing::Instrument;
 
@@ -133,9 +133,9 @@ impl RuntimeSpec {
 fn valid_service_version(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 128
-        && value.bytes().all(|byte| {
-            byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_' | b'+')
-        })
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_' | b'+'))
 }
 
 /// A value-free runtime specification validation failure.
