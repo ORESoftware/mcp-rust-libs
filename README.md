@@ -30,6 +30,33 @@ The bootstrap, config, and HTTP layers intentionally avoid a hidden fleet-wide `
 
 Product tools, authorization, mutation gates, credentials, upstream business clients, concrete exporters, client timeouts, package coordinates, and domain policy remain in their owning repositories.
 
+## API documentation and MCP discovery
+
+[`contracts/api-docs/contract-v1.md`](contracts/api-docs/contract-v1.md) defines the
+framework-neutral `ore.api-docs.v1` contract for every fleet API server and its
+organization-level `*-mcp-server.rs` counterpart. The standard fixes the public
+discovery, OpenAPI, compatibility-alias, and browser-UI routes; separates
+authenticated internal docs; and requires five read-only MCP documentation
+tools without granting arbitrary API execution.
+
+The standard-library-only validator proves exact OpenAPI response-byte SHA-256
+parity, OpenAPI 3.1 metadata, stable unique operation IDs, public/internal
+separation, same-organization API/MCP pairing, and fail-closed mutation
+classification. The checked-in schema and fixtures let Rust, Node, Dart, Gleam,
+and mixed-language repositories consume the same gate.
+
+```sh
+python3 tooling/validate_api_docs_contract.py \
+  --manifest contracts/api-docs/example.manifest.json \
+  --openapi contracts/api-docs/example.openapi.json \
+  --expected-mcp-repository example/example-mcp-server.rs \
+  --operations
+
+python3 -m unittest -v tooling/test_validate_api_docs_contract.py
+```
+
+Tracking: DEN-3158.
+
 ## First ten-server migration wave
 
 The initial consumer wave is:
@@ -83,9 +110,10 @@ python3 -m unittest -v \
   tooling/test_audit_rust_mcp_server.py \
   tooling/test_check_deployable_lockfile.py \
   tooling/test_check_fleet_pr_evidence.py \
-  tooling/test_check_wave2_evidence.py
+  tooling/test_check_wave2_evidence.py \
+  tooling/test_validate_api_docs_contract.py
 python3 tooling/audit_rust_mcp_server.py --repo-root /path/to/mcp-server
 python3 tooling/check_wave2_evidence.py
 ```
 
-Tracking: DEN-957, DEN-959, DEN-960, DEN-965, DEN-779, DEN-852, DEN-161, and DEN-3081.
+Tracking: DEN-957, DEN-959, DEN-960, DEN-965, DEN-779, DEN-852, DEN-161, DEN-3081, and DEN-3158.

@@ -1,0 +1,154 @@
+{
+  "components": {
+    "schemas": {
+      "CreateWidget": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "Health": {
+        "additionalProperties": false,
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "service": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "service"
+        ],
+        "type": "object"
+      },
+      "Widget": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Minimal fixture for the ORE API-docs and MCP integration contract.",
+    "title": "Example API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Healthy"
+          }
+        },
+        "summary": "Report process health",
+        "tags": [
+          "system"
+        ],
+        "x-ore-mcp-expose": true,
+        "x-ore-mcp-mutating": false,
+        "x-ore-stability": "stable",
+        "x-ore-visibility": "public"
+      }
+    },
+    "/v1/widgets": {
+      "get": {
+        "operationId": "listWidgets",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Widget"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Widget list"
+          }
+        },
+        "summary": "List widgets",
+        "tags": [
+          "widgets"
+        ],
+        "x-ore-mcp-expose": true,
+        "x-ore-mcp-mutating": false,
+        "x-ore-stability": "stable",
+        "x-ore-visibility": "public"
+      },
+      "post": {
+        "operationId": "createWidget",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWidget"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Widget"
+                }
+              }
+            },
+            "description": "Widget created"
+          }
+        },
+        "summary": "Create a widget",
+        "tags": [
+          "widgets"
+        ],
+        "x-ore-mcp-expose": false,
+        "x-ore-mcp-mutating": true,
+        "x-ore-stability": "beta",
+        "x-ore-visibility": "public"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "internal": {
+    "available": true
+  },
+  "mcp": {
+    "mode": "read-only",
+    "repository": "example/example-mcp-server.rs",
+    "tools": [
+      "api_docs_discover",
+      "api_docs_get_openapi",
+      "api_docs_validate",
+      "api_docs_list_operations",
+      "api_docs_describe_operation"
+    ]
+  },
+  "provenance": {
+    "gitSha": "0123456789abcdef0123456789abcdef01234567",
+    "sourceRepository": "example/example-api-server.rs"
+  },
+  "public": {
+    "openapi": {
+      "aliases": [
+        "/api/docs.json"
+      ],
+      "mediaType": "application/vnd.oai.openapi+json;version=3.1",
+      "path": "/openapi.json",
+      "sha256": "12d45c1d30e125f171e06b2c35c40a6868a7c137daaa5346573a60f5810dfcab"
+    },
+    "ui": {
+      "aliases": [
+        "/docs/api"
+      ],
+      "path": "/api/docs"
+    }
+  },
+  "schemaVersion": "ore.api-docs.v1",
+  "service": {
+    "environment": "test",
+    "name": "example-api-server",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "$id": "https://oresoftware.com/schemas/ore-api-docs-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "internal": {
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "available"
+      ],
+      "type": "object"
+    },
+    "mcp": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "const": "read-only"
+        },
+        "repository": {
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+-mcp-server\\.rs$",
+          "type": "string"
+        },
+        "tools": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "type": "string"
+          },
+          "minItems": 5,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "repository",
+        "mode",
+        "tools"
+      ],
+      "type": "object"
+    },
+    "provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "gitSha": {
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64}|unknown)$",
+          "type": "string"
+        },
+        "sourceRepository": {
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceRepository",
+        "gitSha"
+      ],
+      "type": "object"
+    },
+    "public": {
+      "additionalProperties": false,
+      "properties": {
+        "openapi": {
+          "additionalProperties": false,
+          "properties": {
+            "aliases": {
+              "contains": {
+                "const": "/api/docs.json"
+              },
+              "items": {
+                "pattern": "^/[^?#\\\\]*$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "mediaType": {
+              "const": "application/vnd.oai.openapi+json;version=3.1"
+            },
+            "path": {
+              "const": "/openapi.json"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "aliases",
+            "mediaType",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        "ui": {
+          "additionalProperties": false,
+          "properties": {
+            "aliases": {
+              "contains": {
+                "const": "/docs/api"
+              },
+              "items": {
+                "pattern": "^/[^?#\\\\]*$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "path": {
+              "const": "/api/docs"
+            }
+          },
+          "required": [
+            "path",
+            "aliases"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "openapi",
+        "ui"
+      ],
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "ore.api-docs.v1"
+    },
+    "service": {
+      "additionalProperties": false,
+      "properties": {
+        "environment": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9.-]*$",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "service",
+    "public",
+    "internal",
+    "mcp",
+    "provenance"
+  ],
+  "title": "ORE API docs discovery manifest v1",
+  "type": "object"
+}
