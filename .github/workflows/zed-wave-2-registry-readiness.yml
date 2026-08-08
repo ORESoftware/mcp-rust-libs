@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   readiness:
-    name: Probe 21 exact package coordinates
+    name: Probe 23-package recursive closure
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -34,7 +34,7 @@ jobs:
       blocked_count: ${{ steps.probe.outputs.blocked_count }}
     steps:
       - name: Check out without credentials
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           show-progress: false
@@ -47,7 +47,7 @@ jobs:
           python3 -m py_compile scripts/zed_wave_2_registry_readiness.py
           python3 -m json.tool fleet/zed-wave-2-packages.json >/dev/null
 
-      - name: Probe public registry publication readiness
+      - name: Probe recursive public registry publication readiness
         id: probe
         shell: bash
         run: |
@@ -60,7 +60,7 @@ jobs:
         if: steps.probe.outputs.all_ready == 'true'
         shell: bash
         run: |
-          echo '::notice title=Wave-2 Zed graph ready::All 21 package coordinates have compatible public 0.1.x releases. Run the four consumer resolver/frozen-install gates.'
+          echo '::notice title=Wave-2 Zed graph ready::All 23 packages in the recursive closure have compatible public 0.1.x releases. Run the four consumer resolver/frozen-install gates.'
 
       - name: Upload bounded readiness evidence
         if: always()
