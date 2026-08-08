@@ -1,12 +1,22 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "issue": "DEN-957",
+  "blockingIssue": "DEN-3036",
   "phase": "zed-lock-publication-readiness",
   "updatedDate": "2026-08-08",
   "registry": "https://registry.zpkg.net",
   "requiredVersion": "^0.1.0",
   "zedCliRevision": "1ab18fcb2ff884e82af4cac4513d7b983a23c84a",
-  "qualification": "Public registry readiness only. Resolver-generated lockfiles and clean-clone frozen installs remain separate mandatory gates.",
+  "qualification": "Public registry readiness over the full recursive package closure only. Resolver-generated lockfiles and clean-clone frozen installs remain separate mandatory gates.",
+  "counts": {
+    "consumers": 4,
+    "directPackages": 21,
+    "transitiveOnlyPackages": 2,
+    "recursivePackages": 23,
+    "consumerDependencyEdges": 24,
+    "packageDependencyEdges": 31,
+    "totalDependencyEdges": 55
+  },
   "consumers": [
     {
       "issue": "DEN-2285",
@@ -61,107 +71,189 @@
     {
       "coordinate": "apostille-me/apme-cli",
       "sourceRepository": "apostille-me/apme-cli",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "apostille-me/apme-clients",
+        "apostille-me/apme-interfaces",
+        "apostille-me/apme-libs"
+      ]
     },
     {
       "coordinate": "apostille-me/apme-clients",
       "sourceRepository": "apostille-me/apme-clients",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "apostille-me/apme-interfaces",
+        "apostille-me/apme-libs"
+      ]
     },
     {
       "coordinate": "apostille-me/apme-interfaces",
       "sourceRepository": "apostille-me/apme-interfaces",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": []
     },
     {
       "coordinate": "apostille-me/apme-libs",
       "sourceRepository": "apostille-me/apme-libs",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "apostille-me/apme-interfaces"
+      ]
     },
     {
       "coordinate": "apostille-me/apme-sync",
       "sourceRepository": "apostille-me/apme-sync",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "apostille-me/apme-interfaces"
+      ]
     },
     {
       "coordinate": "embedded-alerts/eal-cli",
       "sourceRepository": "embedded-alerts/eal-cli",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "embedded-alerts/eal-clients",
+        "embedded-alerts/eal-interfaces",
+        "embedded-alerts/eal-libs"
+      ]
     },
     {
       "coordinate": "embedded-alerts/eal-clients",
       "sourceRepository": "embedded-alerts/eal-clients",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "embedded-alerts/eal-interfaces",
+        "embedded-alerts/eal-libs"
+      ]
     },
     {
       "coordinate": "embedded-alerts/eal-interfaces",
       "sourceRepository": "embedded-alerts/eal-interfaces",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": []
     },
     {
       "coordinate": "embedded-alerts/eal-libs",
       "sourceRepository": "embedded-alerts/eal-libs",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "embedded-alerts/eal-interfaces"
+      ]
     },
     {
       "coordinate": "embedded-alerts/eal-sync",
       "sourceRepository": "embedded-alerts/eal-sync",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "embedded-alerts/eal-interfaces"
+      ]
     },
     {
       "coordinate": "evento-globolo/evgl-cli",
       "sourceRepository": "evento-globolo/evgl-cli",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "evento-globolo/evgl-clients",
+        "evento-globolo/evgl-interfaces",
+        "evento-globolo/evgl-libs"
+      ]
     },
     {
       "coordinate": "evento-globolo/evgl-clients",
       "sourceRepository": "evento-globolo/evgl-clients",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "evento-globolo/evgl-interfaces",
+        "evento-globolo/evgl-libs"
+      ]
     },
     {
       "coordinate": "evento-globolo/evgl-interfaces",
       "sourceRepository": "evento-globolo/evgl-interfaces",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": []
     },
     {
       "coordinate": "evento-globolo/evgl-libs",
       "sourceRepository": "evento-globolo/evgl-libs",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "evento-globolo/evgl-interfaces"
+      ]
     },
     {
       "coordinate": "evento-globolo/evgl-sync",
       "sourceRepository": "evento-globolo/evgl-sync",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "evento-globolo/evgl-interfaces"
+      ]
     },
     {
       "coordinate": "hacker-house-medellin/hhm-cli",
       "sourceRepository": "hacker-house-medellin/hhm-cli",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "hacker-house-medellin/hhm-clients",
+        "hacker-house-medellin/hhm-interfaces",
+        "hacker-house-medellin/hhm-libs"
+      ]
     },
     {
       "coordinate": "hacker-house-medellin/hhm-clients",
       "sourceRepository": "hacker-house-medellin/hhm-clients",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "hacker-house-medellin/hhm-interfaces",
+        "hacker-house-medellin/hhm-libs"
+      ]
     },
     {
       "coordinate": "hacker-house-medellin/hhm-interfaces",
       "sourceRepository": "hacker-house-medellin/hhm-interfaces",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": []
     },
     {
       "coordinate": "hacker-house-medellin/hhm-libs",
       "sourceRepository": "hacker-house-medellin/hhm-libs",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "hacker-house-medellin/hhm-interfaces"
+      ]
     },
     {
       "coordinate": "hacker-house-medellin/hhm-sync",
       "sourceRepository": "hacker-house-medellin/hhm-sync",
-      "sourceVisibility": "public"
+      "sourceVisibility": "public",
+      "dependencies": [
+        "hacker-house-medellin/hhm-interfaces"
+      ]
     },
     {
       "coordinate": "shared-auth/shared-auth-clients",
       "sourceRepository": "shared-auth/shared-auth-clients",
-      "sourceVisibility": "private"
+      "sourceVisibility": "private",
+      "dependencies": [
+        "shared-auth/shared-auth-interfaces",
+        "shared-auth/shared-auth-lib"
+      ]
+    },
+    {
+      "coordinate": "shared-auth/shared-auth-interfaces",
+      "sourceRepository": "shared-auth/shared-auth-interfaces",
+      "sourceVisibility": "private",
+      "dependencies": []
+    },
+    {
+      "coordinate": "shared-auth/shared-auth-lib",
+      "sourceRepository": "shared-auth/shared-auth-lib",
+      "sourceVisibility": "private",
+      "dependencies": [
+        "shared-auth/shared-auth-interfaces"
+      ]
     }
   ]
 }
