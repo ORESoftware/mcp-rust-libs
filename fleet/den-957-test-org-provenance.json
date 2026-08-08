@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": "DEN-957",
-  "updatedDate": "2026-08-07",
+  "updatedDate": "2026-08-08",
   "timezone": "America/New_York",
   "sharedBootstrap": {
     "repository": "ORESoftware/mcp-rust-libs",
@@ -38,8 +38,10 @@
         "mergeCommit": "7004562817cd148bcab76aba10c806161561975b"
       },
       "hostedValidation": {
-        "status": "not-admitted",
-        "workflowRuns": []
+        "status": "success",
+        "qualification": "credential-free-provenance",
+        "workflowRunId": 31240464773,
+        "workflowRunUrl": "https://github.com/3fa-app-test/mcp-contract-e2e/actions/runs/31240464773"
       }
     },
     {
@@ -60,8 +62,10 @@
         "mergeCommit": "e98f61298eebcd0a25c8cd294be9ab50bf550954"
       },
       "hostedValidation": {
-        "status": "not-admitted",
-        "workflowRuns": []
+        "status": "success",
+        "qualification": "credential-free-provenance",
+        "workflowRunId": 31240622986,
+        "workflowRunUrl": "https://github.com/fiducia-cloud-test/mcp-contract-e2e/actions/runs/31240622986"
       }
     },
     {
@@ -82,8 +86,10 @@
         "mergeCommit": "56ddf7c4ba7907ada119cd3d3dc8c40b6c988e71"
       },
       "hostedValidation": {
-        "status": "not-admitted",
-        "workflowRuns": []
+        "status": "success",
+        "qualification": "credential-free-provenance",
+        "workflowRunId": 31240751011,
+        "workflowRunUrl": "https://github.com/quaestor-ledger-test/mcp-contract-e2e/actions/runs/31240751011"
       }
     },
     {
@@ -104,8 +110,10 @@
         "mergeCommit": "54028daea857d67b1b851850c2df5b5f7d8f2b01"
       },
       "hostedValidation": {
-        "status": "not-admitted",
-        "workflowRuns": []
+        "status": "success",
+        "qualification": "credential-free-provenance",
+        "workflowRunId": 31241061769,
+        "workflowRunUrl": "https://github.com/sonus-auris-test/mcp-contract-e2e/actions/runs/31241061769"
       }
     },
     {
@@ -126,8 +134,10 @@
         "mergeCommit": "9d99856baf44584ab7a2bbc5116dbe724524fc7c"
       },
       "hostedValidation": {
-        "status": "not-admitted",
-        "workflowRuns": []
+        "status": "success",
+        "qualification": "credential-free-provenance",
+        "workflowRunId": 31241212743,
+        "workflowRunUrl": "https://github.com/scintilla-run-test/mcp-contract-e2e/actions/runs/31241212743"
       }
     },
     {
@@ -150,28 +160,71 @@
       },
       "hostedValidation": {
         "status": "success",
+        "qualification": "credential-free-provenance",
         "workflowRunId": 31241357736,
         "workflowJobId": 93062773804,
         "workflowRunUrl": "https://github.com/discrete-event-systems-test/.github/actions/runs/31241357736"
       }
     }
   ],
+  "readinessMonitor": {
+    "qualification": "administrative-prerequisite-only",
+    "repository": "zed-pkg-test/.github",
+    "pullRequest": 15,
+    "pullRequestUrl": "https://github.com/zed-pkg-test/.github/pull/15",
+    "mergeCommit": "c5cfb3449ad271553bbc936b2545ae233458caac",
+    "workflowRunId": 31242538628,
+    "workflowJobId": 93065787772,
+    "workflowRunUrl": "https://github.com/zed-pkg-test/.github/actions/runs/31242538628",
+    "conclusion": "success",
+    "observedOrganizations": [
+      {
+        "organization": "benefactor-cc-test",
+        "httpStatus": 404
+      },
+      {
+        "organization": "daedalus-fab-test",
+        "httpStatus": 404
+      },
+      {
+        "organization": "athlet-o-test",
+        "httpStatus": 404
+      },
+      {
+        "organization": "akrion-sim-test",
+        "httpStatus": 404
+      }
+    ],
+    "notes": "The scheduled monitor fails when an organization appears so operators create mcp-contract-e2e and migrate it to the full byte-exact provenance harness. It is not source or Rust-test evidence."
+  },
   "gaps": [
     {
       "productionRepository": "benefactor-cc/benefactor-cc-mcp-server.rs",
-      "reason": "No matching installed test organization repository was available; no substitute was invented."
+      "matchingTestOrganization": "benefactor-cc-test",
+      "status": "organization-not-found",
+      "reason": "The matching GitHub organization returned 404; create it and install the GitHub App before creating mcp-contract-e2e.",
+      "followUpIssueUrl": "https://github.com/ORESoftware/mcp-rust-libs/issues/20"
     },
     {
       "productionRepository": "daedalus-fab/daedalus-fab-mcp-server.rs",
-      "reason": "No matching installed test organization repository was available; no substitute was invented."
+      "matchingTestOrganization": "daedalus-fab-test",
+      "status": "organization-not-found",
+      "reason": "The matching GitHub organization returned 404; create it and install the GitHub App before creating mcp-contract-e2e.",
+      "followUpIssueUrl": "https://github.com/ORESoftware/mcp-rust-libs/issues/20"
     },
     {
       "productionRepository": "athlet-o/athleto-mcp-server.rs",
-      "reason": "No matching installed test organization repository was available; no substitute was invented."
+      "matchingTestOrganization": "athlet-o-test",
+      "status": "organization-not-found",
+      "reason": "The matching GitHub organization returned 404; create it and install the GitHub App before creating mcp-contract-e2e.",
+      "followUpIssueUrl": "https://github.com/ORESoftware/mcp-rust-libs/issues/20"
     },
     {
       "productionRepository": "akrion-sim/akrion-mcp-server.rs",
-      "reason": "No matching installed test organization repository was available; no substitute was invented."
+      "matchingTestOrganization": "akrion-sim-test",
+      "status": "organization-not-found",
+      "reason": "The matching GitHub organization returned 404; create it and install the GitHub App before creating mcp-contract-e2e.",
+      "followUpIssueUrl": "https://github.com/ORESoftware/mcp-rust-libs/issues/20"
     }
   ]
 }
