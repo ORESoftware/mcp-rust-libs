@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "asOf": "2026-08-08",
   "wave": "zed-graph-mcp-wave-2",
   "sharedRepository": "ORESoftware/mcp-rust-libs",
@@ -13,50 +13,97 @@
     "productionFinal": "2025-11-25",
     "preview": "2026-07-28",
     "consumerCurrent": "2025-06-18",
-    "dispatchPolicy": "official-rmcp"
+    "dispatchPolicy": "official-rmcp",
+    "runtimeMigrationComplete": false
+  },
+  "sharedGraphContract": {
+    "crate": "ore-mcp-zed-graph",
+    "pullRequest": 17,
+    "exactHeadCiRun": 31240884725,
+    "immutableRevision": "652eee6538eae8c286b70593d3da574c3da741de",
+    "phaseAComplete": true
   },
   "consumers": [
     {
       "repository": "apostille-me/apme-mcp-server.rs",
-      "head": "7ab3198e78ce30849c22584ac9afb5007d3ed2ab",
-      "pushCiRun": 31228575090,
+      "initialHead": "7ab3198e78ce30849c22584ac9afb5007d3ed2ab",
+      "initialPushCiRun": 31228575090,
+      "phaseA": {
+        "pullRequest": 3,
+        "exactHeadCiRun": 31241191946,
+        "mergeCommit": "255b7ae97ecff95725061f422fe9929abc6419f3",
+        "sharedRevision": "652eee6538eae8c286b70593d3da574c3da741de",
+        "rustLockPresent": true,
+        "complete": true
+      },
       "linear": "DEN-2285",
-      "zedLockPresent": false
+      "zedLockPresent": false,
+      "frozenZedInstall": false
     },
     {
       "repository": "embedded-alerts/eal-mcp-server.rs",
-      "head": "05384988c517b19e49022d32945a11c3393de0e4",
-      "pushCiRun": 31228579616,
+      "initialHead": "05384988c517b19e49022d32945a11c3393de0e4",
+      "initialPushCiRun": 31228579616,
+      "phaseA": {
+        "pullRequest": 3,
+        "exactHeadCiRun": 31241529326,
+        "mergeCommit": "92dd63d223b52f8676eb3a2bd8fb6a3d592fb45b",
+        "sharedRevision": "652eee6538eae8c286b70593d3da574c3da741de",
+        "rustLockPresent": true,
+        "complete": true
+      },
       "linear": "DEN-2287",
-      "zedLockPresent": false
+      "zedLockPresent": false,
+      "frozenZedInstall": false
     },
     {
       "repository": "evento-globolo/evgl-mcp-server.rs",
-      "head": "6e69697b525ce696f98a8e74b35c888487240796",
-      "pushCiRun": 31228583825,
+      "initialHead": "6e69697b525ce696f98a8e74b35c888487240796",
+      "initialPushCiRun": 31228583825,
+      "phaseA": {
+        "pullRequest": 3,
+        "exactHeadCiRun": 31241649462,
+        "mergeCommit": "81f1a7f346a6bfbb5e1bac35f0f95534e6eb3c6b",
+        "sharedRevision": "652eee6538eae8c286b70593d3da574c3da741de",
+        "rustLockPresent": true,
+        "complete": true
+      },
       "linear": "DEN-2290",
-      "zedLockPresent": false
+      "zedLockPresent": false,
+      "frozenZedInstall": false
     },
     {
       "repository": "hacker-house-medellin/hhm-mcp-server.rs",
-      "head": "9e8850ff7b48b41f46ff62af31ca4d423e5aa7d5",
-      "pushCiRun": 31228588520,
+      "initialHead": "9e8850ff7b48b41f46ff62af31ca4d423e5aa7d5",
+      "initialPushCiRun": 31228588520,
+      "phaseA": {
+        "pullRequest": 3,
+        "exactHeadCiRun": 31241635908,
+        "mergeCommit": "296bd7e8c8eaba28f5683516022759a93c4b7510",
+        "sharedRevision": "652eee6538eae8c286b70593d3da574c3da741de",
+        "rustLockPresent": true,
+        "complete": true
+      },
       "linear": "DEN-2293",
-      "zedLockPresent": false
+      "zedLockPresent": false,
+      "frozenZedInstall": false
     }
   ],
-  "sharedGates": [
-    "complete the DEN-957 runtime and generic Zed dependency-graph contract without creating a parallel shared library",
-    "use official rmcp for protocol dispatch and negotiate the final production revision",
-    "extend ore-mcp-testkit with real-process lifecycle, semantic session, stdout-purity, malformed-frame, and byte/frame-bound coverage",
-    "publish or pin one reviewed immutable shared revision before consumer migration"
+  "completedGates": [
+    "publish a bounded product-neutral Zed dependency-graph contract in the existing shared repository",
+    "pin one reviewed immutable shared revision in all four consumers",
+    "delete copied generic graph descriptor, output schema, submodule-policy text, and result construction",
+    "preserve product-owned identity and dependency coordinates in each consumer",
+    "reject non-empty tool arguments fail-closed",
+    "commit resolver-generated Rust Cargo locks that pin the exact shared revision",
+    "pass exact-head locked metadata, formatting, strict Clippy, tests, manifest checks, and lock no-drift validation"
   ],
-  "consumerGates": [
-    "delete copied generic JSON-RPC and dependency-graph schema code",
-    "preserve organization-specific identity and package coordinates in the consumer",
-    "pass exact-head shared conformance",
-    "run authenticated Zed resolution and commit only resolver-generated lock provenance",
-    "pass frozen clean-clone installation",
+  "remainingGates": [
+    "complete the DEN-957 official-rmcp runtime without creating a parallel shared library",
+    "negotiate the final production revision and keep preview disabled by default",
+    "extend and pass real-process lifecycle, semantic-session, stdout-purity, malformed-frame, and byte/frame-bound conformance",
+    "run authenticated Zed resolution and commit only resolver-generated .zpkg.lock provenance",
+    "pass frozen clean-clone Zed installation",
     "adopt any retained gitlink with one canonical package identity and workspace path",
     "withhold the 0.1.0 release gate until protocol, conformance, and Zed evidence pass"
   ]
