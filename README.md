@@ -23,12 +23,13 @@ The `packages/rust` workspace contains narrow, version-neutral infrastructure:
 - `ore-mcp-http` — exact URL parsing, loopback-only HTTP, bearer-host allowlists, no-redirect defaults, and incremental response-body bounds;
 - `ore-mcp-process` — fail-fast or truncating concurrent stdout/stderr capture with timeout, kill, and reap behavior;
 - `ore-mcp-runtime` — official `rmcp` stdio lifecycle plus exact final-protocol enforcement before SDK negotiation;
+- `ore-mcp-telemetry` — stderr-only JSON logging, bounded secret-safe resource assembly, validated optional OTLP endpoints, fail-open trace/metric exporter construction, and deterministic provider shutdown;
 - `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio, initialize, catalog, result, byte/frame-limit, and stdout-purity audits;
 - `ore-mcp-zed-graph` — bounded package-coordinate validation plus the shared closed-world dependency-graph descriptor and result contract.
 
-The bootstrap, config, and HTTP layers intentionally avoid a hidden fleet-wide `rmcp`, OpenTelemetry, or concrete HTTP-client upgrade. Servers in different SDK and OpenTelemetry cohorts can share policy without sharing product dependencies.
+The bootstrap, config, telemetry, and HTTP layers intentionally avoid a hidden fleet-wide `rmcp` or concrete product-client upgrade. Servers in different SDK cohorts can share policy and process telemetry without sharing product tool or business-client dependencies.
 
-Product tools, authorization, mutation gates, credentials, upstream business clients, concrete exporters, client timeouts, package coordinates, and domain policy remain in their owning repositories.
+Product tools, authorization, mutation gates, credentials, OTLP authentication headers, upstream business clients, client timeouts, package coordinates, `rmcp`-version-specific tool wrapping, and domain policy remain in their owning repositories.
 
 ## First ten-server migration wave
 
@@ -88,4 +89,4 @@ python3 tooling/audit_rust_mcp_server.py --repo-root /path/to/mcp-server
 python3 tooling/check_wave2_evidence.py
 ```
 
-Tracking: DEN-957, DEN-959, DEN-960, DEN-965, DEN-779, DEN-852, DEN-161, and DEN-3081.
+Tracking: DEN-957, DEN-959, DEN-960, DEN-965, DEN-779, DEN-852, DEN-161, DEN-3081, and DEN-3100.
