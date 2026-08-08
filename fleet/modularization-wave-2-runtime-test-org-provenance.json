@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-08",
+  "issue": "DEN-957",
+  "sharedRuntimeRevision": "458419497de273d2ca6089a727f38894083d8da6",
+  "securityModel": {
+    "anonymousProductionFetch": true,
+    "productionCredentialsUsed": false,
+    "workflowPermissions": "contents-read",
+    "checkoutCredentialsPersisted": false,
+    "immutableActionPins": true,
+    "credentialShapeScan": true
+  },
+  "sharedProcessConsumer": {
+    "repository": "file-tunnel-test/mcp-contract-e2e",
+    "pullRequest": 2,
+    "exactHead": "af84c37effa1216b80e4a3e1505d80d1d1803d43",
+    "mergeCommit": "1f68e7b6d1d2b00e292f5abecca03e012a0c121c",
+    "workflowRuns": [
+      31267848380,
+      31267848386
+    ],
+    "operatingSystems": [
+      "ubuntu-24.04",
+      "macos-14",
+      "windows-2022"
+    ],
+    "toolchains": [
+      "1.88.0",
+      "1.97.1"
+    ],
+    "matrixJobs": 6,
+    "status": "success"
+  },
+  "runtimeConsumers": [
+    {
+      "productionRepository": "apostille-me/apme-mcp-server.rs",
+      "productionMerge": "1bffb67aa8ef7fd0fc6b396aff218c6d438fa345",
+      "matchingTestOrganization": "apostille-me-test",
+      "status": "blocked-dedicated-repository",
+      "organizationExists": true,
+      "connectedRepository": false,
+      "dedicatedRepository": false,
+      "followUpLinear": "DEN-3060",
+      "followUpGitHub": "ORESoftware/mcp-rust-libs#27"
+    },
+    {
+      "productionRepository": "embedded-alerts/eal-mcp-server.rs",
+      "productionMerge": "04252a83040f4a95d4ef5bc7aabcd6fd1ba308a4",
+      "matchingTestOrganization": "embedded-alerts-test",
+      "testRepository": "embedded-alerts-test/.github",
+      "pullRequest": 9,
+      "exactHead": "3c33af2bfe65f5834c1c5e2cee4d0cad0672152b",
+      "mergeCommit": "b8f35cf73c6058c6490ab6abee591d767e2f5aa8",
+      "workflowRun": 31270025607,
+      "operatingSystems": [
+        "ubuntu-24.04",
+        "macos-14",
+        "windows-2022"
+      ],
+      "toolchains": [
+        "1.88.0",
+        "1.97.1"
+      ],
+      "matrixJobs": 6,
+      "sourceFetch": "anonymous-exact-sha",
+      "qualification": "exact-source-runtime-provenance",
+      "connectedRepository": true,
+      "dedicatedRepository": false,
+      "status": "success-interim"
+    },
+    {
+      "productionRepository": "evento-globolo/evgl-mcp-server.rs",
+      "productionMerge": "7fdb469257496244cf3c6d952acde017cb53f965",
+      "matchingTestOrganization": "evento-globolo-test",
+      "testRepository": "evento-globolo-test/.github",
+      "pullRequest": 12,
+      "exactHead": "be46073da6d3fabbda9e445fad8c67fdf1b9c2dd",
+      "mergeCommit": "cf36657662d9ebe422acce04c0744bf6cca486b4",
+      "workflowRun": 31270107267,
+      "operatingSystems": [
+        "ubuntu-24.04",
+        "macos-14",
+        "windows-2022"
+      ],
+      "toolchains": [
+        "1.88.0",
+        "1.97.1"
+      ],
+      "matrixJobs": 6,
+      "sourceFetch": "anonymous-exact-sha",
+      "qualification": "exact-source-runtime-provenance",
+      "connectedRepository": true,
+      "dedicatedRepository": false,
+      "status": "success-interim"
+    },
+    {
+      "productionRepository": "hacker-house-medellin/hhm-mcp-server.rs",
+      "productionMerge": "0adaebe2a46ef055b974f4f9b25d3fcd7df07088",
+      "matchingTestOrganization": "hacker-house-medellin-test",
+      "status": "blocked-dedicated-repository",
+      "organizationExists": true,
+      "connectedRepository": false,
+      "dedicatedRepository": false,
+      "followUpLinear": "DEN-3060",
+      "followUpGitHub": "ORESoftware/mcp-rust-libs#27"
+    }
+  ],
+  "administrativeFollowUp": {
+    "linear": "DEN-3060",
+    "github": "ORESoftware/mcp-rust-libs#27",
+    "objective": "create dedicated mcp-contract-e2e repositories and connected GitHub App access for all four matching organizations"
+  },
+  "publicationClosure": {
+    "linear": "DEN-3036",
+    "readyPackages": 0,
+    "totalPackages": 23,
+    "frozenInstallationReady": false
+  },
+  "qualification": {
+    "runtimeAndProvenanceOnly": true,
+    "zedRegistryPublication": false,
+    "resolverGeneratedZedLock": false,
+    "frozenZedInstall": false,
+    "deploymentEvidence": false,
+    "providerBackedAiConsensus": false
+  }
+}
