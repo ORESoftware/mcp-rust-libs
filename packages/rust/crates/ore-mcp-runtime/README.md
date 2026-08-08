@@ -9,6 +9,7 @@
 - configuration → telemetry → server-construction ordering;
 - telemetry-guard retention through protocol shutdown;
 - official `rmcp` stdio startup, wait, and error propagation;
+- an optional exact-version service wrapper applied before SDK negotiation;
 - low-cardinality lifecycle spans that never include arguments, result bodies, credentials, or user identity data.
 
 ## Deliberately caller-owned
@@ -43,9 +44,26 @@ ore_mcp_runtime::run_stdio(
 
 For a product hook after construction, call `prepare_stdio`, mutate only the product-owned server through `PreparedStdio::server_mut`, then call `serve`.
 
+## Exact protocol enforcement
+
+`rmcp` 2.2 negotiates again outside `ServerHandler::initialize` and echoes any protocol version known to that SDK release. A handler's `ServerInfo.protocol_version` is therefore a fallback, not a strict ceiling.
+
+Wrap a product handler before returning it from the server-construction callback when a deployment must reject every version except one reviewed protocol:
+
+```rust,ignore
+use ore_mcp_runtime::ExactProtocol;
+use rmcp::model::ProtocolVersion;
+
+let server = ExactProtocol::new(product_handler, ProtocolVersion::V_2025_11_25);
+```
+
+`run_stdio`, `PreparedStdio::serve`, and `serve_stdio` accept any official `Service<RoleServer>`, so ordinary `ServerHandler` values remain compatible through the SDK's blanket service implementation while service-level adapters can be composed safely.
+
+The wrapper returns a generic invalid-request error for a non-exact initialize version and never logs the requested value.
+
 ## Feature boundary
 
-The default `rmcp-stdio` feature enables the transport and lifecycle span. With default features disabled, metadata, bootstrap ordering, and preparation remain available without `rmcp` or `tracing`.
+The default `rmcp-stdio` feature enables transport, lifecycle spans, and exact protocol enforcement. With default features disabled, metadata, bootstrap ordering, and preparation remain available without `rmcp` or `tracing`.
 
 ## Migration cautions
 
