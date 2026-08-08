@@ -14,13 +14,13 @@
 
 use std::{error::Error, fmt};
 
-pub use ore_mcp_bootstrap::runtime::{IdentityError, STDIO_TRANSPORT, ServerIdentity};
+pub use ore_mcp_bootstrap::runtime::{IdentityError, ServerIdentity, STDIO_TRANSPORT};
 #[cfg(feature = "rmcp-stdio")]
 use rmcp::{
-    ErrorData as McpError, RoleServer, ServiceExt,
     model::{ClientNotification, ClientRequest, ProtocolVersion, ServerInfo, ServerResult},
     service::{NotificationContext, RequestContext, Service},
     transport::stdio,
+    ErrorData as McpError, RoleServer, ServiceExt,
 };
 #[cfg(feature = "rmcp-stdio")]
 use tracing::Instrument;
