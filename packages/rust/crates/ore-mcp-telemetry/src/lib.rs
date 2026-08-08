@@ -13,21 +13,21 @@ use std::{
     time::Duration,
 };
 
-use opentelemetry::{KeyValue, global};
+use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{
-    Resource,
     metrics::{PeriodicReader, SdkMeterProvider},
     runtime,
     trace::{Tracer, TracerProvider},
+    Resource,
 };
 use ore_mcp_bootstrap::{
     config::validate_log_filter_text,
     runtime::ServerIdentity,
-    telemetry::{STANDARD_RESOURCE_ENV, reserved_identity_key, resource_attribute_pairs},
+    telemetry::{reserved_identity_key, resource_attribute_pairs, STANDARD_RESOURCE_ENV},
 };
 use ore_mcp_safety::valid_attribute_value;
-use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 use url::Url;
 
 /// Default stderr filter used when callers do not provide one explicitly.
@@ -195,9 +195,10 @@ impl TelemetryConfig {
         }
 
         let filter_text = log_filter.unwrap_or(DEFAULT_LOG_FILTER);
-        let filter_text = validate_log_filter_text(filter_text)
-            .map_err(|_| TelemetryError::InvalidLogFilter)?;
-        let filter = EnvFilter::try_new(filter_text).map_err(|_| TelemetryError::InvalidLogFilter)?;
+        let filter_text =
+            validate_log_filter_text(filter_text).map_err(|_| TelemetryError::InvalidLogFilter)?;
+        let filter =
+            EnvFilter::try_new(filter_text).map_err(|_| TelemetryError::InvalidLogFilter)?;
 
         Ok(Self {
             identity,
@@ -363,10 +364,7 @@ impl TelemetryGuard {
     }
 
     fn shutdown_inner(&mut self) -> ShutdownStatus {
-        shutdown_providers(
-            self.tracer_provider.take(),
-            self.meter_provider.take(),
-        )
+        shutdown_providers(self.tracer_provider.take(), self.meter_provider.take())
     }
 }
 
@@ -515,7 +513,8 @@ where
         return ProviderBundle::disabled();
     };
 
-    let (tracer_provider, tracer, traces) = match trace_builder(endpoint.as_str(), resource.clone()) {
+    let (tracer_provider, tracer, traces) = match trace_builder(endpoint.as_str(), resource.clone())
+    {
         Ok((provider, tracer)) => (Some(provider), Some(tracer), ExporterState::Enabled),
         Err(()) => (None, None, ExporterState::BuildFailed),
     };
@@ -643,7 +642,10 @@ mod tests {
         assert_eq!(
             resource_attributes_from_snapshot(&snapshot),
             vec![
-                ("deployment.environment".to_string(), "production".to_string()),
+                (
+                    "deployment.environment".to_string(),
+                    "production".to_string()
+                ),
                 ("k8s.pod.name".to_string(), "mcp-0".to_string()),
                 ("team".to_string(), "platform".to_string()),
                 ("cloud.region".to_string(), "us-east-1".to_string()),
@@ -703,8 +705,8 @@ mod tests {
 
     #[test]
     fn provider_build_failures_are_status_only_and_fail_open() {
-        let endpoint = OtlpEndpoint::parse("https://collector.example:4317")
-            .expect("valid endpoint");
+        let endpoint =
+            OtlpEndpoint::parse("https://collector.example:4317").expect("valid endpoint");
         let resource = TelemetryConfig::new(identity(), "0.1.0", None)
             .expect("valid configuration")
             .resource();
