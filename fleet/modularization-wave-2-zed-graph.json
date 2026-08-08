@@ -1,33 +1,85 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "asOf": "2026-08-08",
   "wave": "zed-graph-mcp-wave-2",
   "sharedRepository": "ORESoftware/mcp-rust-libs",
-  "githubIssue": "ORESoftware/mcp-rust-libs#15",
+  "githubIssues": {
+    "wave": "ORESoftware/mcp-rust-libs#15",
+    "testOrganizationProvisioning": "ORESoftware/mcp-rust-libs#27"
+  },
   "linear": {
     "sharedExtraction": "DEN-957",
     "workspaceHardening": "DEN-959",
-    "consumers": ["DEN-2285", "DEN-2287", "DEN-2290", "DEN-2293"]
+    "publicationClosure": "DEN-3036",
+    "testOrganizationProvisioning": "DEN-3060",
+    "runtimeConsumers": [
+      "DEN-2972",
+      "DEN-3035",
+      "DEN-3054",
+      "DEN-3056"
+    ],
+    "zedCertification": [
+      "DEN-2285",
+      "DEN-2287",
+      "DEN-2290",
+      "DEN-2293"
+    ]
   },
   "protocolPolicy": {
     "productionFinal": "2025-11-25",
     "preview": "2026-07-28",
-    "consumerCurrent": "2025-06-18",
+    "previewEnabled": false,
+    "rejectedLegacy": [
+      "2025-06-18"
+    ],
     "dispatchPolicy": "official-rmcp",
-    "runtimeMigrationComplete": false
+    "sdkVersion": "2.2.0",
+    "sharedRuntimeRevision": "458419497de273d2ca6089a727f38894083d8da6",
+    "runtimeMigrationComplete": true
   },
   "sharedGraphContract": {
     "crate": "ore-mcp-zed-graph",
     "pullRequest": 17,
     "exactHeadCiRun": 31240884725,
-    "immutableRevision": "652eee6538eae8c286b70593d3da574c3da741de",
-    "phaseAComplete": true
+    "mergeRevision": "652eee6538eae8c286b70593d3da574c3da741de",
+    "complete": true
+  },
+  "exactProtocolAdapter": {
+    "crate": "ore-mcp-runtime",
+    "pullRequest": 23,
+    "exactHead": "58df937a399d792f3695f31abae1490e2b3ac5c5",
+    "exactHeadCiRun": 31266779821,
+    "mergeRevision": "458419497de273d2ca6089a727f38894083d8da6",
+    "complete": true
+  },
+  "sharedProcessConsumerProof": {
+    "repository": "file-tunnel-test/mcp-contract-e2e",
+    "pullRequest": 2,
+    "exactHead": "af84c37effa1216b80e4a3e1505d80d1d1803d43",
+    "mergeCommit": "1f68e7b6d1d2b00e292f5abecca03e012a0c121c",
+    "workflowRuns": [
+      31267848380,
+      31267848386
+    ],
+    "operatingSystems": [
+      "ubuntu-24.04",
+      "macos-14",
+      "windows-2022"
+    ],
+    "toolchains": [
+      "1.88.0",
+      "1.97.1"
+    ],
+    "matrixJobs": 6,
+    "complete": true
   },
   "consumers": [
     {
       "repository": "apostille-me/apme-mcp-server.rs",
-      "initialHead": "7ab3198e78ce30849c22584ac9afb5007d3ed2ab",
-      "initialPushCiRun": 31228575090,
+      "linear": {
+        "runtime": "DEN-2972",
+        "zedCertification": "DEN-2285"
+      },
       "phaseA": {
         "pullRequest": 3,
         "exactHeadCiRun": 31241191946,
@@ -36,14 +88,47 @@
         "rustLockPresent": true,
         "complete": true
       },
-      "linear": "DEN-2285",
-      "zedLockPresent": false,
-      "frozenZedInstall": false
+      "runtime": {
+        "pullRequest": 5,
+        "exactHead": "93eeb4fe4378a3dae6629898a89dd1b19537f984",
+        "mergeCommit": "1bffb67aa8ef7fd0fc6b396aff218c6d438fa345",
+        "workflowRuns": [
+          31268502539,
+          31268502556
+        ],
+        "sharedRevision": "458419497de273d2ca6089a727f38894083d8da6",
+        "rmcpVersion": "2.2.0",
+        "protocolVersion": "2025-11-25",
+        "exactProtocol": true,
+        "previewRejected": true,
+        "legacyRejected": [
+          "2025-06-18"
+        ],
+        "realProcessConformance": true,
+        "stdoutProtocolPure": true,
+        "complete": true
+      },
+      "testOrganization": {
+        "organization": "apostille-me-test",
+        "organizationExists": true,
+        "connectedRepository": false,
+        "dedicatedRepository": false,
+        "status": "blocked-dedicated-repository",
+        "followUpLinear": "DEN-3060",
+        "followUpGitHub": "ORESoftware/mcp-rust-libs#27"
+      },
+      "zed": {
+        "lockPresent": false,
+        "frozenInstall": false,
+        "blocker": "DEN-3036"
+      }
     },
     {
       "repository": "embedded-alerts/eal-mcp-server.rs",
-      "initialHead": "05384988c517b19e49022d32945a11c3393de0e4",
-      "initialPushCiRun": 31228579616,
+      "linear": {
+        "runtime": "DEN-3035",
+        "zedCertification": "DEN-2287"
+      },
       "phaseA": {
         "pullRequest": 3,
         "exactHeadCiRun": 31241529326,
@@ -52,14 +137,61 @@
         "rustLockPresent": true,
         "complete": true
       },
-      "linear": "DEN-2287",
-      "zedLockPresent": false,
-      "frozenZedInstall": false
+      "runtime": {
+        "pullRequest": 4,
+        "exactHead": "b6c11df8821e97a39689e627a443c8e7d2951c74",
+        "mergeCommit": "04252a83040f4a95d4ef5bc7aabcd6fd1ba308a4",
+        "workflowRuns": [
+          31268928120,
+          31268928138
+        ],
+        "sharedRevision": "458419497de273d2ca6089a727f38894083d8da6",
+        "rmcpVersion": "2.2.0",
+        "protocolVersion": "2025-11-25",
+        "exactProtocol": true,
+        "previewRejected": true,
+        "legacyRejected": [
+          "2025-06-18"
+        ],
+        "realProcessConformance": true,
+        "stdoutProtocolPure": true,
+        "complete": true
+      },
+      "testOrganization": {
+        "organization": "embedded-alerts-test",
+        "organizationExists": true,
+        "repository": "embedded-alerts-test/.github",
+        "pullRequest": 9,
+        "exactHead": "3c33af2bfe65f5834c1c5e2cee4d0cad0672152b",
+        "mergeCommit": "b8f35cf73c6058c6490ab6abee591d767e2f5aa8",
+        "workflowRun": 31270025607,
+        "operatingSystems": [
+          "ubuntu-24.04",
+          "macos-14",
+          "windows-2022"
+        ],
+        "toolchains": [
+          "1.88.0",
+          "1.97.1"
+        ],
+        "matrixJobs": 6,
+        "qualification": "exact-source-runtime-provenance",
+        "connectedRepository": true,
+        "dedicatedRepository": false,
+        "status": "complete-interim"
+      },
+      "zed": {
+        "lockPresent": false,
+        "frozenInstall": false,
+        "blocker": "DEN-3036"
+      }
     },
     {
       "repository": "evento-globolo/evgl-mcp-server.rs",
-      "initialHead": "6e69697b525ce696f98a8e74b35c888487240796",
-      "initialPushCiRun": 31228583825,
+      "linear": {
+        "runtime": "DEN-3054",
+        "zedCertification": "DEN-2290"
+      },
       "phaseA": {
         "pullRequest": 3,
         "exactHeadCiRun": 31241649462,
@@ -68,14 +200,61 @@
         "rustLockPresent": true,
         "complete": true
       },
-      "linear": "DEN-2290",
-      "zedLockPresent": false,
-      "frozenZedInstall": false
+      "runtime": {
+        "pullRequest": 4,
+        "exactHead": "4dae79d6172fdb8aa8e60cc4039edebdd2469ccf",
+        "mergeCommit": "7fdb469257496244cf3c6d952acde017cb53f965",
+        "workflowRuns": [
+          31269306061,
+          31269306081
+        ],
+        "sharedRevision": "458419497de273d2ca6089a727f38894083d8da6",
+        "rmcpVersion": "2.2.0",
+        "protocolVersion": "2025-11-25",
+        "exactProtocol": true,
+        "previewRejected": true,
+        "legacyRejected": [
+          "2025-06-18"
+        ],
+        "realProcessConformance": true,
+        "stdoutProtocolPure": true,
+        "complete": true
+      },
+      "testOrganization": {
+        "organization": "evento-globolo-test",
+        "organizationExists": true,
+        "repository": "evento-globolo-test/.github",
+        "pullRequest": 12,
+        "exactHead": "be46073da6d3fabbda9e445fad8c67fdf1b9c2dd",
+        "mergeCommit": "cf36657662d9ebe422acce04c0744bf6cca486b4",
+        "workflowRun": 31270107267,
+        "operatingSystems": [
+          "ubuntu-24.04",
+          "macos-14",
+          "windows-2022"
+        ],
+        "toolchains": [
+          "1.88.0",
+          "1.97.1"
+        ],
+        "matrixJobs": 6,
+        "qualification": "exact-source-runtime-provenance",
+        "connectedRepository": true,
+        "dedicatedRepository": false,
+        "status": "complete-interim"
+      },
+      "zed": {
+        "lockPresent": false,
+        "frozenInstall": false,
+        "blocker": "DEN-3036"
+      }
     },
     {
       "repository": "hacker-house-medellin/hhm-mcp-server.rs",
-      "initialHead": "9e8850ff7b48b41f46ff62af31ca4d423e5aa7d5",
-      "initialPushCiRun": 31228588520,
+      "linear": {
+        "runtime": "DEN-3056",
+        "zedCertification": "DEN-2293"
+      },
       "phaseA": {
         "pullRequest": 3,
         "exactHeadCiRun": 31241635908,
@@ -84,27 +263,65 @@
         "rustLockPresent": true,
         "complete": true
       },
-      "linear": "DEN-2293",
-      "zedLockPresent": false,
-      "frozenZedInstall": false
+      "runtime": {
+        "pullRequest": 4,
+        "exactHead": "b236fcc03e69d3a7119e0d44c7b747e93e8ec2ca",
+        "mergeCommit": "0adaebe2a46ef055b974f4f9b25d3fcd7df07088",
+        "workflowRuns": [
+          31269611106,
+          31269611104
+        ],
+        "sharedRevision": "458419497de273d2ca6089a727f38894083d8da6",
+        "rmcpVersion": "2.2.0",
+        "protocolVersion": "2025-11-25",
+        "exactProtocol": true,
+        "previewRejected": true,
+        "legacyRejected": [
+          "2025-06-18"
+        ],
+        "realProcessConformance": true,
+        "stdoutProtocolPure": true,
+        "complete": true
+      },
+      "testOrganization": {
+        "organization": "hacker-house-medellin-test",
+        "organizationExists": true,
+        "connectedRepository": false,
+        "dedicatedRepository": false,
+        "status": "blocked-dedicated-repository",
+        "followUpLinear": "DEN-3060",
+        "followUpGitHub": "ORESoftware/mcp-rust-libs#27"
+      },
+      "zed": {
+        "lockPresent": false,
+        "frozenInstall": false,
+        "blocker": "DEN-3036"
+      }
     }
   ],
+  "publicationClosure": {
+    "linear": "DEN-3036",
+    "pullRequest": 26,
+    "mergeCommit": "67df19955cff7fc81bbe9dd4e86f796761ba9c68",
+    "readyPackages": 0,
+    "totalPackages": 23,
+    "allBlockedByHttp404": true
+  },
   "completedGates": [
     "publish a bounded product-neutral Zed dependency-graph contract in the existing shared repository",
-    "pin one reviewed immutable shared revision in all four consumers",
-    "delete copied generic graph descriptor, output schema, submodule-policy text, and result construction",
-    "preserve product-owned identity and dependency coordinates in each consumer",
-    "reject non-empty tool arguments fail-closed",
-    "commit resolver-generated Rust Cargo locks that pin the exact shared revision",
-    "pass exact-head locked metadata, formatting, strict Clippy, tests, manifest checks, and lock no-drift validation"
+    "publish and pin an exact official-rmcp runtime adapter in the existing shared repository",
+    "delete copied generic graph descriptor, result construction, and newline JSON-RPC dispatch from all four consumers",
+    "preserve product-owned identity and exact dependency coordinates in each consumer",
+    "negotiate final MCP 2025-11-25 and reject preview and legacy versions before SDK normalization",
+    "pass direct handler and real-process initialize, catalog, tool-call, ping, unknown-method, stdout-purity, preview-rejection, and legacy-rejection conformance",
+    "pass locked hardened CI plus Rust 1.88.0 and Rust 1.97.1 exact-runtime matrices in all four production repositories",
+    "pass independent Linux, macOS, and Windows exact-source runtime matrices in the connected Embedded Alerts and Evento Globolo test organizations"
   ],
   "remainingGates": [
-    "complete the DEN-957 official-rmcp runtime without creating a parallel shared library",
-    "negotiate the final production revision and keep preview disabled by default",
-    "extend and pass real-process lifecycle, semantic-session, stdout-purity, malformed-frame, and byte/frame-bound conformance",
-    "run authenticated Zed resolution and commit only resolver-generated .zpkg.lock provenance",
-    "pass frozen clean-clone Zed installation",
+    "provision dedicated mcp-contract-e2e repositories and connected GitHub App access in all four matching test organizations",
+    "run authenticated Zed resolution and commit only resolver-generated .zpkg.lock provenance after the full 23-package publication closure is available",
+    "pass isolated frozen clean-clone Zed installation",
     "adopt any retained gitlink with one canonical package identity and workspace path",
-    "withhold the 0.1.0 release gate until protocol, conformance, and Zed evidence pass"
+    "withhold the 0.1.0 release gate until Zed publication, lock, and frozen-install evidence pass"
   ]
 }
