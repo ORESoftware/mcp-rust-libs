@@ -82,6 +82,17 @@ Creation and GitHub App installation are tracked in
 substitute production mutation or credential-bearing pull-request workflow was
 introduced.
 
+A separate administrative readiness monitor is merged in
+[`zed-pkg-test/.github#15`](https://github.com/zed-pkg-test/.github/pull/15) at
+`c5cfb3449ad271553bbc936b2545ae233458caac`. Its successful
+[run 31242538628](https://github.com/zed-pkg-test/.github/actions/runs/31242538628)
+validated the four-target manifest and confirmed each public organization
+endpoint still returns HTTP 404. The monitor uses read-only contents access,
+does not persist checkout credentials, and will fail when any organization
+appears so operators migrate it to the full matching-org provenance harness.
+This readiness result is administrative evidence only; it is not source or
+Rust-test evidence for the four private production repositories.
+
 ## Related registries
 
 - Production completion: `modularization-wave-1-completion.md`
@@ -89,3 +100,4 @@ introduced.
 - Linear project routing: `linear-projects.md`
 - Machine-readable test evidence: `den-957-test-org-provenance.json`
 - Missing test-organization follow-up: [issue #20](https://github.com/ORESoftware/mcp-rust-libs/issues/20)
+- Missing-organization readiness monitor: [zed-pkg-test/.github#15](https://github.com/zed-pkg-test/.github/pull/15)
