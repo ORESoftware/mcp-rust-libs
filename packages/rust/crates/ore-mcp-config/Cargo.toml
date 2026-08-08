@@ -1,0 +1,21 @@
+[package]
+name = "ore-mcp-config"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Strict, secret-safe flags2env configuration adapter for ORESoftware MCP servers"
+
+[lints]
+workspace = true
+
+[dependencies]
+flags2env = { git = "https://github.com/ORESoftware/flags-2-env", rev = "dada72e58fb976e95af43d1e35994ac33fe06f98" }
+ore-mcp-bootstrap = { workspace = true }
+ore-mcp-safety = { workspace = true }
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "3.23"

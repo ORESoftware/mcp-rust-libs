@@ -18,13 +18,15 @@ The August 2, 2026 connected-fleet audit found 24 existing standalone Rust MCP r
 The `packages/rust` workspace contains narrow, version-neutral infrastructure:
 
 - `ore-mcp-bootstrap` — strict startup-config discovery, secret-free option redaction, bounded telemetry resource-attribute policy, and validated server/transport identity;
+- `ore-mcp-config` — strict flags2env audit/parsing/coercion with unknown/positional rejection, deterministic source precedence, environment-only secret policy, and value-free diagnostics;
 - `ore-mcp-safety` — UTF-8-safe truncation, bounded incremental bytes, error redaction, and header validation;
 - `ore-mcp-http` — exact URL parsing, loopback-only HTTP, bearer-host allowlists, no-redirect defaults, and incremental response-body bounds;
-- `ore-mcp-process` — concurrent bounded stdout/stderr capture with timeout, kill, and reap behavior;
-- `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio audits with byte and frame limits;
+- `ore-mcp-process` — fail-fast or truncating concurrent stdout/stderr capture with timeout, kill, and reap behavior;
+- `ore-mcp-runtime` — official `rmcp` stdio lifecycle plus exact final-protocol enforcement before SDK negotiation;
+- `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio, initialize, catalog, result, byte/frame-limit, and stdout-purity audits;
 - `ore-mcp-zed-graph` — bounded package-coordinate validation plus the shared closed-world dependency-graph descriptor and result contract.
 
-The bootstrap and HTTP layers intentionally do not depend on a particular `rmcp`, OpenTelemetry, or concrete HTTP-client version. Servers in the OpenTelemetry 0.27 and 0.32 cohorts can share policy without a hidden fleet-wide SDK upgrade.
+The bootstrap, config, and HTTP layers intentionally avoid a hidden fleet-wide `rmcp`, OpenTelemetry, or concrete HTTP-client upgrade. Servers in different SDK and OpenTelemetry cohorts can share policy without sharing product dependencies.
 
 Product tools, authorization, mutation gates, credentials, upstream business clients, concrete exporters, client timeouts, package coordinates, and domain policy remain in their owning repositories.
 
@@ -56,25 +58,34 @@ A dated second wave covers four short-name servers published after the August 2 
 3. `evento-globolo/evgl-mcp-server.rs`
 4. `hacker-house-medellin/hhm-mcp-server.rs`
 
-Their initial Rust CI is green, but they repeat the same hand-written JSON-RPC dispatcher, advertise `2025-06-18`, and do not yet have resolver-generated Zed lock or frozen-install evidence. GitHub issue [#15](https://github.com/ORESoftware/mcp-rust-libs/issues/15) coordinates official-`rmcp` adoption, the final `2025-11-25` protocol baseline, shared Zed dependency-graph contracts, real-process conformance, and exact package provenance.
+All four now use exact official `rmcp 2.2.0`, the shared runtime and graph contract, and final MCP `2025-11-25`. Each passed locked hardened CI plus Rust 1.88.0 and 1.97.1 real-process conformance, including generic rejection of preview `2026-07-28` and legacy `2025-06-18` before SDK normalization.
 
-See [`fleet/modularization-wave-2-zed-graph.md`](fleet/modularization-wave-2-zed-graph.md) and its [machine-readable record](fleet/modularization-wave-2-zed-graph.json). The historical August 2 inventory remains unchanged.
+Independent matching test-organization matrices also execute the exact Embedded Alerts and Evento Globolo production merges on Linux, macOS, and Windows. Dedicated test repositories for all four matching organizations remain tracked separately.
+
+Zed package provenance is not complete: the recursive publication monitor currently reports zero of 23 packages ready, so resolver-generated `.zpkg.lock` and isolated `zed install --frozen` evidence remain blocked on publication rather than runtime correctness.
+
+See [`fleet/modularization-wave-2-zed-graph.md`](fleet/modularization-wave-2-zed-graph.md), its [machine-readable record](fleet/modularization-wave-2-zed-graph.json), and the [test-organization provenance ledger](fleet/modularization-wave-2-runtime-test-org-provenance.md). The historical August 2 inventory remains unchanged.
 
 ## Protocol policy
 
-Production follows the latest final MCP revision (`2025-11-25`). The `2026-07-28` lifecycle remains an opt-in preview until the upstream specification is final and both lifecycle paths pass fleet conformance. Hand-written transports and hard-coded `2024-11-05` servers are migration priorities.
+Production follows final MCP `2025-11-25`. Preview `2026-07-28` remains disabled until upstream finalization and explicit conformance. New migrations use official SDK dispatch and an exact protocol boundary rather than hand-written transports or negotiated-version normalization.
 
 ## Validation
 
 ```sh
 cd packages/rust
 cargo fmt --all -- --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace --all-targets
-cargo doc --workspace --no-deps
+cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo test --locked --workspace --all-targets
+cargo doc --locked --workspace --no-deps
 
-python3 -m unittest -v tooling/test_audit_rust_mcp_server.py
+python3 -m unittest -v \
+  tooling/test_audit_rust_mcp_server.py \
+  tooling/test_check_deployable_lockfile.py \
+  tooling/test_check_fleet_pr_evidence.py \
+  tooling/test_check_wave2_evidence.py
 python3 tooling/audit_rust_mcp_server.py --repo-root /path/to/mcp-server
+python3 tooling/check_wave2_evidence.py
 ```
 
-Tracking: DEN-957, DEN-959, DEN-965, DEN-779, DEN-852, DEN-161, and DEN-1248.
+Tracking: DEN-957, DEN-959, DEN-960, DEN-965, DEN-779, DEN-852, DEN-161, and DEN-3081.
