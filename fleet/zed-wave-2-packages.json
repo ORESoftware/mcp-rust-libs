@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "issue": "DEN-957",
+  "phase": "zed-lock-publication-readiness",
+  "updatedDate": "2026-08-08",
+  "registry": "https://registry.zpkg.net",
+  "requiredVersion": "^0.1.0",
+  "zedCliRevision": "1ab18fcb2ff884e82af4cac4513d7b983a23c84a",
+  "qualification": "Public registry readiness only. Resolver-generated lockfiles and clean-clone frozen installs remain separate mandatory gates.",
+  "consumers": [
+    {
+      "issue": "DEN-2285",
+      "repository": "apostille-me/apme-mcp-server.rs",
+      "dependencies": [
+        "apostille-me/apme-cli",
+        "apostille-me/apme-clients",
+        "apostille-me/apme-interfaces",
+        "apostille-me/apme-libs",
+        "apostille-me/apme-sync",
+        "shared-auth/shared-auth-clients"
+      ]
+    },
+    {
+      "issue": "DEN-2287",
+      "repository": "embedded-alerts/eal-mcp-server.rs",
+      "dependencies": [
+        "embedded-alerts/eal-cli",
+        "embedded-alerts/eal-clients",
+        "embedded-alerts/eal-interfaces",
+        "embedded-alerts/eal-libs",
+        "embedded-alerts/eal-sync",
+        "shared-auth/shared-auth-clients"
+      ]
+    },
+    {
+      "issue": "DEN-2290",
+      "repository": "evento-globolo/evgl-mcp-server.rs",
+      "dependencies": [
+        "evento-globolo/evgl-cli",
+        "evento-globolo/evgl-clients",
+        "evento-globolo/evgl-interfaces",
+        "evento-globolo/evgl-libs",
+        "evento-globolo/evgl-sync",
+        "shared-auth/shared-auth-clients"
+      ]
+    },
+    {
+      "issue": "DEN-2293",
+      "repository": "hacker-house-medellin/hhm-mcp-server.rs",
+      "dependencies": [
+        "hacker-house-medellin/hhm-cli",
+        "hacker-house-medellin/hhm-clients",
+        "hacker-house-medellin/hhm-interfaces",
+        "hacker-house-medellin/hhm-libs",
+        "hacker-house-medellin/hhm-sync",
+        "shared-auth/shared-auth-clients"
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "coordinate": "apostille-me/apme-cli",
+      "sourceRepository": "apostille-me/apme-cli",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "apostille-me/apme-clients",
+      "sourceRepository": "apostille-me/apme-clients",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "apostille-me/apme-interfaces",
+      "sourceRepository": "apostille-me/apme-interfaces",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "apostille-me/apme-libs",
+      "sourceRepository": "apostille-me/apme-libs",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "apostille-me/apme-sync",
+      "sourceRepository": "apostille-me/apme-sync",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "embedded-alerts/eal-cli",
+      "sourceRepository": "embedded-alerts/eal-cli",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "embedded-alerts/eal-clients",
+      "sourceRepository": "embedded-alerts/eal-clients",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "embedded-alerts/eal-interfaces",
+      "sourceRepository": "embedded-alerts/eal-interfaces",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "embedded-alerts/eal-libs",
+      "sourceRepository": "embedded-alerts/eal-libs",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "embedded-alerts/eal-sync",
+      "sourceRepository": "embedded-alerts/eal-sync",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "evento-globolo/evgl-cli",
+      "sourceRepository": "evento-globolo/evgl-cli",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "evento-globolo/evgl-clients",
+      "sourceRepository": "evento-globolo/evgl-clients",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "evento-globolo/evgl-interfaces",
+      "sourceRepository": "evento-globolo/evgl-interfaces",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "evento-globolo/evgl-libs",
+      "sourceRepository": "evento-globolo/evgl-libs",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "evento-globolo/evgl-sync",
+      "sourceRepository": "evento-globolo/evgl-sync",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "hacker-house-medellin/hhm-cli",
+      "sourceRepository": "hacker-house-medellin/hhm-cli",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "hacker-house-medellin/hhm-clients",
+      "sourceRepository": "hacker-house-medellin/hhm-clients",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "hacker-house-medellin/hhm-interfaces",
+      "sourceRepository": "hacker-house-medellin/hhm-interfaces",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "hacker-house-medellin/hhm-libs",
+      "sourceRepository": "hacker-house-medellin/hhm-libs",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "hacker-house-medellin/hhm-sync",
+      "sourceRepository": "hacker-house-medellin/hhm-sync",
+      "sourceVisibility": "public"
+    },
+    {
+      "coordinate": "shared-auth/shared-auth-clients",
+      "sourceRepository": "shared-auth/shared-auth-clients",
+      "sourceVisibility": "private"
+    }
+  ]
+}
