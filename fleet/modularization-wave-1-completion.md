@@ -51,6 +51,34 @@ No document in this repository should claim that all ten final heads executed
 Cargo on GitHub-hosted capacity unless later evidence supplies actual checkout
 and command logs.
 
+## Test-organization provenance extension
+
+A 2026-08-07 follow-up added credential-free, byte-exact source provenance
+harnesses for six servers in matching `*-test` organizations:
+
+- `3FA-app`;
+- `fiducia-cloud`;
+- `quaestor-ledger`;
+- `sonus-auris`;
+- `scintilla-run`;
+- `discrete-event-systems`.
+
+The harnesses recompute production Git blob IDs for the manifest, telemetry
+module, and shared-bootstrap Rust contract test. They also verify the immutable
+shared revision, shared identity and telemetry-policy delegation, stderr safety,
+and absence of credential-shaped values.
+
+Discrete Event Systems produced successful hosted evidence in workflow run
+`31241357736`. The other five repositories admitted no workflow run, so their
+evidence remains exact-source and executable-verifier evidence rather than
+successful hosted CI.
+
+No accessible matching test repository was available for Benefactor CC,
+Daedalus Fab, Athlet-O, or Akrion Sim. No substitute repository was invented.
+See `den-957-test-org-provenance.md` and
+`den-957-test-org-provenance.json` for the exact test PRs, merge commits,
+production heads, blob IDs, and coverage gaps.
+
 ## Stale pull-request cleanup
 
 Superseded drafts were closed for Daedalus Fab, Athlet-O, Akrion Sim,
@@ -62,3 +90,5 @@ the canonical PRs in the table above.
 - GitHub organization and Project routing: `github-org-projects.md`
 - Linear organization-project routing: `linear-projects.md`
 - Machine-readable completion record: `modularization-wave-1-completion.json`
+- Test-organization provenance: `den-957-test-org-provenance.md`
+- Machine-readable test evidence: `den-957-test-org-provenance.json`

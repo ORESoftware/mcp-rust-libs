@@ -1,6 +1,6 @@
 # GitHub organization project registry — Rust MCP wave 1
 
-**Updated:** 2026-08-05  
+**Updated:** 2026-08-07  
 **Tracking issue:** DEN-957
 
 This file is the routing contract for the ten organizations in the first Rust
@@ -21,6 +21,26 @@ the linked pull request and future follow-up issues.
 | `discrete-event-systems` | `discrete-event-systems-project` | `https://github.com/orgs/discrete-event-systems/projects/1` | `discrete-event-systems/des-mcp-server.rs` | [PR #18](https://github.com/discrete-event-systems/des-mcp-server.rs/pull/18) |
 | `scintilla-run` | `scintilla-run-project` | `https://github.com/orgs/scintilla-run/projects/1` | `scintilla-run/scintilla-mcp-server.rs` | [PR #15](https://github.com/scintilla-run/scintilla-mcp-server.rs/pull/15) |
 
+## Test-organization evidence routing
+
+The Project `Evidence` field should link the matching test PR in addition to the
+canonical production PR when coverage exists.
+
+| Production organization | Test organization | Test repository or path | Evidence PR | Hosted qualification |
+|---|---|---|---:|---|
+| `3FA-app` | `3fa-app-test` | `mcp-contract-e2e` | [#3](https://github.com/3fa-app-test/mcp-contract-e2e/pull/3) | Exact-source verifier; no run admitted |
+| `fiducia-cloud` | `fiducia-cloud-test` | `mcp-contract-e2e` | [#2](https://github.com/fiducia-cloud-test/mcp-contract-e2e/pull/2) | Exact-source verifier; no run admitted |
+| `quaestor-ledger` | `quaestor-ledger-test` | `mcp-contract-e2e` | [#2](https://github.com/quaestor-ledger-test/mcp-contract-e2e/pull/2) | Exact-source verifier; no run admitted |
+| `sonus-auris` | `sonus-auris-test` | `mcp-contract-e2e` | [#2](https://github.com/sonus-auris-test/mcp-contract-e2e/pull/2) | Exact-source verifier; no run admitted |
+| `scintilla-run` | `scintilla-run-test` | `mcp-contract-e2e` | [#3](https://github.com/scintilla-run-test/mcp-contract-e2e/pull/3) | Exact-source verifier; no run admitted |
+| `discrete-event-systems` | `discrete-event-systems-test` | `.github/contract-tests/des-mcp-server` | [#6](https://github.com/discrete-event-systems-test/.github/pull/6) | Hosted run `31241357736` passed |
+
+`benefactor-cc`, `daedalus-fab`, `athlet-o`, and `akrion-sim` had no matching
+installed test repository during the 2026-08-07 pass. Their Project items should
+record `Risk = runner` or `Risk = dependency` and link the explicit gap in
+`den-957-test-org-provenance.md`; no substitute test organization should be
+silently used.
+
 ## Board fields
 
 Each board should expose at least:
@@ -29,7 +49,7 @@ Each board should expose at least:
 - `Repository`;
 - `Linear issue`;
 - `Risk`: none, runner, dependency, security, release;
-- `Evidence`: PR, merge commit, workflow run, or operator exception.
+- `Evidence`: PR, merge commit, workflow run, exact-source verifier, or operator exception.
 
 ## Automation contract
 
@@ -38,7 +58,8 @@ Each board should expose at least:
 3. Link the Linear issue in the PR body and add the PR to the organization board.
 4. Move an item to Done only after the canonical PR merges.
 5. A workflow that never receives a runner is `Blocked`, never `Passed`.
-6. Superseded PRs are closed and excluded from completion counts.
+6. Exact-source provenance is valid evidence but must not be labeled hosted CI.
+7. Superseded PRs are closed and excluded from completion counts.
 
 The current GitHub connector can update repositories, issues, PRs, and merges,
 but does not expose GitHub Projects v2 mutations. This registry therefore
