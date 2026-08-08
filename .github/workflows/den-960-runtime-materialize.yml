@@ -7,6 +7,11 @@ on:
       - packages/rust/Cargo.toml
       - packages/rust/Cargo.lock
       - packages/rust/crates/ore-mcp-runtime/**
+  push:
+    branches:
+      - agent/den-960-ore-mcp-runtime
+    paths:
+      - .github/workflows/den-960-runtime-materialize.yml
   workflow_dispatch:
 
 permissions:
@@ -14,13 +19,14 @@ permissions:
 
 concurrency:
   group: den-960-runtime-materialize-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  generate-and-prove:
+  prove:
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.number == 22 &&
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.number == 22 &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        github.event.pull_request.head.ref == 'agent/den-960-ore-mcp-runtime')
     runs-on: ubuntu-24.04
@@ -52,3 +58,49 @@ jobs:
           path: packages/rust/Cargo.lock
           if-no-files-found: error
           retention-days: 2
+
+  materialize:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'ORESoftware/mcp-rust-libs' &&
+      github.actor == 'ORESoftware' &&
+      github.ref == 'refs/heads/agent/den-960-ore-mcp-runtime'
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out exact materialization branch without credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: agent/den-960-ore-mcp-runtime
+          fetch-depth: 1
+          persist-credentials: false
+          show-progress: false
+          submodules: false
+      - name: Install canonical MSRV
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.88.0
+          components: rustfmt, clippy
+      - name: Generate and prove the exact lockfile
+        run: |
+          set -euo pipefail
+          cargo +1.88.0 generate-lockfile --manifest-path packages/rust/Cargo.toml
+          cargo +1.88.0 metadata --locked --manifest-path packages/rust/Cargo.toml --format-version 1 >/dev/null
+          cargo +1.88.0 test --locked --manifest-path packages/rust/Cargo.toml -p ore-mcp-runtime --no-default-features
+          cargo +1.88.0 clippy --locked --manifest-path packages/rust/Cargo.toml -p ore-mcp-runtime --all-features --all-targets -- -D warnings
+      - name: Commit generated lock and remove this one-shot workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git add packages/rust/Cargo.lock
+          git rm .github/workflows/den-960-runtime-materialize.yml
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(DEN-960): materialize exact runtime lockfile'
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+            push origin HEAD:refs/heads/agent/den-960-ore-mcp-runtime
