@@ -78,6 +78,8 @@ jobs:
             tooling/test_check_fleet_pr_evidence.py \
             tooling/check_wave2_evidence.py \
             tooling/test_check_wave2_evidence.py \
+            scripts/zed_wave_2_registry_readiness.py \
+            tooling/test_zed_wave_2_registry_readiness.py \
             tooling/validate_api_docs_contract.py \
             tooling/test_validate_api_docs_contract.py
       - name: Run positive and adversarial audit fixtures
@@ -88,6 +90,7 @@ jobs:
             tooling/test_check_deployable_lockfile.py \
             tooling/test_check_fleet_pr_evidence.py \
             tooling/test_check_wave2_evidence.py \
+            tooling/test_zed_wave_2_registry_readiness.py \
             tooling/test_validate_api_docs_contract.py
       - name: Validate API-docs and MCP discovery example
         run: |
