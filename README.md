@@ -21,12 +21,13 @@ The `packages/rust` workspace contains narrow, version-neutral infrastructure:
 - `ore-mcp-config` — strict flags2env audit/parsing/coercion with unknown/positional rejection, deterministic source precedence, environment-only secret policy, and value-free diagnostics;
 - `ore-mcp-safety` — UTF-8-safe truncation, bounded incremental bytes, error redaction, and header validation;
 - `ore-mcp-http` — exact URL parsing, loopback-only HTTP, bearer-host allowlists, no-redirect defaults, and incremental response-body bounds;
+- `ore-mcp-org-server` — a complete read-only organization server with six closed tools, `ores-otel` traces/metrics/logs, Shared Auth boundary guidance, SOPS+age environment policy, and the Zed dependency graph;
 - `ore-mcp-process` — fail-fast or truncating concurrent stdout/stderr capture with timeout, kill, and reap behavior;
 - `ore-mcp-runtime` — official `rmcp` stdio lifecycle plus exact final-protocol enforcement before SDK negotiation;
 - `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio, initialize, catalog, result, byte/frame-limit, and stdout-purity audits;
 - `ore-mcp-zed-graph` — bounded package-coordinate validation plus the shared closed-world dependency-graph descriptor and result contract.
 
-The bootstrap, config, and HTTP layers intentionally avoid a hidden fleet-wide `rmcp`, OpenTelemetry, or concrete HTTP-client upgrade. Servers in different SDK and OpenTelemetry cohorts can share policy without sharing product dependencies.
+The bootstrap, config, and HTTP layers intentionally avoid a hidden fleet-wide `rmcp`, OpenTelemetry, or concrete HTTP-client upgrade. Servers in different SDK and OpenTelemetry cohorts can share those narrow policies without sharing product dependencies. The separately named `ore-mcp-org-server` is the opinionated greenfield baseline: it deliberately pins `ores-otel/ores-mcp-server-core-libs.rs` at a reviewed immutable revision so newly created organization servers receive one telemetry and logging implementation by construction.
 
 Product tools, authorization, mutation gates, credentials, upstream business clients, concrete exporters, client timeouts, package coordinates, and domain policy remain in their owning repositories.
 
