@@ -125,6 +125,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return the immutable organization-server identity and read-only access contract."
     )]
+    #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "org_identity", mcp.tool.class = "inventory"))]
     fn org_identity(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Inventory,
@@ -144,6 +145,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return the canonical Zed dependency graph, immutable package coordinates, and .vendor/.zed materialization policy."
     )]
+    #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "zed_dependency_graph", mcp.tool.class = "inventory"))]
     fn zed_dependency_graph(
         &self,
         Parameters(_): Parameters<NoArguments>,
@@ -158,6 +160,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return non-sensitive ores-otel logging, traces, metrics, and logs initialization status without collector details."
     )]
+    #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "telemetry_status", mcp.tool.class = "health"))]
     fn telemetry_status(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Health,
@@ -181,6 +184,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Describe the fail-closed Shared Auth boundary and whether a public authority URL is configured; never accepts or inspects credentials."
     )]
+    #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "shared_auth_policy", mcp.tool.class = "health"))]
     fn shared_auth_policy(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Health,
@@ -201,6 +205,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return the encrypted-environment contract: SOPS+age ciphertext in env/enc, plaintext only in ignored env/dec, and Just+Nix execution."
     )]
+    #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "environment_policy", mcp.tool.class = "details"))]
     fn environment_policy(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Details,
@@ -221,6 +226,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return the common read-only, bounded-output, redaction, transport, telemetry, auth, and dependency-management guarantees."
     )]
+    #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "security_baseline", mcp.tool.class = "details"))]
     fn security_baseline(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Details,
