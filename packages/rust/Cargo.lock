@@ -1014,6 +1014,8 @@ dependencies = [
  "ore-mcp-zed-graph",
  "ores-mcp-server-core-libs",
  "rmcp 2.2.0",
+ "schemars",
+ "serde",
  "serde_json",
  "tracing",
 ]

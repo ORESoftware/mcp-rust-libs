@@ -18,11 +18,14 @@ use ores_mcp_server_core_libs::observability::{
 };
 use rmcp::{
     handler::server::router::tool::ToolRouter,
+    handler::server::wrapper::Parameters,
     model::{Implementation, ServerCapabilities, ServerInfo},
     tool, tool_handler, tool_router,
     transport::stdio,
     ServerHandler, ServiceExt,
 };
+use schemars::JsonSchema;
+use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::Instrument;
 
@@ -63,6 +66,10 @@ struct TelemetrySnapshot {
     metric_exporter: bool,
     log_exporter: bool,
 }
+
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+struct NoArguments {}
 
 impl From<TelemetryStatus> for TelemetrySnapshot {
     fn from(status: TelemetryStatus) -> Self {
@@ -118,7 +125,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return the immutable organization-server identity and read-only access contract."
     )]
-    fn org_identity(&self) -> Result<String, String> {
+    fn org_identity(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Inventory,
             json!({
@@ -137,7 +144,10 @@ impl OrgMcpServer {
     #[tool(
         description = "Return the canonical Zed dependency graph, immutable package coordinates, and .vendor/.zed materialization policy."
     )]
-    fn zed_dependency_graph(&self) -> Result<String, String> {
+    fn zed_dependency_graph(
+        &self,
+        Parameters(_): Parameters<NoArguments>,
+    ) -> Result<String, String> {
         self.successful_json(
             ToolClass::Inventory,
             self.dependency_graph.structured_content(),
@@ -148,7 +158,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return non-sensitive ores-otel logging, traces, metrics, and logs initialization status without collector details."
     )]
-    fn telemetry_status(&self) -> Result<String, String> {
+    fn telemetry_status(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Health,
             json!({
@@ -171,7 +181,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Describe the fail-closed Shared Auth boundary and whether a public authority URL is configured; never accepts or inspects credentials."
     )]
-    fn shared_auth_policy(&self) -> Result<String, String> {
+    fn shared_auth_policy(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Health,
             json!({
@@ -191,7 +201,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return the encrypted-environment contract: SOPS+age ciphertext in env/enc, plaintext only in ignored env/dec, and Just+Nix execution."
     )]
-    fn environment_policy(&self) -> Result<String, String> {
+    fn environment_policy(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Details,
             json!({
@@ -211,7 +221,7 @@ impl OrgMcpServer {
     #[tool(
         description = "Return the common read-only, bounded-output, redaction, transport, telemetry, auth, and dependency-management guarantees."
     )]
-    fn security_baseline(&self) -> Result<String, String> {
+    fn security_baseline(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
         self.successful_json(
             ToolClass::Details,
             json!({
@@ -317,9 +327,9 @@ mod tests {
     #[test]
     fn all_public_tools_are_closed_no_argument_tools() {
         let router = OrgMcpServer::tool_router();
-        let names = router
-            .list_all()
-            .into_iter()
+        let tools = router.list_all();
+        let names = tools
+            .iter()
             .map(|tool| tool.name.to_string())
             .collect::<Vec<_>>();
         assert_eq!(names.len(), 6);
@@ -333,5 +343,14 @@ mod tests {
         ] {
             assert!(names.iter().any(|candidate| candidate == name));
         }
+        for tool in tools {
+            let descriptor = serde_json::to_value(tool).expect("serialize tool descriptor");
+            assert_eq!(
+                descriptor.pointer("/inputSchema/additionalProperties"),
+                Some(&Value::Bool(false))
+            );
+        }
+        assert!(serde_json::from_value::<NoArguments>(json!({})).is_ok());
+        assert!(serde_json::from_value::<NoArguments>(json!({"unexpected": true})).is_err());
     }
 }

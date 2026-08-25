@@ -16,6 +16,7 @@ ore-mcp-bootstrap.workspace = true
 ore-mcp-zed-graph.workspace = true
 ores-mcp-server-core-libs = { git = "https://github.com/ores-otel/ores-mcp-server-core-libs.rs", rev = "e559a76f869c2c2d9bf939b510d358a3924abd81" }
 rmcp = { workspace = true, features = ["macros", "schemars"] }
+schemars = "1"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tracing.workspace = true
-
