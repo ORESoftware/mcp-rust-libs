@@ -1010,6 +1010,7 @@ dependencies = [
 name = "ore-mcp-org-server"
 version = "0.1.0"
 dependencies = [
+ "futures",
  "ore-mcp-bootstrap",
  "ore-mcp-zed-graph",
  "ores-mcp-server-core-libs",
@@ -1017,6 +1018,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "tokio-util",
  "tracing",
 ]
 

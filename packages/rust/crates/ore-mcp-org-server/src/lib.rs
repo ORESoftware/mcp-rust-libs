@@ -11,6 +11,7 @@
 
 use std::io;
 
+use futures::{future, StreamExt};
 use ore_mcp_bootstrap::runtime::ServerIdentity;
 use ore_mcp_zed_graph::DependencyGraph;
 use ores_mcp_server_core_libs::observability::{
@@ -20,15 +21,19 @@ use rmcp::{
     handler::server::router::tool::ToolRouter,
     handler::server::wrapper::Parameters,
     model::{Implementation, ServerCapabilities, ServerInfo},
+    service::{RxJsonRpcMessage, TxJsonRpcMessage},
     tool, tool_handler, tool_router,
-    transport::stdio,
-    ServerHandler, ServiceExt,
+    transport::{async_rw::JsonRpcMessageCodec, io::stdio, sink_stream::SinkStreamTransport},
+    RoleServer, ServerHandler, ServiceExt,
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::{json, Value};
+use tokio_util::codec::{FramedRead, FramedWrite};
 use tracing::Instrument;
 
+/// Maximum accepted JSON-RPC request frame on stdio.
+pub const MAX_STDIO_FRAME_BYTES: usize = 1024 * 1024;
 const MAX_TOOL_OUTPUT_BYTES: usize = 64 * 1024;
 const ORES_OTEL_REVISION: &str = "e559a76f869c2c2d9bf939b510d358a3924abd81";
 
@@ -287,8 +292,31 @@ pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> 
         transport = "stdio",
         access.mode = "read_only"
     );
+    let (stdin, stdout) = stdio();
+    let incoming = FramedRead::new(
+        stdin,
+        JsonRpcMessageCodec::<RxJsonRpcMessage<RoleServer>>::new_with_max_length(
+            MAX_STDIO_FRAME_BYTES,
+        ),
+    )
+    .filter_map(|frame| {
+        future::ready(match frame {
+            Ok(message) => Some(message),
+            Err(_) => {
+                tracing::warn!("discarded invalid or oversized MCP stdio frame");
+                None
+            }
+        })
+    });
+    let outgoing = FramedWrite::new(
+        stdout,
+        JsonRpcMessageCodec::<TxJsonRpcMessage<RoleServer>>::new_with_max_length(
+            MAX_STDIO_FRAME_BYTES,
+        ),
+    );
+    let transport = SinkStreamTransport::new(outgoing, incoming);
     let service = server
-        .serve(stdio())
+        .serve(transport)
         .instrument(server_span.clone())
         .await?;
     service.waiting().instrument(server_span).await?;
@@ -299,6 +327,8 @@ pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tokio_util::bytes::BytesMut;
+    use tokio_util::codec::Decoder;
 
     const DEPENDENCIES: &[&str] = &[
         "ores-otel/ores-mcp-server-core-libs.rs",
@@ -358,5 +388,18 @@ mod tests {
         }
         assert!(serde_json::from_value::<NoArguments>(json!({})).is_ok());
         assert!(serde_json::from_value::<NoArguments>(json!({"unexpected": true})).is_err());
+    }
+
+    #[test]
+    fn stdio_codec_rejects_oversized_frames() {
+        let mut codec = JsonRpcMessageCodec::<RxJsonRpcMessage<RoleServer>>::new_with_max_length(
+            MAX_STDIO_FRAME_BYTES,
+        );
+        let oversized = vec![b' '; MAX_STDIO_FRAME_BYTES + 2];
+        let mut frame = BytesMut::from(oversized.as_slice());
+        let error = codec
+            .decode(&mut frame)
+            .expect_err("oversized stdio frame must be rejected");
+        assert!(error.to_string().contains("max line length exceeded"));
     }
 }
