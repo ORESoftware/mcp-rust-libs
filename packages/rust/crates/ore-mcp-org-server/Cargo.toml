@@ -12,7 +12,6 @@ description = "Hardened read-only organization MCP server shared across the ORES
 workspace = true
 
 [dependencies]
-futures = "0.3"
 ore-mcp-bootstrap.workspace = true
 ore-mcp-zed-graph.workspace = true
 ores-mcp-server-core-libs = { git = "https://github.com/ores-otel/ores-mcp-server-core-libs.rs", rev = "e559a76f869c2c2d9bf939b510d358a3924abd81" }
@@ -20,5 +19,9 @@ rmcp = { workspace = true, features = ["macros", "schemars"] }
 schemars = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tokio = { version = "1", default-features = false, features = ["io-util"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 tracing.workspace = true
+
+[dev-dependencies]
+tokio = { version = "1", features = ["io-util", "macros", "rt"] }

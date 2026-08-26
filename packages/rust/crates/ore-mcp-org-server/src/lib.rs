@@ -10,8 +10,9 @@
 #![forbid(unsafe_code)]
 
 use std::io;
+use std::pin::Pin;
+use std::task::{Context, Poll, ready};
 
-use futures::{future, StreamExt};
 use ore_mcp_bootstrap::runtime::ServerIdentity;
 use ore_mcp_zed_graph::DependencyGraph;
 use ores_mcp_server_core_libs::observability::{
@@ -21,15 +22,14 @@ use rmcp::{
     handler::server::router::tool::ToolRouter,
     handler::server::wrapper::Parameters,
     model::{Implementation, ServerCapabilities, ServerInfo},
-    service::{RxJsonRpcMessage, TxJsonRpcMessage},
     tool, tool_handler, tool_router,
-    transport::{async_rw::JsonRpcMessageCodec, io::stdio, sink_stream::SinkStreamTransport},
-    RoleServer, ServerHandler, ServiceExt,
+    transport::stdio,
+    ServerHandler, ServiceExt,
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tokio_util::codec::{FramedRead, FramedWrite};
+use tokio::io::{AsyncBufRead, AsyncRead, BufReader, ReadBuf};
 use tracing::Instrument;
 
 /// Maximum accepted JSON-RPC request frame on stdio.
@@ -268,6 +268,127 @@ impl ServerHandler for OrgMcpServer {
     }
 }
 
+#[cfg(test)]
+#[derive(Debug, PartialEq, Eq)]
+enum CappedLine {
+    Eof,
+    Discarded,
+    Bytes(Vec<u8>),
+}
+
+struct LineCappedReader<R> {
+    inner: BufReader<R>,
+    line: Vec<u8>,
+    discarding: bool,
+    pending: Vec<u8>,
+    pending_offset: usize,
+}
+
+impl<R: AsyncRead + Unpin> AsyncRead for LineCappedReader<R> {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
+        let this = &mut *self;
+        if this.pending_offset < this.pending.len() {
+            copy_pending(this, buf);
+            return Poll::Ready(Ok(()));
+        }
+        loop {
+            let available = ready!(Pin::new(&mut this.inner).poll_fill_buf(cx))?;
+            if available.is_empty() {
+                return Poll::Ready(Ok(()));
+            }
+            if let Some(offset) = available.iter().position(|byte| *byte == b'\n') {
+                let consume = offset + 1;
+                if this.discarding || this.line.len() + offset > MAX_STDIO_FRAME_BYTES {
+                    Pin::new(&mut this.inner).consume(consume);
+                    this.line.clear();
+                    this.discarding = false;
+                    tracing::warn!("discarded invalid or oversized MCP stdio frame");
+                    continue;
+                }
+                this.line.extend_from_slice(&available[..offset]);
+                Pin::new(&mut this.inner).consume(consume);
+                if this.line.last() == Some(&b'\r') {
+                    this.line.pop();
+                }
+                this.pending.append(&mut this.line);
+                this.pending.push(b'\n');
+                this.pending_offset = 0;
+                copy_pending(this, buf);
+                return Poll::Ready(Ok(()));
+            }
+            if this.discarding || this.line.len() + available.len() > MAX_STDIO_FRAME_BYTES {
+                let consumed = available.len();
+                Pin::new(&mut this.inner).consume(consumed);
+                this.line.clear();
+                this.discarding = true;
+                continue;
+            }
+            let consumed = available.len();
+            this.line.extend_from_slice(available);
+            Pin::new(&mut this.inner).consume(consumed);
+        }
+    }
+}
+
+fn copy_pending<R>(this: &mut LineCappedReader<R>, buf: &mut ReadBuf<'_>) {
+    let rest = &this.pending[this.pending_offset..];
+    let copied = rest.len().min(buf.remaining());
+    buf.put_slice(&rest[..copied]);
+    this.pending_offset += copied;
+    if this.pending_offset == this.pending.len() {
+        this.pending.clear();
+        this.pending_offset = 0;
+    }
+}
+
+#[cfg(test)]
+async fn read_capped_line<R>(reader: &mut R, max_bytes: usize) -> io::Result<CappedLine>
+where
+    R: tokio::io::AsyncBufRead + Unpin,
+{
+    use tokio::io::AsyncBufReadExt;
+    let mut data = Vec::new();
+    let mut discarding = false;
+    loop {
+        let available = reader.fill_buf().await?;
+        if available.is_empty() {
+            return Ok(if data.is_empty() && !discarding {
+                CappedLine::Eof
+            } else if discarding || data.len() > max_bytes {
+                CappedLine::Discarded
+            } else {
+                CappedLine::Bytes(data)
+            });
+        }
+        if let Some(offset) = available.iter().position(|byte| *byte == b'\n') {
+            if discarding || data.len() + offset > max_bytes {
+                reader.consume(offset + 1);
+                return Ok(CappedLine::Discarded);
+            }
+            data.extend_from_slice(&available[..offset]);
+            reader.consume(offset + 1);
+            if data.last() == Some(&b'\r') {
+                data.pop();
+            }
+            return Ok(CappedLine::Bytes(data));
+        }
+        if discarding || data.len() + available.len() > max_bytes {
+            let consumed = available.len();
+            reader.consume(consumed);
+            discarding = true;
+            data.clear();
+            continue;
+        }
+        let consumed = available.len();
+        data.extend_from_slice(available);
+        reader.consume(consumed);
+    }
+}
+
 /// Initialize `ores-otel` and serve one organization server over MCP stdio.
 ///
 /// # Errors
@@ -293,30 +414,15 @@ pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> 
         access.mode = "read_only"
     );
     let (stdin, stdout) = stdio();
-    let incoming = FramedRead::new(
-        stdin,
-        JsonRpcMessageCodec::<RxJsonRpcMessage<RoleServer>>::new_with_max_length(
-            MAX_STDIO_FRAME_BYTES,
-        ),
-    )
-    .filter_map(|frame| {
-        future::ready(match frame {
-            Ok(message) => Some(message),
-            Err(_) => {
-                tracing::warn!("discarded invalid or oversized MCP stdio frame");
-                None
-            }
-        })
-    });
-    let outgoing = FramedWrite::new(
-        stdout,
-        JsonRpcMessageCodec::<TxJsonRpcMessage<RoleServer>>::new_with_max_length(
-            MAX_STDIO_FRAME_BYTES,
-        ),
-    );
-    let transport = SinkStreamTransport::new(outgoing, incoming);
+    let stdin = LineCappedReader {
+        inner: BufReader::new(stdin),
+        line: Vec::new(),
+        discarding: false,
+        pending: Vec::new(),
+        pending_offset: 0,
+    };
     let service = server
-        .serve(transport)
+        .serve((stdin, stdout))
         .instrument(server_span.clone())
         .await?;
     service.waiting().instrument(server_span).await?;
@@ -327,6 +433,10 @@ pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rmcp::{
+        service::RxJsonRpcMessage, transport::async_rw::JsonRpcMessageCodec, RoleServer,
+    };
+    use tokio::io::AsyncReadExt;
     use tokio_util::bytes::BytesMut;
     use tokio_util::codec::Decoder;
 
@@ -401,5 +511,53 @@ mod tests {
             .decode(&mut frame)
             .expect_err("oversized stdio frame must be rejected");
         assert!(error.to_string().contains("max line length exceeded"));
+    }
+
+    #[tokio::test]
+    async fn oversized_stdio_line_is_discarded_without_closing_the_stream() {
+        let mut input = vec![b'x'; MAX_STDIO_FRAME_BYTES + 1];
+        input.push(b'\n');
+        input.extend_from_slice(br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#);
+        input.push(b'\n');
+        let mut reader = BufReader::new(input.as_slice());
+        assert_eq!(
+            read_capped_line(&mut reader, MAX_STDIO_FRAME_BYTES)
+                .await
+                .expect("read oversized line"),
+            CappedLine::Discarded
+        );
+        match read_capped_line(&mut reader, MAX_STDIO_FRAME_BYTES)
+            .await
+            .expect("read initialize line")
+        {
+            CappedLine::Bytes(bytes) => {
+                assert!(bytes.starts_with(br#"{"jsonrpc":"2.0""#));
+            }
+            other => panic!("expected initialize bytes, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn capped_async_read_skips_oversized_line_and_keeps_the_next_frame() {
+        let mut input = vec![b'x'; MAX_STDIO_FRAME_BYTES + 1];
+        input.push(b'\n');
+        input.extend_from_slice(br#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#);
+        input.push(b'\n');
+        let mut reader = LineCappedReader {
+            inner: BufReader::new(input.as_slice()),
+            line: Vec::new(),
+            discarding: false,
+            pending: Vec::new(),
+            pending_offset: 0,
+        };
+        let mut recovered = String::new();
+        reader
+            .read_to_string(&mut recovered)
+            .await
+            .expect("read remaining frames");
+        assert_eq!(
+            recovered,
+            "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}\n"
+        );
     }
 }
