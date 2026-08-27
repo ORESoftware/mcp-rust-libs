@@ -42,6 +42,11 @@ jobs:
       - name: Minimal runtime feature boundary
         working-directory: packages/rust
         run: cargo check --locked -p ore-mcp-runtime --no-default-features
+      - name: Minimal telemetry feature boundary
+        working-directory: packages/rust
+        run: |
+          cargo check --locked -p ore-mcp-telemetry --no-default-features
+          cargo test --locked -p ore-mcp-telemetry --no-default-features
       - name: Clippy
         working-directory: packages/rust
         run: cargo clippy --locked --workspace --all-targets -- -D warnings

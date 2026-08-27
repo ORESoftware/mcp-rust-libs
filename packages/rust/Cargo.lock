@@ -1044,6 +1044,22 @@ name = "ore-mcp-safety"
 version = "0.1.0"
 
 [[package]]
+name = "ore-mcp-telemetry"
+version = "0.1.0"
+dependencies = [
+ "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
+ "ore-mcp-bootstrap",
+ "ore-mcp-safety",
+ "tokio",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
 name = "ore-mcp-testkit"
 version = "0.1.0"
 dependencies = [

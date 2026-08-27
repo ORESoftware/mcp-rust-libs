@@ -5,6 +5,7 @@ This repository owns only cross-cutting safety, transport-policy, bounded-proces
 Fleet invariants:
 
 - stdout is reserved for MCP protocol frames; diagnostics use stderr;
+- shared telemetry never logs tool arguments, result bodies, credentials, user identity, or unbounded payloads;
 - HTTP bearer credentials are sent only to exact allowlisted hosts with redirects disabled;
 - response and subprocess output are bounded before buffering;
 - child processes use argv vectors, bounded deadlines, kill-on-overflow, and reap semantics;

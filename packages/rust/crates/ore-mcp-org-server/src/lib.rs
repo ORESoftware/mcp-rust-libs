@@ -11,7 +11,7 @@
 
 use std::io;
 use std::pin::Pin;
-use std::task::{Context, Poll, ready};
+use std::task::{ready, Context, Poll};
 
 use ore_mcp_bootstrap::runtime::ServerIdentity;
 use ore_mcp_zed_graph::DependencyGraph;
@@ -433,9 +433,7 @@ pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rmcp::{
-        service::RxJsonRpcMessage, transport::async_rw::JsonRpcMessageCodec, RoleServer,
-    };
+    use rmcp::{service::RxJsonRpcMessage, transport::async_rw::JsonRpcMessageCodec, RoleServer};
     use tokio::io::AsyncReadExt;
     use tokio_util::bytes::BytesMut;
     use tokio_util::codec::Decoder;

@@ -1,0 +1,35 @@
+[package]
+name = "ore-mcp-telemetry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Secret-safe stderr logging, optional OTLP lifecycle, and bounded tool instrumentation for ORESoftware MCP servers"
+readme = "README.md"
+
+[features]
+default = ["otlp"]
+otlp = [
+  "dep:opentelemetry",
+  "dep:opentelemetry-otlp",
+  "dep:opentelemetry_sdk",
+  "dep:tokio",
+  "dep:tracing-opentelemetry",
+]
+
+[dependencies]
+ore-mcp-bootstrap = { workspace = true }
+ore-mcp-safety = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+url = "2.5"
+opentelemetry = { version = "0.32", optional = true, default-features = false, features = ["metrics", "trace"] }
+opentelemetry-otlp = { version = "0.32", optional = true, default-features = false, features = ["grpc-tonic", "metrics", "tls-ring", "tls-webpki-roots", "trace"] }
+opentelemetry_sdk = { version = "0.32", optional = true, default-features = false, features = ["metrics", "trace"] }
+tokio = { version = "1", optional = true, default-features = false, features = ["rt"] }
+tracing-opentelemetry = { version = "0.33", optional = true }
+
+[lints]
+workspace = true

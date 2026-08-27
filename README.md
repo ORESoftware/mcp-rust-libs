@@ -24,12 +24,13 @@ The `packages/rust` workspace contains narrow, version-neutral infrastructure:
 - `ore-mcp-org-server` — a complete read-only organization server with six closed tools, `ores-otel` traces/metrics/logs, Shared Auth boundary guidance, SOPS+age environment policy, and the Zed dependency graph;
 - `ore-mcp-process` — fail-fast or truncating concurrent stdout/stderr capture with timeout, kill, and reap behavior;
 - `ore-mcp-runtime` — official `rmcp` stdio lifecycle plus exact final-protocol enforcement before SDK negotiation;
+- `ore-mcp-telemetry` — stderr-only JSON logging, bounded secret-safe resource assembly, validated optional OTLP endpoints, fail-open OpenTelemetry 0.32 trace/metric exporters, and bounded-cardinality tool labels that never record arguments or results;
 - `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio, initialize, catalog, result, byte/frame-limit, and stdout-purity audits;
 - `ore-mcp-zed-graph` — bounded package-coordinate validation plus the shared closed-world dependency-graph descriptor and result contract.
 
-The bootstrap, config, and HTTP layers intentionally avoid a hidden fleet-wide `rmcp`, OpenTelemetry, or concrete HTTP-client upgrade. Servers in different SDK and OpenTelemetry cohorts can share those narrow policies without sharing product dependencies. The separately named `ore-mcp-org-server` is the opinionated greenfield baseline: it deliberately pins `ores-otel/ores-mcp-server-core-libs.rs` at a reviewed immutable revision so newly created organization servers receive one telemetry and logging implementation by construction.
+The bootstrap, config, and HTTP layers intentionally avoid a hidden fleet-wide `rmcp`, OpenTelemetry, or concrete HTTP-client upgrade. Servers in different SDK and OpenTelemetry cohorts can share those narrow policies without sharing product dependencies. `ore-mcp-telemetry` keeps endpoint validation, resource assembly, stderr logging, and tool-span helpers available with `--no-default-features`; the optional `otlp` feature constructs OpenTelemetry 0.32 exporters for the current signed cohort. The separately named `ore-mcp-org-server` is the opinionated greenfield baseline: it deliberately pins `ores-otel/ores-mcp-server-core-libs.rs` at a reviewed immutable revision so newly created organization servers receive one telemetry and logging implementation by construction.
 
-Product tools, authorization, mutation gates, credentials, upstream business clients, concrete exporters, client timeouts, package coordinates, and domain policy remain in their owning repositories.
+Product tools, authorization, mutation gates, credentials, OTLP authentication headers, upstream business clients, concrete exporters, client timeouts, package coordinates, `rmcp`-version-specific tool wrapping, and domain policy remain in their owning repositories.
 
 ## API documentation and MCP discovery
 
@@ -117,4 +118,4 @@ python3 tooling/audit_rust_mcp_server.py --repo-root /path/to/mcp-server
 python3 tooling/check_wave2_evidence.py
 ```
 
-Tracking: DEN-957, DEN-959, DEN-960, DEN-965, DEN-779, DEN-852, DEN-161, DEN-3081, and DEN-3158.
+Tracking: DEN-957, DEN-959, DEN-960, DEN-965, DEN-779, DEN-852, DEN-161, DEN-3081, DEN-3100, and DEN-3158.

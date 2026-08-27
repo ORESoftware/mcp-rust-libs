@@ -8,6 +8,7 @@ members = [
   "crates/ore-mcp-process",
   "crates/ore-mcp-runtime",
   "crates/ore-mcp-safety",
+  "crates/ore-mcp-telemetry",
   "crates/ore-mcp-testkit",
   "crates/ore-mcp-zed-graph",
 ]
@@ -35,6 +36,7 @@ ore-mcp-org-server = { version = "0.1.0", path = "crates/ore-mcp-org-server" }
 ore-mcp-process = { version = "0.1.0", path = "crates/ore-mcp-process" }
 ore-mcp-runtime = { version = "0.1.0", path = "crates/ore-mcp-runtime" }
 ore-mcp-safety = { version = "0.1.0", path = "crates/ore-mcp-safety" }
+ore-mcp-telemetry = { version = "0.1.0", path = "crates/ore-mcp-telemetry" }
 ore-mcp-testkit = { version = "0.1.0", path = "crates/ore-mcp-testkit" }
 ore-mcp-zed-graph = { version = "0.1.0", path = "crates/ore-mcp-zed-graph" }
 rmcp = { version = "2.2.0", features = ["server", "transport-io"] }
