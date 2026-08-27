@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — DEN-957 telemetry remainder
+
+- extract `ore-mcp-telemetry` with stderr-only JSON logging, snapshot-based secret-safe resources, validated credential-free OTLP endpoints, fail-open OpenTelemetry 0.32 exporters, and bounded-cardinality tool labels;
+- keep endpoint/resource/tool policy available with `--no-default-features` so OpenTelemetry 0.27 product adapters can share the policy layer without a hidden SDK upgrade.
+
 ## Unreleased — August 2, 2026 fleet audit
 
 - record 24 existing and five missing Rust MCP servers;
