@@ -53,6 +53,65 @@ jobs:
       - name: Unit and adversarial tests
         working-directory: packages/rust
         run: cargo test --locked --workspace --all-targets
+      - name: Telemetry stderr-only and no-ambient-input invariants
+        working-directory: packages/rust
+        # Salvaged from agent/den-3100-ore-mcp-telemetry, where these assertions
+        # lived in a temporary branch-scoped workflow that is not being merged.
+        #
+        # Arming: ore-mcp-telemetry is not a workspace member on main yet; it
+        # arrives with agent/den-957-mcp-runtime-remainder. Two obvious designs
+        # were rejected. An unconditional check reds every unrelated pull request
+        # until that branch lands. A bare `[ -d ... ] || exit 0` guard passes
+        # vacuously forever the moment the crate is renamed or moved, which is the
+        # failure mode that makes a check worthless. So the gate is the workspace
+        # manifest -- the only file that decides whether the crate is actually
+        # built -- and the check arms itself with no follow-up edit. A manifest
+        # entry whose directory is missing is a hard error, never a skip.
+        #
+        # Do not rewrite the absent-assertions as `! grep ...`. POSIX and bash
+        # both ignore `set -e` for a pipeline beginning with `!`, so that form
+        # returns success whether or not the string is found. The original
+        # branch-scoped workflow used it and those two assertions never ran.
+        run: |
+          set -euo pipefail
+          crate=crates/ore-mcp-telemetry
+
+          if ! grep -Fq '"crates/ore-mcp-telemetry",' Cargo.toml; then
+            echo "::notice title=Telemetry invariants not armed::ore-mcp-telemetry is not a workspace member yet; these checks arm automatically when it is added to packages/rust/Cargo.toml. See docs/negative-knowledge.md."
+            exit 0
+          fi
+
+          if [ ! -d "$crate/src" ]; then
+            echo "::error title=Telemetry invariants are stale::packages/rust/Cargo.toml lists ore-mcp-telemetry as a workspace member but $crate/src does not exist. Update this step's path; do not delete the check."
+            exit 1
+          fi
+
+          # Must be present. Diagnostics go to stderr, and exporter construction
+          # must fail open outside a Tokio runtime: a tonic-backed OTLP exporter
+          # built off-reactor panics inside the SDK, which for an MCP stdio server
+          # is fatal at startup and can corrupt the JSON-RPC frame stream (DEN-3100).
+          for needle in \
+            '.with_writer(std::io::stderr)' \
+            'Handle::try_current' \
+            'catch_unwind'
+          do
+            if ! grep -Rq --include='*.rs' -F "$needle" "$crate/src"; then
+              echo "::error title=Telemetry invariant removed::expected $needle in $crate/src"
+              exit 1
+            fi
+          done
+
+          # Must be absent. The crate never reads the process environment --
+          # callers capture an approved snapshot and pass it explicitly -- and
+          # never writes stdout, which is reserved fleet-wide for MCP protocol
+          # frames. Scoped to *.rs so documenting the rule in prose cannot trip it.
+          for forbidden in 'std::env::var' 'std::io::stdout'; do
+            if grep -Rq --include='*.rs' -F "$forbidden" "$crate"; then
+              echo "::error title=Telemetry invariant violated::$forbidden must not appear in $crate"
+              grep -Rn --include='*.rs' -F "$forbidden" "$crate"
+              exit 1
+            fi
+          done
       - name: Documentation
         working-directory: packages/rust
         env:
