@@ -8,9 +8,14 @@ repository.workspace = true
 authors.workspace = true
 description = "Hardened diagnostic HTTP policy for ORESoftware MCP servers"
 
+[features]
+default = ["reqwest-client"]
+reqwest-client = ["dep:reqwest"]
+
 [lints]
 workspace = true
 
 [dependencies]
 ore-mcp-safety = { workspace = true }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"], optional = true }
 url = "2.5"
