@@ -550,7 +550,7 @@
           "type": "string",
           "minLength": 5,
           "maxLength": 300,
-          "pattern": "^[a-z][a-z0-9+.-]*://[^[:space:]]+$"
+          "pattern": "^[a-z][a-z0-9+.-]*://\\S+$"
         },
         "description": {
           "type": "string",
