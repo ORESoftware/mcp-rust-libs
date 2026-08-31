@@ -189,7 +189,15 @@ impl ProviderRead {
         self.payload.as_ref()
     }
 
-    pub(crate) fn not_configured(provider: ProviderId, operation: &'static str) -> Self {
+    /// Returns an honest result when a consumer cannot construct a provider
+    /// adapter because required account, project, endpoint, or credential
+    /// configuration is absent.
+    ///
+    /// Consumers should call this before adapter construction instead of
+    /// inventing placeholder scope identifiers. `operation` must be a stable,
+    /// non-secret name owned by the calling server.
+    #[must_use]
+    pub fn not_configured(provider: ProviderId, operation: &'static str) -> Self {
         Self {
             provider,
             operation,
@@ -200,7 +208,14 @@ impl ProviderRead {
         }
     }
 
-    pub(crate) fn degraded(provider: ProviderId, operation: &'static str) -> Self {
+    /// Returns a value-free degraded result for failures that occur before a
+    /// scoped adapter can safely issue its provider request.
+    ///
+    /// Adapter methods already translate their own transport and payload
+    /// failures. This constructor is for consumer-owned client creation, such
+    /// as loading the in-cluster Kubernetes client or connecting to NATS.
+    #[must_use]
+    pub fn degraded(provider: ProviderId, operation: &'static str) -> Self {
         Self {
             provider,
             operation,
