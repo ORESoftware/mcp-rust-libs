@@ -156,7 +156,13 @@ fn validate_spec(spec: OrgSpec) -> io::Result<DependencyGraph> {
 impl OrgMcpServer {
     /// Return the canonical organization, repository, package, and access mode.
     #[tool(
-        description = "Return the immutable organization-server identity and read-only access contract."
+        description = "Return the immutable organization-server identity and read-only access contract.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "org_identity", mcp.tool.class = "inventory"))]
     fn org_identity(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -178,7 +184,13 @@ impl OrgMcpServer {
 
     /// Return the closed Zed package graph and materialization contract.
     #[tool(
-        description = "Return the canonical Zed dependency graph, immutable package coordinates, and .vendor/.zed materialization policy."
+        description = "Return the canonical Zed dependency graph, immutable package coordinates, and .vendor/.zed materialization policy.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "zed_dependency_graph", mcp.tool.class = "inventory"))]
     fn zed_dependency_graph(
@@ -193,7 +205,13 @@ impl OrgMcpServer {
 
     /// Return non-sensitive logging and OpenTelemetry initialization status.
     #[tool(
-        description = "Return non-sensitive ores-otel logging, traces, metrics, and logs initialization status without collector details."
+        description = "Return non-sensitive ores-otel logging, traces, metrics, and logs initialization status without collector details.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "telemetry_status", mcp.tool.class = "health"))]
     fn telemetry_status(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -217,7 +235,13 @@ impl OrgMcpServer {
 
     /// Return the Shared Auth integration boundary for product extensions.
     #[tool(
-        description = "Describe the fail-closed Shared Auth boundary and whether a public authority URL is configured; never accepts or inspects credentials."
+        description = "Describe the fail-closed Shared Auth boundary and whether a public authority URL is configured; never accepts or inspects credentials.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "shared_auth_policy", mcp.tool.class = "health"))]
     fn shared_auth_policy(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -238,7 +262,13 @@ impl OrgMcpServer {
 
     /// Return the SOPS, age, Just, and Nix environment-file policy.
     #[tool(
-        description = "Return the encrypted-environment contract: SOPS+age ciphertext in env/enc, plaintext only in ignored env/dec, and Just+Nix execution."
+        description = "Return the encrypted-environment contract: SOPS+age ciphertext in env/enc, plaintext only in ignored env/dec, and Just+Nix execution.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "environment_policy", mcp.tool.class = "details"))]
     fn environment_policy(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -259,7 +289,13 @@ impl OrgMcpServer {
 
     /// Return the minimum security guarantees inherited by the fleet server.
     #[tool(
-        description = "Return the common read-only, bounded-output, redaction, transport, telemetry, auth, and dependency-management guarantees."
+        description = "Return the common read-only, bounded-output, redaction, transport, telemetry, auth, and dependency-management guarantees.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "security_baseline", mcp.tool.class = "details"))]
     fn security_baseline(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -792,6 +828,18 @@ mod tests {
             assert_eq!(
                 descriptor.pointer("/inputSchema/additionalProperties"),
                 Some(&Value::Bool(false))
+            );
+            assert_eq!(
+                descriptor.pointer("/annotations/readOnlyHint"),
+                Some(&Value::Bool(true))
+            );
+            assert_eq!(
+                descriptor.pointer("/annotations/destructiveHint"),
+                Some(&Value::Bool(false))
+            );
+            assert_eq!(
+                descriptor.pointer("/annotations/idempotentHint"),
+                Some(&Value::Bool(true))
             );
         }
         assert!(serde_json::from_value::<NoArguments>(json!({})).is_ok());
