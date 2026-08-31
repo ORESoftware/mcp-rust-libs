@@ -7,10 +7,11 @@ use ore_mcp_remote::{
     protected_mcp_router, AssuranceLevel, RealmClaim, RemoteAuthPolicy, RemoteMcpConfig,
     SharedAuthVerifier,
 };
+use rmcp::ServerHandler;
 use url::Url;
 
 use crate::providers::ProviderContext;
-use crate::{validate_spec, OrgMcpServer, OrgSpec};
+use crate::{validate_spec, OrgMcpServer, OrgSpec, ParityAugmented};
 
 const DEFAULT_BIND: &str = "127.0.0.1:8090";
 const DEFAULT_CLIENTS: &str =
@@ -63,10 +64,47 @@ pub async fn run_http(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> {
     let launch = remote_launch(spec, &RemoteEnvironment::capture()).map_err(io::Error::other)?;
     let telemetry_guard =
         ores_mcp_server_core_libs::observability::init(spec.service_name, spec.organization);
-    let verifier = SharedAuthVerifier::new(launch.config.auth().clone())?;
-    verifier.warm().await?;
     let providers = ProviderContext::capture(spec);
     let server = OrgMcpServer::new(spec, telemetry_guard.status(), providers)?;
+    serve_http_handler(server, spec, launch).await?;
+    drop(telemetry_guard);
+    Ok(())
+}
+
+/// Adds fleet parity to a richer organization handler and serves it over an
+/// OAuth-protected final-protocol `/mcp` route.
+///
+/// The caller owns primary-handler configuration and telemetry initialization.
+/// Shared Auth validation, exact-host policy, body bounds, and the listener are
+/// still owned by this crate.
+///
+/// # Errors
+///
+/// Fails before binding for invalid identity, shared tool collisions, invalid
+/// authorization configuration, JWKS warmup failure, or listener failure.
+pub async fn run_augmented_http<S>(
+    primary: S,
+    spec: OrgSpec,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    S: ServerHandler + Clone,
+{
+    validate_spec(spec)?;
+    let launch = remote_launch(spec, &RemoteEnvironment::capture()).map_err(io::Error::other)?;
+    let server = ParityAugmented::new(primary, spec)?;
+    serve_http_handler(server, spec, launch).await
+}
+
+async fn serve_http_handler<S>(
+    server: S,
+    spec: OrgSpec,
+    launch: RemoteLaunch,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    S: ServerHandler + Clone,
+{
+    let verifier = SharedAuthVerifier::new(launch.config.auth().clone())?;
+    verifier.warm().await?;
     let router = protected_mcp_router(launch.config, verifier, move || Ok(server.clone()));
     let listener = tokio::net::TcpListener::bind(launch.bind).await?;
     tracing::info!(
@@ -82,7 +120,6 @@ pub async fn run_http(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> {
         "starting authenticated organization MCP server"
     );
     axum::serve(listener, router).await?;
-    drop(telemetry_guard);
     Ok(())
 }
 

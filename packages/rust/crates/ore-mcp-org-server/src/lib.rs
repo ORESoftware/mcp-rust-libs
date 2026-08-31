@@ -10,6 +10,7 @@
 
 #![forbid(unsafe_code)]
 
+mod augment;
 mod catalog;
 mod providers;
 mod remote;
@@ -46,7 +47,8 @@ use tracing::Instrument;
 
 use providers::{ProviderContext, ProviderReport};
 
-pub use remote::run_http;
+pub use augment::{ParityAugmented, PARITY_TOOL_NAMES};
+pub use remote::{run_augmented_http, run_http};
 
 /// Maximum accepted JSON-RPC request frame on stdio.
 pub const MAX_STDIO_FRAME_BYTES: usize = 1024 * 1024;
@@ -116,6 +118,23 @@ impl OrgMcpServer {
             dependency_graph,
             providers,
             telemetry: telemetry.into(),
+            metrics: ToolMetrics::global(),
+            tool_router: Self::tool_router(),
+        })
+    }
+
+    fn embedded(spec: OrgSpec) -> io::Result<Self> {
+        let dependency_graph = validate_spec(spec)?;
+        Ok(Self {
+            spec,
+            dependency_graph,
+            providers: ProviderContext::capture(spec),
+            telemetry: TelemetrySnapshot {
+                subscriber_installed: false,
+                trace_exporter: false,
+                metric_exporter: false,
+                log_exporter: false,
+            },
             metrics: ToolMetrics::global(),
             tool_router: Self::tool_router(),
         })
@@ -721,10 +740,38 @@ pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> 
     validate_spec(spec)?;
     let telemetry_guard = observability::init(spec.service_name, spec.organization);
     let providers = ProviderContext::capture(spec);
-    let server = ExactProtocol::new(
-        OrgMcpServer::new(spec, telemetry_guard.status(), providers)?,
-        ProtocolVersion::V_2025_11_25,
-    );
+    let server = OrgMcpServer::new(spec, telemetry_guard.status(), providers)?;
+    serve_stdio_handler(server, spec).await?;
+    drop(telemetry_guard);
+    Ok(())
+}
+
+/// Adds fleet parity to a richer organization handler and serves it over stdio.
+///
+/// The primary handler retains all domain tools, resources, prompts, and
+/// lifecycle hooks. The shared layer adds only non-colliding read-only parity
+/// tools and uses the final MCP protocol revision.
+///
+/// # Errors
+///
+/// Returns an error for invalid identity/dependencies, shared tool-name
+/// collisions, transport failures, or shutdown failures.
+pub async fn run_augmented_stdio<S>(
+    primary: S,
+    spec: OrgSpec,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    S: ServerHandler + Clone,
+{
+    let server = ParityAugmented::new(primary, spec)?;
+    serve_stdio_handler(server, spec).await
+}
+
+async fn serve_stdio_handler<S>(handler: S, spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>>
+where
+    S: ServerHandler,
+{
+    let server = ExactProtocol::new(handler, ProtocolVersion::V_2025_11_25);
     tracing::info!(
         service.name = spec.service_name,
         service.namespace = spec.organization,
@@ -753,7 +800,6 @@ pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> 
         .instrument(server_span.clone())
         .await?;
     service.waiting().instrument(server_span).await?;
-    drop(telemetry_guard);
     Ok(())
 }
 
