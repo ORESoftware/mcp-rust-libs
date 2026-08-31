@@ -4,7 +4,9 @@ Canonical shared hardening and conformance infrastructure for ORESoftware's Rust
 
 ## Fleet audit
 
-The August 2, 2026 connected-fleet audit found 24 existing standalone Rust MCP repositories and five verified missing servers. The highest-value recurring defects were:
+The historical August 2, 2026 connected-fleet audit found 24 existing standalone Rust MCP repositories and five verified missing servers. The current August 31 parity audit discovers 53 local candidate checkouts, resolves them to 51 authoritative GitHub repositories across 48 production organizations and one sibling test organization, records two duplicate checkouts, and leaves no checkout unclassified. All 51 authoritative repositories currently have at least one high finding, beginning with the absent exact-revision parity profile; this is the migration baseline, not a compliance claim. See the [machine-readable report](fleet/audit-2026-08-31-provider-parity.json) and [review matrix](fleet/audit-2026-08-31-provider-parity.md).
+
+The highest-value recurring defects are:
 
 - hand-written JSON-RPC transports pinned to old MCP revisions;
 - bearer-authenticated HTTP clients without exact host or redirect policy;
@@ -12,6 +14,19 @@ The August 2, 2026 connected-fleet audit found 24 existing standalone Rust MCP r
 - child processes captured through `wait_with_output`, allowing unbounded stdout/stderr memory use;
 - stdout log pollution and marker-based rather than semantic JSON-RPC tests;
 - copied startup flag discovery, telemetry attribute filtering, transport identity, and server bootstrap code drifting independently across repositories.
+
+Regenerate the current report from a workspace root with:
+
+```sh
+python3 tooling/audit_mcp_fleet.py \
+  --workspace-root /path/to/codes \
+  --json-report fleet/audit-current.json \
+  --markdown-report fleet/audit-current.md
+```
+
+Discovery excludes `dd/`, monorepo `apps/`, Kubernetes deployment copies,
+repository seeds, dependencies, and build output. GitHub origins are
+canonicalized and deduplicated before the per-repository auditor runs.
 
 ## Shared Rust crates
 
@@ -135,6 +150,7 @@ cargo test --locked --workspace --all-targets
 cargo doc --locked --workspace --no-deps
 
 python3 -m unittest -v \
+  tooling/test_audit_mcp_fleet.py \
   tooling/test_audit_rust_mcp_server.py \
   tooling/test_check_deployable_lockfile.py \
   tooling/test_check_fleet_pr_evidence.py \
@@ -142,6 +158,7 @@ python3 -m unittest -v \
   tooling/test_validate_mcp_fleet_profile.py \
   tooling/test_validate_api_docs_contract.py
 python3 tooling/audit_rust_mcp_server.py --repo-root /path/to/mcp-server
+python3 tooling/audit_mcp_fleet.py --workspace-root /path/to/codes
 python3 tooling/check_wave2_evidence.py
 ```
 
