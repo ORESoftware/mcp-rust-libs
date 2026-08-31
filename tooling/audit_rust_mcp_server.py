@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import importlib.util
 import json
 import re
 import sys
@@ -200,6 +201,54 @@ def workflow_findings(root: Path) -> list[Finding]:
                     )
                 )
     return findings
+
+
+def parity_profile_findings(root: Path) -> list[Finding]:
+    """Require and validate the exact-revision fleet parity profile."""
+
+    relative = "mcp-fleet-profile.json"
+    profile_path = root / relative
+    if not profile_path.is_file():
+        return [
+            Finding(
+                "high",
+                "missing-fleet-parity-profile",
+                "repository has no machine-readable client/provider/org-specific parity profile",
+                relative,
+            )
+        ]
+
+    validator_path = Path(__file__).with_name("validate_mcp_fleet_profile.py")
+    spec = importlib.util.spec_from_file_location("ore_mcp_fleet_profile_validator", validator_path)
+    if spec is None or spec.loader is None:
+        return [
+            Finding(
+                "high",
+                "fleet-parity-validator-unavailable",
+                "shared fleet parity validator could not be loaded",
+                relative,
+            )
+        ]
+    validator = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(validator)
+        profile = validator.load_json(profile_path)
+        errors = validator.validate_profile(profile, root)
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+        errors = [f"profile could not be loaded: {type(error).__name__}"]
+    if not errors:
+        return []
+    summary = "; ".join(errors[:3])
+    if len(errors) > 3:
+        summary += f"; and {len(errors) - 3} more"
+    return [
+        Finding(
+            "high",
+            "invalid-fleet-parity-profile",
+            summary,
+            relative,
+        )
+    ]
 
 
 def audit(root: Path) -> list[Finding]:
@@ -425,6 +474,7 @@ def audit(root: Path) -> list[Finding]:
 
     if not (root / "Cargo.lock").is_file():
         findings.append(Finding("low", "missing-lock", "Cargo.lock is absent for a deployable server"))
+    findings.extend(parity_profile_findings(root))
     findings.extend(workflow_findings(root))
     if "#[cfg(test)]" not in combined and not (root / "tests").is_dir():
         findings.append(Finding("medium", "missing-tests", "no Rust tests detected"))

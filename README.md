@@ -32,6 +32,31 @@ The bootstrap, config, and HTTP layers intentionally avoid a hidden fleet-wide `
 
 Product tools, authorization, mutation gates, credentials, OTLP authentication headers, upstream business clients, concrete exporters, client timeouts, package coordinates, `rmcp`-version-specific tool wrapping, and domain policy remain in their owning repositories.
 
+## Client and provider parity
+
+[`contracts/mcp-fleet-parity/contract-v1.md`](contracts/mcp-fleet-parity/contract-v1.md)
+defines the evidence required before a server can claim client interoperability,
+upstream connectivity, or organization-specific value. The v1 profile requires
+the same final MCP surface for Cursor, ChatGPT/OpenAI, Claude/Anthropic, Gemini,
+Grok, and Qwen; stdout-pure stdio plus OAuth-protected Streamable HTTP; and real
+read-first adapters for GitHub, AWS, GCP, Supabase, Neon, Cloudflare, the
+ORESoftware Kubernetes cluster, and NATS.
+
+The dependency-free validator checks cross-field semantics and exact repository
+evidence in addition to the checked-in JSON Schema. It rejects duplicate clients
+or providers, missing read operations, absent implementation symbols or tests,
+no-op markers, unscoped origins, credential-shaped values, incomplete provider
+failure states, weak remote authorization claims, generic tool catalogs, and
+mutable evidence references.
+
+```sh
+python3 tooling/validate_mcp_fleet_profile.py \
+  --profile /path/to/mcp-fleet-profile.json \
+  --repo-root /path/to/exact/server/checkout
+```
+
+Tracking: DEN-965.
+
 ## API documentation and MCP discovery
 
 [`contracts/api-docs/contract-v1.md`](contracts/api-docs/contract-v1.md) defines the
@@ -113,6 +138,7 @@ python3 -m unittest -v \
   tooling/test_check_deployable_lockfile.py \
   tooling/test_check_fleet_pr_evidence.py \
   tooling/test_check_wave2_evidence.py \
+  tooling/test_validate_mcp_fleet_profile.py \
   tooling/test_validate_api_docs_contract.py
 python3 tooling/audit_rust_mcp_server.py --repo-root /path/to/mcp-server
 python3 tooling/check_wave2_evidence.py

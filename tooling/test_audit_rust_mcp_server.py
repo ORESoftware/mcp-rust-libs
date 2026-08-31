@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 PATH = Path(__file__).with_name("audit_rust_mcp_server.py")
 SPEC = importlib.util.spec_from_file_location("mcp_audit", PATH)
@@ -342,8 +343,20 @@ pub fn bounded(){}
         )
         self.standard_workflow()
         self.process_test()
-        findings = module.audit(self.root)
+        with mock.patch.object(module, "parity_profile_findings", return_value=[]):
+            findings = module.audit(self.root)
         self.assertFalse(any(item.severity in {"medium", "high"} for item in findings), findings)
+
+    def test_missing_fleet_parity_profile_is_high(self) -> None:
+        self.standard_manifest()
+        self.write("src/lib.rs", "pub fn server() {}\n")
+        self.assertIn("missing-fleet-parity-profile", self.codes())
+
+    def test_invalid_fleet_parity_profile_is_high(self) -> None:
+        self.standard_manifest()
+        self.write("src/lib.rs", "pub fn server() {}\n")
+        self.write("mcp-fleet-profile.json", "{}\n")
+        self.assertIn("invalid-fleet-parity-profile", self.codes())
 
 
 if __name__ == "__main__":
