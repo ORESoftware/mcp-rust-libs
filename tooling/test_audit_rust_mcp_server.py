@@ -214,6 +214,39 @@ ore-mcp-org-server={git='https://github.com/ORESoftware/mcp-rust-libs',rev='0123
             {"bearer-redirect-policy", "bearer-proxy-policy", "bearer-host-policy"} <= codes
         )
 
+    def test_parse_bearer_endpoint_is_an_exact_host_policy(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            """
+fn x(c:reqwest::Client,u:url::Url) {
+    let _ = reqwest::Client::builder().no_proxy().redirect(reqwest::redirect::Policy::none());
+    let _ = HttpPolicy::default().parse_bearer_endpoint(u.as_str(), &["api.example.com"]);
+    let _ = c.get(u).bearer_auth("secret");
+    let _ = "base_url";
+}
+""",
+        )
+        self.assertNotIn("bearer-host-policy", self.codes())
+
+    def test_mutation_words_outside_registered_tools_are_ignored(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            "fn apply_cli_flags() {}\nfn create_client() {}\n",
+        )
+        codes = self.codes()
+        self.assertNotIn("mutation-gate", codes)
+        self.assertNotIn("mutation-confirmation", codes)
+
+    def test_truncate_output_is_a_visible_final_output_ceiling(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            "fn x(v:serde_json::Value){let _=truncate_output(v.to_string());}\n",
+        )
+        self.assertNotIn("unbounded-tool-output", self.codes())
+
     def test_flags_permissive_mutation_and_unbounded_output(self) -> None:
         self.standard_manifest()
         self.write(

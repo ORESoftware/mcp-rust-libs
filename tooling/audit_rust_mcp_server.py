@@ -36,6 +36,8 @@ MUTATION_GATES = (
     "require_approval",
 )
 _CFG_TEST_ATTRIBUTE = re.compile(r"^\s*#\s*\[\s*cfg\s*\(\s*test\s*\)\s*\]\s*$")
+_TOOL_ATTRIBUTE = re.compile(r"#\s*\[\s*tool(?:\s*\(|\s*\])")
+_FUNCTION_NAME = re.compile(r"\b(?:async\s+)?fn\s+([A-Za-z_][A-Za-z0-9_]*)")
 _WORKFLOW_STEP_START = re.compile(
     r"^(?P<indent>\s*)-\s+(?:name|uses|run|id|if|shell)\s*:",
     re.IGNORECASE,
@@ -132,6 +134,29 @@ def production_text(path: Path) -> str:
                 break
 
     return "\n".join(production)
+
+
+def tool_function_names(text: str) -> list[str]:
+    """Extract names of functions explicitly registered with ``#[tool]``.
+
+    Mutation words elsewhere in a server (for example ``apply_cli_flags`` or
+    an adapter helper named ``create_client``) are not MCP operations. Keeping
+    this deliberately small extractor tied to the registration attribute
+    avoids treating ordinary implementation helpers as remotely callable.
+    """
+
+    names: list[str] = []
+    awaiting_function = False
+    for line in text.splitlines():
+        if _TOOL_ATTRIBUTE.search(line):
+            awaiting_function = True
+        if not awaiting_function:
+            continue
+        match = _FUNCTION_NAME.search(line)
+        if match:
+            names.append(match.group(1))
+            awaiting_function = False
+    return names
 
 
 def workflow_steps(text: str) -> list[str]:
@@ -381,7 +406,13 @@ def audit(root: Path) -> list[Finding]:
     proxy_disabled = ".no_proxy()" in production
     exact_host_policy = any(
         token in production.lower()
-        for token in ("allowed_hosts", "allowlisted_hosts", "host_allowlist", "exact host")
+        for token in (
+            "allowed_hosts",
+            "allowlisted_hosts",
+            "host_allowlist",
+            "exact host",
+            "parse_bearer_endpoint",
+        )
     )
     if bearer and not redirect_denied:
         findings.append(
@@ -437,7 +468,9 @@ def audit(root: Path) -> list[Finding]:
             )
         )
 
-    mutation_names = sorted(set(match.group(0) for match in MUTATION_WORDS.finditer(production)))
+    mutation_names = sorted(
+        name for name in set(tool_function_names(production)) if MUTATION_WORDS.fullmatch(name)
+    )
     if mutation_names and not any(gate in production.lower() for gate in MUTATION_GATES):
         findings.append(
             Finding(
@@ -462,7 +495,14 @@ def audit(root: Path) -> list[Finding]:
     )
     output_bounded = any(
         token in production.lower()
-        for token in ("max_tool_output", "output_limit", "bounded_output", "truncate_utf8", "max_output_bytes")
+        for token in (
+            "max_tool_output",
+            "output_limit",
+            "bounded_output",
+            "truncate_output",
+            "truncate_utf8",
+            "max_output_bytes",
+        )
     )
     if renders_json and not output_bounded:
         findings.append(
