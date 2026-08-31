@@ -45,6 +45,12 @@ The `packages/rust` workspace contains narrow, version-neutral infrastructure:
 - `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio, initialize, catalog, result, byte/frame-limit, and stdout-purity audits;
 - `ore-mcp-zed-graph` — bounded package-coordinate validation plus the shared closed-world dependency-graph descriptor and result contract.
 
+The current workspace MSRV is Rust 1.95.0. The provider-complete organization
+server uses AWS SDK crates whose declared minimum is Rust 1.94.1; claiming the
+older fleet MSRV would only pass with reused build artifacts. CI therefore
+rebuilds on Rust 1.95.0 and 1.97.1 while retaining the modern Hyper 1/Rustls
+stack that removes the vulnerable legacy AWS transport graph.
+
 The bootstrap and config layers intentionally avoid a hidden fleet-wide `rmcp` or OpenTelemetry upgrade. `ore-mcp-http` now enables its concrete `reqwest-client` feature by default so provider adapters share one reviewed credentialed-read boundary; consumers that need policy types only can disable default features. `ore-mcp-integrations` fixes provider endpoints and operations while requiring each consumer to supply exact organization resources, credentials, product authorization, MCP tool composition, and final output bounds. Its AWS, Kubernetes, and NATS implementations are opt-in so servers do not acquire unrelated SDKs. `ore-mcp-remote` applies one authenticated remote transport to the same product service used by stdio; it never forwards the caller's Shared Auth token to a provider, and its bounded JWKS fetcher disables redirects and ambient proxies. `ore-mcp-telemetry` keeps endpoint validation, resource assembly, stderr logging, and tool-span helpers available with `--no-default-features`; the optional `otlp` feature constructs OpenTelemetry 0.32 exporters for the current signed cohort. The separately named `ore-mcp-org-server` is the opinionated organization baseline: it pins `ores-otel/ores-mcp-server-core-libs.rs` at a reviewed immutable revision, generates organization-specific resources and prompts from `OrgSpec`, and composes the eight real provider adapters behind one closed, read-only catalog.
 
 Product tools, authorization, mutation gates, credentials, OTLP authentication headers, upstream business clients, concrete exporters, client timeouts, package coordinates, `rmcp`-version-specific tool wrapping, and domain policy remain in their owning repositories.
