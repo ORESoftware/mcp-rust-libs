@@ -37,7 +37,7 @@ The `packages/rust` workspace contains narrow, version-neutral infrastructure:
 - `ore-mcp-safety` — UTF-8-safe truncation, bounded incremental bytes, error redaction, and header validation;
 - `ore-mcp-http` — exact URL parsing, loopback-only HTTP, bearer-host allowlists, and a concrete credential-safe read client with redirects and ambient proxies disabled, bounded deadlines, sensitive headers, status-state classification, and incremental response-body bounds;
 - `ore-mcp-integrations` — closed, read-first adapters for GitHub, AWS STS/EKS, GCP, Supabase, Neon, Cloudflare, Kubernetes, and NATS, with exact organization scopes, bounded projections, and the shared five-state outcome model;
-- `ore-mcp-org-server` — a complete read-only organization server with six closed tools, `ores-otel` traces/metrics/logs, Shared Auth boundary guidance, SOPS+age environment policy, and the Zed dependency graph;
+- `ore-mcp-org-server` — a complete read-only organization server with 15 closed tools, three generated resources, three operator prompts, exact MCP 2025-11-25 stdio, OAuth-protected Streamable HTTP, `ores-otel`, the Zed graph, and all eight fleet providers;
 - `ore-mcp-process` — fail-fast or truncating concurrent stdout/stderr capture with timeout, kill, and reap behavior;
 - `ore-mcp-remote` — exact MCP 2025-11-25 Streamable HTTP at `/mcp`, RFC 9728 discovery, exact Host/Origin checks, bounded bodies and stateful identity bindings, and local Shared Auth ES256 verification across issuer, audience, OAuth client, realm, session, scope, role, and assurance boundaries;
 - `ore-mcp-runtime` — official `rmcp` stdio lifecycle plus exact final-protocol enforcement before SDK negotiation;
@@ -45,7 +45,7 @@ The `packages/rust` workspace contains narrow, version-neutral infrastructure:
 - `ore-mcp-testkit` — semantic JSON-RPC 2.0 stdio, initialize, catalog, result, byte/frame-limit, and stdout-purity audits;
 - `ore-mcp-zed-graph` — bounded package-coordinate validation plus the shared closed-world dependency-graph descriptor and result contract.
 
-The bootstrap and config layers intentionally avoid a hidden fleet-wide `rmcp` or OpenTelemetry upgrade. `ore-mcp-http` now enables its concrete `reqwest-client` feature by default so provider adapters share one reviewed credentialed-read boundary; consumers that need policy types only can disable default features. `ore-mcp-integrations` fixes provider endpoints and operations while requiring each consumer to supply exact organization resources, credentials, product authorization, MCP tool composition, and final output bounds. Its AWS, Kubernetes, and NATS implementations are opt-in so servers do not acquire unrelated SDKs. `ore-mcp-remote` applies one authenticated remote transport to the same product service used by stdio; it never forwards the caller's Shared Auth token to a provider, and its bounded JWKS fetcher disables redirects and ambient proxies. `ore-mcp-telemetry` keeps endpoint validation, resource assembly, stderr logging, and tool-span helpers available with `--no-default-features`; the optional `otlp` feature constructs OpenTelemetry 0.32 exporters for the current signed cohort. The separately named `ore-mcp-org-server` is the opinionated greenfield baseline: it deliberately pins `ores-otel/ores-mcp-server-core-libs.rs` at a reviewed immutable revision so newly created organization servers receive one telemetry and logging implementation by construction.
+The bootstrap and config layers intentionally avoid a hidden fleet-wide `rmcp` or OpenTelemetry upgrade. `ore-mcp-http` now enables its concrete `reqwest-client` feature by default so provider adapters share one reviewed credentialed-read boundary; consumers that need policy types only can disable default features. `ore-mcp-integrations` fixes provider endpoints and operations while requiring each consumer to supply exact organization resources, credentials, product authorization, MCP tool composition, and final output bounds. Its AWS, Kubernetes, and NATS implementations are opt-in so servers do not acquire unrelated SDKs. `ore-mcp-remote` applies one authenticated remote transport to the same product service used by stdio; it never forwards the caller's Shared Auth token to a provider, and its bounded JWKS fetcher disables redirects and ambient proxies. `ore-mcp-telemetry` keeps endpoint validation, resource assembly, stderr logging, and tool-span helpers available with `--no-default-features`; the optional `otlp` feature constructs OpenTelemetry 0.32 exporters for the current signed cohort. The separately named `ore-mcp-org-server` is the opinionated organization baseline: it pins `ores-otel/ores-mcp-server-core-libs.rs` at a reviewed immutable revision, generates organization-specific resources and prompts from `OrgSpec`, and composes the eight real provider adapters behind one closed, read-only catalog.
 
 Product tools, authorization, mutation gates, credentials, OTLP authentication headers, upstream business clients, concrete exporters, client timeouts, package coordinates, `rmcp`-version-specific tool wrapping, and domain policy remain in their owning repositories.
 
@@ -73,6 +73,26 @@ python3 tooling/validate_mcp_fleet_profile.py \
 ```
 
 Tracking: DEN-965.
+
+`ore-mcp-org-server::run_stdio` exposes the final protocol locally.
+`ore-mcp-org-server::run_http` exposes the same catalog remotely and requires
+`ORE_MCP_PUBLIC_RESOURCE`, `SHARED_AUTH_ISSUER`, and `SHARED_AUTH_JWKS_URL`;
+authorized client IDs, exact origins, and the loopback-default bind may be set
+with `ORE_MCP_OAUTH_CLIENT_IDS`, `ORE_MCP_ALLOWED_ORIGINS`, and
+`ORE_MCP_HTTP_BIND`. The default authorized client families are Cursor,
+OpenAI/ChatGPT, Anthropic/Claude, Gemini, Grok, and Qwen.
+
+Provider credentials and exact scopes are process-environment settings, never
+tool arguments: `ORE_MCP_GITHUB_TOKEN`; `ORE_MCP_AWS_ACCOUNT_ID` plus
+`ORE_MCP_AWS_EKS_CLUSTERS`; `ORE_MCP_GCP_PROJECT_ID`,
+`ORE_MCP_GCP_PROJECT_NUMBER`, and `ORE_MCP_GCP_ACCESS_TOKEN`;
+`ORE_MCP_SUPABASE_URL` plus `ORE_MCP_SUPABASE_SERVICE_ROLE_KEY`;
+`ORE_MCP_NEON_ORGANIZATION_ID`, `ORE_MCP_NEON_PROJECT_ID`, and
+`ORE_MCP_NEON_API_KEY`; `ORE_MCP_CLOUDFLARE_ZONE`,
+`ORE_MCP_CLOUDFLARE_ZONE_ID`, and `ORE_MCP_CLOUDFLARE_API_TOKEN`;
+`ORE_MCP_K8S_ENABLED=1` plus an optional exact `ORE_MCP_K8S_NAMESPACE`; and
+`ORE_MCP_NATS_URL`. Missing configuration returns `not_configured`; it never
+becomes a synthetic success.
 
 ## API documentation and MCP discovery
 
