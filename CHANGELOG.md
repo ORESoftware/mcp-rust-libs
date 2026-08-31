@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — DEN-965 client and provider parity
+
+- define and validate the exact fleet evidence profile for six MCP clients, two transports, Shared Auth, eight infrastructure providers, org-specific catalogs, bounded outputs, and mutation gates;
+- add hardened bounded HTTP reads plus scoped GitHub, AWS, GCP, Supabase, Neon, Cloudflare, Kubernetes, and NATS adapters;
+- publish the deduplicated 51-repository authoritative fleet audit and its current migration findings;
+- add `ore-mcp-remote` for exact-version Streamable HTTP, RFC 9728 discovery, pre-auth authority/origin checks, local ES256 Shared Auth verification, raw-token stripping, and bounded identity-bound sessions.
+
 ## Unreleased — DEN-957 telemetry remainder
 
 - extract `ore-mcp-telemetry` with stderr-only JSON logging, snapshot-based secret-safe resources, validated credential-free OTLP endpoints, fail-open OpenTelemetry 0.32 exporters, and bounded-cardinality tool labels;

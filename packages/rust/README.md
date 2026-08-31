@@ -6,6 +6,7 @@ This first reviewed extraction contains the cross-fleet primitives found to be d
 - `ore-mcp-http`: exact URL parsing, loopback-only HTTP, bearer-host allowlists, and a concrete bounded read client that disables redirects and ambient proxies and marks credentials as sensitive;
 - `ore-mcp-integrations`: fixed read operations and bounded safe projections for GitHub, AWS STS/EKS, GCP, Supabase, Neon, Cloudflare, Kubernetes, and NATS;
 - `ore-mcp-process`: concurrent bounded stdout/stderr capture with timeout, kill, and reap semantics;
+- `ore-mcp-remote`: Shared Auth protected MCP 2025-11-25 Streamable HTTP with exact authority/origin policy, bounded request/session state, RFC 9728 discovery, and no downstream token relay;
 - `ore-mcp-testkit`: semantic JSON-RPC 2.0 stdout auditing under byte and frame limits.
 
 Product tools, authorization, mutations, and business API clients remain in their owning MCP repositories.
