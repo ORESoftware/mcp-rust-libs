@@ -176,6 +176,23 @@ rmcp={workspace=true}
         self.assertIn("rmcp-version-unparsed", codes)
         self.assertNotIn("missing-rmcp", codes)
 
+    def test_org_server_wrapper_supplies_reviewed_rmcp_transport(self) -> None:
+        self.write(
+            "Cargo.toml",
+            """[package]
+name='x'
+version='0.1.0'
+[dependencies]
+ore-mcp-org-server={git='https://github.com/ORESoftware/mcp-rust-libs',rev='0123456789abcdef'}
+""",
+        )
+        self.write("Cargo.lock", "# lock\n")
+        self.write("src/lib.rs", "pub fn x(){}\n")
+        codes = self.codes()
+        self.assertNotIn("missing-rmcp", codes)
+        self.assertNotIn("handwritten-jsonrpc", codes)
+        self.assertNotIn("rmcp-version-unparsed", codes)
+
     def test_flags_unbounded_network_and_process_sinks(self) -> None:
         self.standard_manifest()
         self.write(

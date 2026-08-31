@@ -269,9 +269,10 @@ def audit(root: Path) -> list[Finding]:
         for token in ("transport-streamable-http", "StreamableHttpService", "streamable_http")
     )
     rmcp_present = "rmcp" in dependencies
+    trusted_rmcp_wrapper = "ore-mcp-org-server" in dependencies
     rmcp_value = dependencies.get("rmcp")
     rmcp = dependency_version(rmcp_value)
-    if not rmcp_present:
+    if not rmcp_present and not trusted_rmcp_wrapper:
         code = "handwritten-jsonrpc" if "jsonrpc" in production.lower() else "missing-rmcp"
         findings.append(
             Finding(
@@ -280,7 +281,7 @@ def audit(root: Path) -> list[Finding]:
                 "official rmcp transport is not detected",
             )
         )
-    elif rmcp is None:
+    elif rmcp_present and rmcp is None:
         findings.append(
             Finding(
                 "medium",
@@ -288,7 +289,7 @@ def audit(root: Path) -> list[Finding]:
                 f"rmcp dependency {rmcp_value!r} has no statically comparable published version",
             )
         )
-    else:
+    elif rmcp_present:
         parsed = semver_tuple(rmcp)
         if parsed is None:
             findings.append(
