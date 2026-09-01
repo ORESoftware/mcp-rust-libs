@@ -1,6 +1,6 @@
 # Shared MCP security boundary
 
-This repository owns only cross-cutting safety, transport-policy, bounded-process, and conformance primitives. Product tools, authorization, mutation gates, credentials, upstream API clients, and business policy remain in their owning repositories.
+This repository owns cross-cutting safety, transport policy, bounded process execution, conformance primitives, and narrowly fixed read adapters with bounded provider projections. Product tools, authorization, mutation gates, credentials, organization resource maps, upstream business clients, and business policy remain in their owning repositories.
 
 Fleet invariants:
 

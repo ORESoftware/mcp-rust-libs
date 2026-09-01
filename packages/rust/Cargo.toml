@@ -4,8 +4,10 @@ members = [
   "crates/ore-mcp-bootstrap",
   "crates/ore-mcp-config",
   "crates/ore-mcp-http",
+  "crates/ore-mcp-integrations",
   "crates/ore-mcp-org-server",
   "crates/ore-mcp-process",
+  "crates/ore-mcp-remote",
   "crates/ore-mcp-runtime",
   "crates/ore-mcp-safety",
   "crates/ore-mcp-telemetry",
@@ -16,7 +18,7 @@ members = [
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88.0"
+rust-version = "1.95.0"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ORESoftware/mcp-rust-libs"
 authors = ["ORESoftware contributors"]
@@ -32,8 +34,10 @@ all = "warn"
 ore-mcp-bootstrap = { version = "0.1.0", path = "crates/ore-mcp-bootstrap" }
 ore-mcp-config = { version = "0.1.0", path = "crates/ore-mcp-config" }
 ore-mcp-http = { version = "0.1.0", path = "crates/ore-mcp-http" }
+ore-mcp-integrations = { version = "0.1.0", path = "crates/ore-mcp-integrations" }
 ore-mcp-org-server = { version = "0.1.0", path = "crates/ore-mcp-org-server" }
 ore-mcp-process = { version = "0.1.0", path = "crates/ore-mcp-process" }
+ore-mcp-remote = { version = "0.1.0", path = "crates/ore-mcp-remote" }
 ore-mcp-runtime = { version = "0.1.0", path = "crates/ore-mcp-runtime" }
 ore-mcp-safety = { version = "0.1.0", path = "crates/ore-mcp-safety" }
 ore-mcp-telemetry = { version = "0.1.0", path = "crates/ore-mcp-telemetry" }

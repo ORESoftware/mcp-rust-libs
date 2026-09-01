@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 PATH = Path(__file__).with_name("audit_rust_mcp_server.py")
 SPEC = importlib.util.spec_from_file_location("mcp_audit", PATH)
@@ -175,6 +176,43 @@ rmcp={workspace=true}
         self.assertIn("rmcp-version-unparsed", codes)
         self.assertNotIn("missing-rmcp", codes)
 
+    def test_org_server_wrapper_supplies_reviewed_rmcp_transport(self) -> None:
+        self.write(
+            "Cargo.toml",
+            """[package]
+name='x'
+version='0.1.0'
+[dependencies]
+ore-mcp-org-server={git='https://github.com/ORESoftware/mcp-rust-libs',rev='0123456789abcdef'}
+""",
+        )
+        self.write("Cargo.lock", "# lock\n")
+        self.write("src/lib.rs", "pub fn x(){}\n")
+        codes = self.codes()
+        self.assertNotIn("missing-rmcp", codes)
+        self.assertNotIn("handwritten-jsonrpc", codes)
+        self.assertNotIn("rmcp-version-unparsed", codes)
+
+    def test_org_server_http_runner_supplies_reviewed_auth_and_host_boundary(self) -> None:
+        self.write(
+            "Cargo.toml",
+            """[package]
+name='x'
+version='0.1.0'
+[dependencies]
+ore-mcp-org-server={git='https://github.com/ORESoftware/mcp-rust-libs',rev='0123456789abcdef'}
+rmcp='2.2'
+""",
+        )
+        self.write("Cargo.lock", "# lock\n")
+        self.write(
+            "src/lib.rs",
+            'async fn x(){let _="streamable_http";run_augmented_http(primary(), spec()).await;}\n',
+        )
+        codes = self.codes()
+        self.assertNotIn("http-auth-boundary", codes)
+        self.assertNotIn("http-host-boundary", codes)
+
     def test_flags_unbounded_network_and_process_sinks(self) -> None:
         self.standard_manifest()
         self.write(
@@ -195,6 +233,39 @@ rmcp={workspace=true}
         self.assertTrue(
             {"bearer-redirect-policy", "bearer-proxy-policy", "bearer-host-policy"} <= codes
         )
+
+    def test_parse_bearer_endpoint_is_an_exact_host_policy(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            """
+fn x(c:reqwest::Client,u:url::Url) {
+    let _ = reqwest::Client::builder().no_proxy().redirect(reqwest::redirect::Policy::none());
+    let _ = HttpPolicy::default().parse_bearer_endpoint(u.as_str(), &["api.example.com"]);
+    let _ = c.get(u).bearer_auth("secret");
+    let _ = "base_url";
+}
+""",
+        )
+        self.assertNotIn("bearer-host-policy", self.codes())
+
+    def test_mutation_words_outside_registered_tools_are_ignored(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            "fn apply_cli_flags() {}\nfn create_client() {}\n",
+        )
+        codes = self.codes()
+        self.assertNotIn("mutation-gate", codes)
+        self.assertNotIn("mutation-confirmation", codes)
+
+    def test_truncate_output_is_a_visible_final_output_ceiling(self) -> None:
+        self.standard_manifest()
+        self.write(
+            "src/lib.rs",
+            "fn x(v:serde_json::Value){let _=truncate_output(v.to_string());}\n",
+        )
+        self.assertNotIn("unbounded-tool-output", self.codes())
 
     def test_flags_permissive_mutation_and_unbounded_output(self) -> None:
         self.standard_manifest()
@@ -342,8 +413,20 @@ pub fn bounded(){}
         )
         self.standard_workflow()
         self.process_test()
-        findings = module.audit(self.root)
+        with mock.patch.object(module, "parity_profile_findings", return_value=[]):
+            findings = module.audit(self.root)
         self.assertFalse(any(item.severity in {"medium", "high"} for item in findings), findings)
+
+    def test_missing_fleet_parity_profile_is_high(self) -> None:
+        self.standard_manifest()
+        self.write("src/lib.rs", "pub fn server() {}\n")
+        self.assertIn("missing-fleet-parity-profile", self.codes())
+
+    def test_invalid_fleet_parity_profile_is_high(self) -> None:
+        self.standard_manifest()
+        self.write("src/lib.rs", "pub fn server() {}\n")
+        self.write("mcp-fleet-profile.json", "{}\n")
+        self.assertIn("invalid-fleet-parity-profile", self.codes())
 
 
 if __name__ == "__main__":
