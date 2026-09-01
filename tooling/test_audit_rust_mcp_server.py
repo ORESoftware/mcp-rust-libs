@@ -193,6 +193,26 @@ ore-mcp-org-server={git='https://github.com/ORESoftware/mcp-rust-libs',rev='0123
         self.assertNotIn("handwritten-jsonrpc", codes)
         self.assertNotIn("rmcp-version-unparsed", codes)
 
+    def test_org_server_http_runner_supplies_reviewed_auth_and_host_boundary(self) -> None:
+        self.write(
+            "Cargo.toml",
+            """[package]
+name='x'
+version='0.1.0'
+[dependencies]
+ore-mcp-org-server={git='https://github.com/ORESoftware/mcp-rust-libs',rev='0123456789abcdef'}
+rmcp='2.2'
+""",
+        )
+        self.write("Cargo.lock", "# lock\n")
+        self.write(
+            "src/lib.rs",
+            'async fn x(){let _="streamable_http";run_augmented_http(primary(), spec()).await;}\n',
+        )
+        codes = self.codes()
+        self.assertNotIn("http-auth-boundary", codes)
+        self.assertNotIn("http-host-boundary", codes)
+
     def test_flags_unbounded_network_and_process_sinks(self) -> None:
         self.standard_manifest()
         self.write(

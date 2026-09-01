@@ -295,6 +295,9 @@ def audit(root: Path) -> list[Finding]:
     )
     rmcp_present = "rmcp" in dependencies
     trusted_rmcp_wrapper = "ore-mcp-org-server" in dependencies
+    trusted_http_boundary = trusted_rmcp_wrapper and any(
+        token in production for token in ("run_http(", "run_augmented_http(")
+    )
     rmcp_value = dependencies.get("rmcp")
     rmcp = dependency_version(rmcp_value)
     if not rmcp_present and not trusted_rmcp_wrapper:
@@ -439,7 +442,7 @@ def audit(root: Path) -> list[Finding]:
             )
         )
 
-    if streamable_http and not bearer:
+    if streamable_http and not bearer and not trusted_http_boundary:
         findings.append(
             Finding(
                 "high",
@@ -447,7 +450,7 @@ def audit(root: Path) -> list[Finding]:
                 "Streamable HTTP transport has no obvious bearer authorization boundary",
             )
         )
-    if streamable_http and not any(
+    if streamable_http and not trusted_http_boundary and not any(
         token in production for token in ("allowed_hosts", "with_allowed_hosts")
     ):
         findings.append(
