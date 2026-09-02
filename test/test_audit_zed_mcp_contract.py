@@ -49,6 +49,13 @@ class ZedMcpContractTests(unittest.TestCase):
     def setUp(self) -> None:
         self.repo = ConsumerRepo()
         self.addCleanup(self.repo.close)
+        previous_repository = os.environ.get('GITHUB_REPOSITORY')
+        os.environ['GITHUB_REPOSITORY'] = 'example/mcp-server'
+        self.addCleanup(
+            lambda: os.environ.__setitem__('GITHUB_REPOSITORY', previous_repository)
+            if previous_repository is not None
+            else os.environ.pop('GITHUB_REPOSITORY', None)
+        )
 
     def codes(self, *, required: bool = True) -> set[str]:
         return {finding.code for finding in AUDIT.audit(self.repo.root, require_contract=required)}
