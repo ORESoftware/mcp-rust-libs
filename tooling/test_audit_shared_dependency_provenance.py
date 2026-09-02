@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 
@@ -9,6 +10,7 @@ MODULE_PATH = Path(__file__).with_name("audit_shared_dependency_provenance.py")
 SPEC = importlib.util.spec_from_file_location("dependency_provenance", MODULE_PATH)
 assert SPEC and SPEC.loader
 module = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = module
 SPEC.loader.exec_module(module)
 
 REVISION_A = "0123456789abcdef0123456789abcdef01234567"
@@ -43,7 +45,15 @@ version = "0.1.0"
 command = "cargo build --release --locked"
 ''',
         )
-        self.write(".zpkg.lock", "schemaVersion = 1\n")
+        self.write(
+            ".zpkg.lock",
+            '''version = 1
+
+[[packages]]
+name = "oresoftware/mcp-rust-libs"
+version = "0.1.0"
+''',
+        )
 
     def tearDown(self) -> None:
         self.temp.cleanup()
@@ -144,11 +154,25 @@ command = "cargo build --release"
         self.assertEqual(missing[0].severity, "medium")
         self.assertIn("manifest-only", missing[0].message)
 
+    def test_metadata_only_lock_is_not_frozen_resolution(self) -> None:
+        self.write(".zpkg.lock", "version = 1\n")
+        findings = self.audit(require_zed_lock=False)
+        placeholder = [item for item in findings if item.code == "empty-zed-lock"]
+        self.assertEqual(len(placeholder), 1)
+        self.assertEqual(placeholder[0].severity, "medium")
+        self.assertIn("placeholder", placeholder[0].message)
+
     def test_frozen_gate_requires_regular_zed_lock(self) -> None:
         (self.root / ".zpkg.lock").unlink()
         findings = self.audit(require_zed_lock=True)
         missing = [item for item in findings if item.code == "missing-zed-lock"]
         self.assertEqual(missing[0].severity, "high")
+
+    def test_frozen_gate_rejects_metadata_only_lock(self) -> None:
+        self.write(".zpkg.lock", "schemaVersion = 1\n")
+        findings = self.audit(require_zed_lock=True)
+        placeholder = [item for item in findings if item.code == "empty-zed-lock"]
+        self.assertEqual(placeholder[0].severity, "high")
 
     def test_diverged_revision_is_rejected(self) -> None:
         findings = self.audit(
