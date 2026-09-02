@@ -1,0 +1,83 @@
+name: Finalize MCP fleet contract
+
+on:
+  push:
+    branches:
+      - audit/zed-consumer-contract
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-mcp-zed-contract-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  patch-and-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact branch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Align the inventory schema and example
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('fleet/consumer-inventory.schema.json')
+          document = json.loads(path.read_text(encoding='utf-8'))
+          properties = document.setdefault('properties', {})
+          properties.setdefault('$schema', {'type': 'string'})
+          path.write_text(json.dumps(document, indent=2) + '\n', encoding='utf-8')
+
+          example = json.loads(Path('fleet/consumer-inventory.example.json').read_text(encoding='utf-8'))
+          unknown = sorted(set(example) - set(properties))
+          if unknown:
+              raise SystemExit(f'fleet example has unknown top-level keys: {unknown}')
+          PY
+
+      - name: Run per-consumer and fleet policy tests
+        shell: bash
+        env:
+          GITHUB_TOKEN: ''
+          GH_TOKEN: ''
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            tools/audit_zed_mcp_contract.py \
+            tools/audit_mcp_fleet.py \
+            test/test_audit_zed_mcp_contract.py \
+            test/test_audit_mcp_fleet.py
+          python3 -m unittest -v \
+            test/test_audit_zed_mcp_contract.py \
+            test/test_audit_mcp_fleet.py
+          python3 -m json.tool fleet/consumer-inventory.schema.json >/dev/null
+          python3 -m json.tool fleet/consumer-inventory.example.json >/dev/null
+
+      - name: Remove one-shot workflows and publish the verified patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f -- \
+            .github/workflows/fix-zed-contract-path-bounds.yml \
+            .github/workflows/repair-zed-contract-path-bounds.yml \
+            .github/workflows/finalize-mcp-fleet-contract.yml
+          git config user.name 'ores-gh-bots'
+          git config user.email 'ores-gh-bots@users.noreply.github.com'
+          git add \
+            fleet/consumer-inventory.schema.json \
+            .github/workflows/fix-zed-contract-path-bounds.yml \
+            .github/workflows/repair-zed-contract-path-bounds.yml \
+            .github/workflows/finalize-mcp-fleet-contract.yml
+          if ! git diff --cached --quiet; then
+            git commit -m 'test: finalize MCP fleet adoption contract'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
