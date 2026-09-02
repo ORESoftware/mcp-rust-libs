@@ -145,6 +145,8 @@ def _load_contract(root: Path, rel_path: str) -> tuple[Path, dict]:
     path = root / rel
     if path.is_symlink():
         raise ValueError('contract file must not be a symlink')
+    if path.stat().st_size > 1_048_576:
+        raise ValueError('contract file exceeds 1048576 bytes')
     with path.open('r', encoding='utf-8') as handle:
         document = json.load(handle)
     if not isinstance(document, dict):
@@ -184,11 +186,14 @@ def _contract_findings(root: Path, rel_path: str, required: bool) -> list[Findin
     elif not isinstance(lock_integrity, str) or not SHA256.fullmatch(lock_integrity):
         findings.append(Finding('MCP-ZED-008', rel_path, 'lockfile_integrity must be lowercase sha256:<64 hex>'))
     else:
-        lock_candidate = (root / PurePosixPath(lock_rel)).resolve()
-        if not _inside(root, lock_candidate) or lock_candidate.is_symlink():
+        lock_source = root / PurePosixPath(lock_rel)
+        lock_candidate = lock_source.resolve()
+        if not _inside(root, lock_candidate) or lock_source.is_symlink():
             findings.append(Finding('MCP-ZED-009', rel_path, 'lockfile must be a non-symlink inside the consumer repository'))
         elif not lock_candidate.is_file():
             findings.append(Finding('MCP-ZED-010', lock_rel, 'declared Zed lockfile does not exist'))
+        elif lock_candidate.stat().st_size > 8_388_608:
+            findings.append(Finding('MCP-ZED-012', lock_rel, 'lockfile must be bounded UTF-8 text'))
         else:
             data = lock_candidate.read_bytes()
             digest = f'sha256:{hashlib.sha256(data).hexdigest()}'
@@ -232,8 +237,9 @@ def _contract_findings(root: Path, rel_path: str, required: bool) -> list[Findin
             continue
         seen.add(identity)
 
-        manifest_path = (root / PurePosixPath(manifest_rel)).resolve()
-        if not _inside(root, manifest_path) or manifest_path.is_symlink() or not manifest_path.is_file():
+        manifest_source = root / PurePosixPath(manifest_rel)
+        manifest_path = manifest_source.resolve()
+        if not _inside(root, manifest_path) or manifest_source.is_symlink() or not manifest_path.is_file():
             findings.append(Finding('MCP-ZED-019', manifest_rel, 'manifest must be a regular file inside the consumer repository'))
             continue
         try:
@@ -279,6 +285,8 @@ def _contract_findings(root: Path, rel_path: str, required: bool) -> list[Findin
                 findings.append(Finding('MCP-ZED-030', manifest_rel, f'dependency {dependency} must use an HTTPS github.com/zed-pkg mirror'))
             if not isinstance(revision, str) or not EXACT_REVISION.fullmatch(revision):
                 findings.append(Finding('MCP-ZED-031', manifest_rel, f'dependency {dependency} must pin the mirror by exact revision'))
+            if spec.get('version') != version:
+                findings.append(Finding('MCP-ZED-035', manifest_rel, f'dependency {dependency} version must match the contract exactly'))
             if 'branch' in spec or 'tag' in spec or 'path' in spec or 'registry' in spec:
                 findings.append(Finding('MCP-ZED-032', manifest_rel, f'dependency {dependency} mixes or floats transport selectors'))
         else:
