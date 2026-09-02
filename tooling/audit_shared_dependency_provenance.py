@@ -7,11 +7,12 @@ The check intentionally separates three claims:
   repository at one full immutable revision;
 * Zed graph declaration: ``.zpkg.toml`` declares the canonical package edge and
   uses a locked Cargo build;
-* Zed frozen resolution: a regular ``.zpkg.lock`` exists when that stronger gate
-  is explicitly enabled.
+* Zed frozen resolution: a regular, non-placeholder ``.zpkg.lock`` exists when
+  that stronger gate is explicitly enabled.
 
-This prevents a manifest-only package edge from being reported as a frozen
-install while the recursive Zed publication closure remains blocked.
+This prevents a manifest-only package edge or ``version = 1`` placeholder from
+being reported as a frozen install while the recursive Zed publication closure
+remains blocked.
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ CANONICAL_ZED = "oresoftware/mcp-rust-libs"
 CANONICAL_BRANCH = "main"
 SHARED_DEPENDENCY = re.compile(r"^ore-mcp-[a-z0-9-]+$")
 FULL_REVISION = re.compile(r"^[0-9a-f]{40}$")
+LOCK_METADATA_KEYS = {"version", "schemaVersion", "lockfileVersion"}
 RANK = {"info": 0, "low": 1, "medium": 2, "high": 3}
 
 
@@ -77,6 +79,18 @@ def read_toml(path: Path) -> dict[str, object]:
     if not isinstance(value, dict):
         raise ValueError("TOML root must be a table")
     return value
+
+
+def lock_has_resolution_payload(lock: dict[str, object]) -> bool:
+    """Reject metadata-only placeholders without guessing the final lock schema."""
+    for key, value in lock.items():
+        if key in LOCK_METADATA_KEYS:
+            continue
+        if isinstance(value, dict) and value:
+            return True
+        if isinstance(value, list) and value:
+            return True
+    return False
 
 
 def github_compare_status(revision: str, *, timeout: float = 15.0) -> str:
@@ -255,12 +269,11 @@ def audit(
                 )
 
     lock_path = root / ".zpkg.lock"
-    lock_present = lock_path.is_file() and not lock_path.is_symlink()
-    if lock_path.exists() and not lock_present:
+    if lock_path.is_symlink() or (lock_path.exists() and not lock_path.is_file()):
         findings.append(
             Finding("high", "invalid-zed-lock", ".zpkg.lock must be a regular file", ".zpkg.lock")
         )
-    elif not lock_present:
+    elif not lock_path.is_file():
         findings.append(
             Finding(
                 "high" if require_zed_lock else "medium",
@@ -273,6 +286,27 @@ def audit(
                 ".zpkg.lock",
             )
         )
+    else:
+        try:
+            zed_lock = read_toml(lock_path)
+        except (OSError, ValueError, tomllib.TOMLDecodeError):
+            findings.append(
+                Finding("high", "invalid-zed-lock", ".zpkg.lock could not be parsed", ".zpkg.lock")
+            )
+        else:
+            if not lock_has_resolution_payload(zed_lock):
+                findings.append(
+                    Finding(
+                        "high" if require_zed_lock else "medium",
+                        "empty-zed-lock",
+                        (
+                            "frozen Zed resolution was required but .zpkg.lock contains metadata only"
+                            if require_zed_lock
+                            else "Zed lock is a metadata-only placeholder; do not claim frozen resolution"
+                        ),
+                        ".zpkg.lock",
+                    )
+                )
 
     if dependencies and zed_declared and len(distinct_revisions) == 1:
         findings.append(
