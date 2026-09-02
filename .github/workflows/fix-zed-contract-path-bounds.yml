@@ -1,0 +1,112 @@
+name: Fix Zed contract path bounds
+
+on:
+  push:
+    branches:
+      - audit/zed-consumer-contract
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-zed-contract-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact branch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Bound parsing and reject symlinks before resolution
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          script = Path('tools/audit_zed_mcp_contract.py')
+          text = script.read_text(encoding='utf-8')
+          text = text.replace(
+              "    if path.is_symlink():\n        raise ValueError('contract file must not be a symlink')\n    with path.open('r', encoding='utf-8') as handle:\n",
+              "    if path.is_symlink():\n        raise ValueError('contract file must not be a symlink')\n"
+              "    if path.stat().st_size > 1_048_576:\n"
+              "        raise ValueError('contract file exceeds 1048576 bytes')\n"
+              "    with path.open('r', encoding='utf-8') as handle:\n",
+              1,
+          )
+          text = text.replace(
+              "        lock_candidate = (root / PurePosixPath(lock_rel)).resolve()\n        if not _inside(root, lock_candidate) or lock_candidate.is_symlink():\n",
+              "        lock_source = root / PurePosixPath(lock_rel)\n"
+              "        lock_candidate = lock_source.resolve()\n"
+              "        if not _inside(root, lock_candidate) or lock_source.is_symlink():\n",
+              1,
+          )
+          text = text.replace(
+              "        else:\n            data = lock_candidate.read_bytes()\n            digest = f'sha256:{hashlib.sha256(data).hexdigest()}'\n",
+              "        elif lock_candidate.stat().st_size > 8_388_608:\n"
+              "            findings.append(Finding('MCP-ZED-012', lock_rel, 'lockfile must be bounded UTF-8 text'))\n"
+              "        else:\n"
+              "            data = lock_candidate.read_bytes()\n"
+              "            digest = f'sha256:{hashlib.sha256(data).hexdigest()}'\n",
+              1,
+          )
+          text = text.replace(
+              "        manifest_path = (root / PurePosixPath(manifest_rel)).resolve()\n        if not _inside(root, manifest_path) or manifest_path.is_symlink() or not manifest_path.is_file():\n",
+              "        manifest_source = root / PurePosixPath(manifest_rel)\n"
+              "        manifest_path = manifest_source.resolve()\n"
+              "        if not _inside(root, manifest_path) or manifest_source.is_symlink() or not manifest_path.is_file():\n",
+              1,
+          )
+          text = text.replace(
+              "            if not isinstance(revision, str) or not EXACT_REVISION.fullmatch(revision):\n                findings.append(Finding('MCP-ZED-031', manifest_rel, f'dependency {dependency} must pin the mirror by exact revision'))\n",
+              "            if not isinstance(revision, str) or not EXACT_REVISION.fullmatch(revision):\n"
+              "                findings.append(Finding('MCP-ZED-031', manifest_rel, f'dependency {dependency} must pin the mirror by exact revision'))\n"
+              "            if spec.get('version') != version:\n"
+              "                findings.append(Finding('MCP-ZED-035', manifest_rel, f'dependency {dependency} version must match the contract exactly'))\n",
+              1,
+          )
+          script.write_text(text, encoding='utf-8')
+
+          tests = Path('test/test_audit_zed_mcp_contract.py')
+          test_text = tests.read_text(encoding='utf-8')
+          addition = '''
+    def test_git_mirror_version_must_match_contract(self) -> None:
+        revision = 'b' * 40
+        self.repo.write('Cargo.toml', f'''\
+[package]
+name = "consumer"
+version = "0.1.0"
+
+[dependencies]
+mcp-core = {{ git = "https://github.com/zed-pkg/mcp-core", rev = "{revision}", version = "=1.2.4" }}
+''')
+        self.repo.write_contract({
+            'name': 'mcp-core',
+            'version': '=1.2.3',
+            'manifest': 'Cargo.toml',
+            'transport': 'git-mirror',
+        })
+        self.assertIn('MCP-ZED-035', self.codes())
+
+'''
+          needle = "\n\nif __name__ == '__main__':\n"
+          if 'test_git_mirror_version_must_match_contract' not in test_text:
+              test_text = test_text.replace(needle, '\n' + addition + needle, 1)
+          tests.write_text(test_text, encoding='utf-8')
+          PY
+
+          rm -- .github/workflows/fix-zed-contract-path-bounds.yml
+          git config user.name 'ores-gh-bots'
+          git config user.email 'ores-gh-bots@users.noreply.github.com'
+          git add tools/audit_zed_mcp_contract.py test/test_audit_zed_mcp_contract.py .github/workflows/fix-zed-contract-path-bounds.yml
+          if ! git diff --cached --quiet; then
+            git commit -m 'security: reject symlinked and oversized Zed evidence'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
