@@ -1,0 +1,57 @@
+name: Zed MCP dependency contract
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run adversarial policy tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v test/test_audit_zed_mcp_contract.py
+
+      - name: Audit this workspace's dependency sources
+        shell: bash
+        env:
+          MCP_REQUIRE_ZED_CONTRACT: 'false'
+        run: |
+          set -euo pipefail
+          python3 tools/audit_zed_mcp_contract.py
+
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify Rust workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f Cargo.toml ]]; then
+            echo 'No root Cargo.toml; Rust workspace verification is not applicable.'
+            exit 0
+          fi
+          cargo fmt --all -- --check
+          cargo metadata --locked --no-deps --format-version 1 >/dev/null
+          cargo test --workspace --all-targets --all-features --locked
+          cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
