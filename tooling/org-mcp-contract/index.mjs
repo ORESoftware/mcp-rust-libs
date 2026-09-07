@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFile, realpath } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { connectStdio } from './stdio.mjs';
+import { parseStrictJson, STRICT_JSON_POLICY } from './json.mjs';
 
 const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const demand = (condition, code) => { if (!condition) throw new Error(`MCP contract: ${code}`); };
@@ -132,7 +133,7 @@ export function readToolPayload(response, operation) {
   demand(Array.isArray(result.content) && result.content.length === 1 &&
     result.content[0]?.type === 'text' && typeof result.content[0].text === 'string', 'expected one JSON text result');
   let payload;
-  try { payload = JSON.parse(result.content[0].text); } catch { throw new Error('MCP contract: malformed JSON text result'); }
+  try { payload = parseStrictJson(result.content[0].text); } catch { throw new Error('MCP contract: malformed JSON text result'); }
   if (Object.hasOwn(result, 'structuredContent')) {
     // Reject disagreement rather than trusting one of two output representations.
     demand(isDeepStrictEqual(result.structuredContent, payload), 'conflicting output representations');
@@ -151,7 +152,7 @@ export async function checkImplementation({ binary, cwd, manifestPath, admitted,
   const executable = await realpath(binary);
   const binaryBefore = digest(await readFile(executable));
   const manifestBytes = await readFile(manifestPath);
-  const manifest = JSON.parse(manifestBytes);
+  const manifest = parseStrictJson(manifestBytes);
   validateManifest(manifest);
   // Recorded calls are evidence, not authority: validate their expected verdicts first.
   for (const operation of manifest.tools) {
@@ -186,13 +187,15 @@ export async function checkImplementation({ binary, cwd, manifestPath, admitted,
       }
     }
     connection.assertHealthy();
-    await admitted.verifyCurrent();
-    demand(binaryBefore === digest(await readFile(executable)), 'executable changed during conformance');
-    demand(digest(manifestBytes) === digest(await readFile(manifestPath)), 'operation manifest changed during conformance');
-    connection.assertHealthy();
-    return { schema: 'ores.mcp-tool-conformance-result/v1', status: 'passed',
-      coverage: manifest.coverage, tools: manifest.tools.map((tool) => tool.name), validCalls, invalidCalls,
-      parityRunId: admitted.runId, contractIrId: admitted.irId,
-      binarySha256: binaryBefore, operationManifestSha256: digest(manifestBytes) };
   } finally { await connection.close(); }
+  // Drain before certification: shutdown output and unfinished frames must not
+  // be ignored by a return value evaluated before the finally block completes.
+  connection.assertHealthy();
+  await admitted.verifyCurrent();
+  demand(binaryBefore === digest(await readFile(executable)), 'executable changed during conformance');
+  demand(digest(manifestBytes) === digest(await readFile(manifestPath)), 'operation manifest changed during conformance');
+  return { schema: 'ores.mcp-tool-conformance-result/v1', status: 'passed',
+    coverage: manifest.coverage, tools: manifest.tools.map((tool) => tool.name), validCalls, invalidCalls,
+    parityRunId: admitted.runId, contractIrId: admitted.irId, wireJsonPolicy: STRICT_JSON_POLICY,
+    binarySha256: binaryBefore, operationManifestSha256: digest(manifestBytes) };
 }

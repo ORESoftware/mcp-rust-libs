@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { isAbsolute } from 'node:path';
+import { parseStrictJson } from './json.mjs';
 
 const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
@@ -32,19 +33,29 @@ export function connectStdio(binary, { cwd, timeoutMs = 5000, maxBytes = 1048576
   }
   child.on('error', () => fail('server could not start'));
   child.stdin.on('error', () => { if (!closing) fail('server input failed'); });
-  child.once('close', () => { if (!closing) fail('server exited before suite completed'); });
+  child.once('close', () => {
+    if (buffer.length) fail('unterminated JSON-RPC frame');
+    if (!closing) fail('server exited before suite completed');
+  });
   child.stderr.on('data', count); // Discard, but bound stderr as well as stdout.
   child.stdout.on('data', (chunk) => {
     if (!count(chunk)) return;
     buffer = Buffer.concat([buffer, chunk]);
     let newline;
     while ((newline = buffer.indexOf(10)) !== -1) {
-      const line = buffer.subarray(0, newline).toString('utf8');
+      const line = buffer.subarray(0, newline);
       buffer = buffer.subarray(newline + 1);
       let message;
-      try { message = JSON.parse(line); } catch { fail('non-JSON stdout'); return; }
+      try { message = parseStrictJson(line); } catch { fail('invalid or ambiguous JSON stdout'); return; }
       if (!object(message) || message.jsonrpc !== '2.0') { fail('invalid JSON-RPC envelope'); return; }
-      if (!Object.hasOwn(message, 'id') && typeof message.method === 'string') continue;
+      if (!Object.hasOwn(message, 'id')) {
+        if (typeof message.method !== 'string' || Object.hasOwn(message, 'result') ||
+            Object.hasOwn(message, 'error') || (Object.hasOwn(message, 'params') &&
+              !object(message.params) && !Array.isArray(message.params))) {
+          fail('invalid JSON-RPC notification'); return;
+        }
+        continue;
+      }
       const request = pending.get(message.id);
       if (!request || Object.hasOwn(message, 'method') ||
           Object.hasOwn(message, 'result') === Object.hasOwn(message, 'error') ||
