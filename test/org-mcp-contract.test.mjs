@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
 import { admitContract, assertCatalog, assertInvalidCall, checkImplementation, readToolPayload,
-  validateManifest } from '../tooling/org-mcp-contract/index.mjs';
+  sameAdvertisedSchema, validateManifest } from '../tooling/org-mcp-contract/index.mjs';
 import { connectStdio } from '../tooling/org-mcp-contract/stdio.mjs';
 
 const input = { type: 'object', additionalProperties: false };
@@ -179,4 +179,37 @@ test('unsupported validation is not counted as an invalid payload', async () => 
 test('source changes between receipt verification and schema loading stop admission', async () => {
   const { api } = authorityApi(); api.loadSchemaCollection = async () => ({ digest: 'changed' });
   await assert.rejects(admitContract(api, { authoredSchema: 'authored' }), /inputs changed/);
+});
+
+const normalizationApi = {
+  // This double deliberately preserves every keyword; upstream owns metadata normalization.
+  normalizeSchemaNodeForComparison: structuredClone,
+  canonicalStringify: (value) => JSON.stringify(value),
+};
+test('Schemars and TypeSpec closed empty objects are equivalent', () => {
+  assert.equal(sameAdvertisedSchema(normalizationApi, input, { ...input, properties: {} }), true);
+  assert.equal(sameAdvertisedSchema(normalizationApi, { ...input, properties: {}, required: [] }, input), true);
+});
+test('empty-object equivalence never opens objects or permits named arguments', () => {
+  for (const other of [{ type: 'object' }, { type: 'object', additionalProperties: true },
+    { ...input, properties: { name: { type: 'string' } } }, { ...input, required: ['name'] }]) {
+    assert.equal(sameAdvertisedSchema(normalizationApi, input, other), false);
+  }
+});
+test('empty-object equivalence refuses extra assertion and reference keywords', () => {
+  for (const extra of [{ minProperties: 1 }, { $ref: '#/properties' }, { patternProperties: {} },
+    { unevaluatedProperties: false }, { not: {} }]) {
+    assert.equal(sameAdvertisedSchema(normalizationApi, input, { ...input, properties: {}, ...extra }), false);
+  }
+});
+test('keyword-shaped literal payloads are never rewritten', () => {
+  assert.equal(sameAdvertisedSchema(normalizationApi,
+    { const: { properties: {} } }, { const: {} }), false);
+  assert.equal(sameAdvertisedSchema(normalizationApi,
+    { properties: { properties: {} } }, { properties: {} }), false);
+});
+test('invalid empty-object keyword types are never treated as absent', () => {
+  for (const extra of [{ properties: [] }, { properties: null }, { required: {} }, { required: null }]) {
+    assert.equal(sameAdvertisedSchema(normalizationApi, input, { ...input, ...extra }), false);
+  }
 });

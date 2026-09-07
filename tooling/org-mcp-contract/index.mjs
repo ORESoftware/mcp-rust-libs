@@ -7,6 +7,23 @@ const object = (value) => value !== null && typeof value === 'object' && !Array.
 const demand = (condition, code) => { if (!condition) throw new Error(`MCP contract: ${code}`); };
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
+/** The only extra equivalence here is two literal closed, empty object schemas.
+ * Schemars omits empty `properties` while TypeSpec emits it. Do not recursively
+ * strip keywords: property names and const/enum payloads are literal data, and
+ * removing schema locations could change reference resolution.
+ */
+export function sameAdvertisedSchema(api, left, right) {
+  const a = api.normalizeSchemaNodeForComparison(left);
+  const b = api.normalizeSchemaNodeForComparison(right);
+  if (api.canonicalStringify(a) === api.canonicalStringify(b)) return true;
+  const emptyObject = (schema) => object(schema) && schema.type === 'object' &&
+    schema.additionalProperties === false &&
+    Object.keys(schema).every((key) => ['type', 'additionalProperties', 'properties', 'required'].includes(key)) &&
+    (!Object.hasOwn(schema, 'properties') || (object(schema.properties) && Object.keys(schema.properties).length === 0)) &&
+    (!Object.hasOwn(schema, 'required') || (Array.isArray(schema.required) && schema.required.length === 0));
+  return emptyObject(a) && emptyObject(b);
+}
+
 /** Always compile both independent lanes anew; never admit a caller-supplied status string. */
 export async function admitContract(api, options) {
   const formatAssertion = options.formatAssertion === true;
@@ -58,8 +75,7 @@ export async function admitContract(api, options) {
       return verdicts[0];
     },
     sameSchema(left, right) {
-      return api.canonicalStringify(api.normalizeSchemaNodeForComparison(left)) ===
-        api.canonicalStringify(api.normalizeSchemaNodeForComparison(right));
+      return sameAdvertisedSchema(api, left, right);
     },
   });
 }
