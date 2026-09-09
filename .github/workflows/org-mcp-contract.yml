@@ -25,13 +25,13 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: ORESoftware/typespec-json-schema-validator
-          ref: 4740f1367a7906813dcd420a77d0c9ede26943fb
+          ref: 6d560db590cd1a9e03822697f91f6a3f78f6c22a
           path: vendor/typespec-json-schema-validator
           persist-credentials: false
       - name: Install the pinned TJSV dependency graph
         working-directory: vendor/typespec-json-schema-validator
         run: npm ci --ignore-scripts
-      - name: Prove the pinned validator unit suite
+      - name: Prove the pinned TJSV unit suite
         working-directory: vendor/typespec-json-schema-validator
         run: npm test
       - name: Exercise real compiler, peer schemas, Contract IR, and runtime boundaries
