@@ -5,10 +5,13 @@ on:
     branches: [main, dev]
 permissions:
   contents: read
+concurrency:
+  group: org-mcp-contract-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   runner-tests:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -16,4 +19,23 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22.16.0
-      - run: node --test test/org-mcp-*.test.mjs
+      - name: Run dependency-free MCP runner regressions
+        run: node --test test/org-mcp-*.test.mjs
+      - name: Check out the reviewed TJSV source revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ORESoftware/typespec-json-schema-validator
+          ref: 4740f1367a7906813dcd420a77d0c9ede26943fb
+          path: vendor/typespec-json-schema-validator
+          persist-credentials: false
+      - name: Install the pinned TJSV dependency graph
+        working-directory: vendor/typespec-json-schema-validator
+        run: npm ci --ignore-scripts
+      - name: Prove the pinned validator unit suite
+        working-directory: vendor/typespec-json-schema-validator
+        run: npm test
+      - name: Exercise real compiler, peer schemas, Contract IR, and runtime boundaries
+        env:
+          REQUIRE_TJSV_REAL: '1'
+          TJSV_ROOT: ${{ github.workspace }}/vendor/typespec-json-schema-validator
+        run: node --test test/org-mcp-contract-tjsv.integration.mjs
