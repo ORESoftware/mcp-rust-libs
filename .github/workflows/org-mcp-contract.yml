@@ -5,10 +5,13 @@ on:
     branches: [main, dev]
 permissions:
   contents: read
+concurrency:
+  group: org-mcp-contract-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   runner-tests:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -16,4 +19,31 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22.16.0
-      - run: node --test test/org-mcp-*.test.mjs
+      - name: Run dependency-free MCP runner regressions
+        run: node --test test/org-mcp-*.test.mjs
+      - name: Check out the reviewed TJSV source revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ORESoftware/typespec-json-schema-validator
+          ref: 6d560db590cd1a9e03822697f91f6a3f78f6c22a
+          path: vendor/typespec-json-schema-validator
+          persist-credentials: false
+      - name: Audit the pinned TJSV production dependency closure
+        working-directory: vendor/typespec-json-schema-validator
+        env:
+          TSJSV_NPM_AUDIT_RECEIPT: ${{ runner.temp }}/mcp-consumer-tjsv-npm-audit-receipt.json
+        run: npm run audit:prod
+      - name: Install the pinned TJSV dependency graph exactly as upstream supports it
+        working-directory: vendor/typespec-json-schema-validator
+        run: npm ci
+      - name: Prove the pinned TJSV full repository gate
+        working-directory: vendor/typespec-json-schema-validator
+        run: npm run test:all
+      - name: Prove the pinned TJSV package boundary and clean consumer acceptance
+        working-directory: vendor/typespec-json-schema-validator
+        run: npm run release:preflight
+      - name: Exercise real compiler, peer schemas, Contract IR, and runtime boundaries
+        env:
+          REQUIRE_TJSV_REAL: '1'
+          TJSV_ROOT: ${{ github.workspace }}/vendor/typespec-json-schema-validator
+        run: node --test test/org-mcp-contract-tjsv.integration.mjs

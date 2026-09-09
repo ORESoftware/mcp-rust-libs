@@ -85,13 +85,24 @@ export function validateManifest(manifest) {
   demand(object(manifest) && manifest.schema === 'ores.mcp-tool-conformance/v1', 'unsupported operation manifest');
   demand(typeof manifest.protocolVersion === 'string' && /^\d{4}-\d{2}-\d{2}$/u.test(manifest.protocolVersion),
     'missing exact protocol version');
-  demand(manifest.coverage === 'declared-tools-only', 'coverage must be explicit');
+  demand(manifest.coverage === 'declared-tools-only' || manifest.coverage === 'exact-tools',
+    'coverage must be explicit');
+  const exactCatalog = manifest.coverage === 'exact-tools';
+  if (exactCatalog) {
+    demand(manifest.serverClass === 'regular' || manifest.serverClass === 'admin',
+      'exact catalog requires regular or admin serverClass');
+  }
   demand(Array.isArray(manifest.tools) && manifest.tools.length > 0, 'empty tool inventory');
   const names = new Set();
   for (const tool of manifest.tools) {
     demand(object(tool) && typeof tool.name === 'string' && /^[A-Za-z0-9_.-]+$/u.test(tool.name) &&
       !names.has(tool.name), 'invalid or duplicate operation');
     names.add(tool.name);
+    if (exactCatalog) {
+      demand(tool.surface === 'regular' || tool.surface === 'admin', 'exact catalog tool surface missing');
+      demand(manifest.serverClass !== 'regular' || tool.surface === 'regular',
+        'regular server cannot declare admin-surface tools');
+    }
     demand(typeof tool.input === 'string' && typeof tool.output === 'string', 'missing data declarations');
     demand(tool.encoding === 'json_text' || tool.encoding === 'structured', 'unsupported result encoding');
     demand(Array.isArray(tool.validArguments) && tool.validArguments.length > 0 &&
@@ -107,6 +118,9 @@ export function assertCatalog(catalog, manifest, admitted) {
   for (const tool of catalog.tools) {
     demand(object(tool) && typeof tool.name === 'string' && !tools.has(tool.name), 'duplicate or invalid advertised tool');
     tools.set(tool.name, tool);
+  }
+  if (manifest.coverage === 'exact-tools') {
+    demand(tools.size === manifest.tools.length, 'unexpected tool in exact catalog');
   }
   for (const operation of manifest.tools) {
     const tool = tools.get(operation.name);
@@ -195,7 +209,8 @@ export async function checkImplementation({ binary, cwd, manifestPath, admitted,
   demand(binaryBefore === digest(await readFile(executable)), 'executable changed during conformance');
   demand(digest(manifestBytes) === digest(await readFile(manifestPath)), 'operation manifest changed during conformance');
   return { schema: 'ores.mcp-tool-conformance-result/v1', status: 'passed',
-    coverage: manifest.coverage, tools: manifest.tools.map((tool) => tool.name), validCalls, invalidCalls,
+    coverage: manifest.coverage, serverClass: manifest.serverClass ?? null,
+    tools: manifest.tools.map((tool) => tool.name), validCalls, invalidCalls,
     parityRunId: admitted.runId, contractIrId: admitted.irId, wireJsonPolicy: STRICT_JSON_POLICY,
     binarySha256: binaryBefore, operationManifestSha256: digest(manifestBytes) };
 }
