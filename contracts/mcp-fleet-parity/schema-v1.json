@@ -1,0 +1,799 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ORESoftware/mcp-rust-libs/contracts/mcp-fleet-parity/schema-v1.json",
+  "title": "ORESoftware Rust MCP fleet parity profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "identity",
+    "protocol",
+    "clients",
+    "integrations",
+    "organizationSurface",
+    "security",
+    "evidence"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "identity": {
+      "$ref": "#/$defs/identity"
+    },
+    "protocol": {
+      "$ref": "#/$defs/protocol"
+    },
+    "clients": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "$ref": "#/$defs/client"
+      }
+    },
+    "integrations": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/integration"
+      }
+    },
+    "organizationSurface": {
+      "$ref": "#/$defs/organizationSurface"
+    },
+    "security": {
+      "$ref": "#/$defs/security"
+    },
+    "evidence": {
+      "$ref": "#/$defs/fleetEvidence"
+    }
+  },
+  "$defs": {
+    "portableName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"
+    },
+    "repository": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*-mcp-server\\.rs$"
+    },
+    "sourcePath": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 300,
+      "pattern": "^(src|tests|crates|packages)/[A-Za-z0-9._/-]+$"
+    },
+    "environmentKey": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 128,
+      "pattern": "^[A-Z][A-Z0-9_]+$"
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reference", "revision", "verifiedAt"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "source_test",
+            "github_run",
+            "test_org_run",
+            "client_smoke",
+            "live_read_probe"
+          ]
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 500
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "verifiedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization",
+        "repository",
+        "revision",
+        "linearIssue",
+        "serverName",
+        "summary"
+      ],
+      "properties": {
+        "organization": {
+          "$ref": "#/$defs/portableName"
+        },
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "linearIssue": {
+          "type": "string",
+          "pattern": "^DEN-[1-9][0-9]*$"
+        },
+        "serverName": {
+          "$ref": "#/$defs/portableName"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 500
+        }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "enabled", "authentication", "evidence"],
+      "properties": {
+        "kind": {
+          "enum": ["stdio", "streamable_http", "legacy_sse"]
+        },
+        "enabled": {
+          "const": true
+        },
+        "authentication": {
+          "enum": ["process_boundary", "oauth_2_1"]
+        },
+        "endpointPath": {
+          "type": "string",
+          "pattern": "^/[A-Za-z0-9._~!$&'()*+,;=:@%/-]*$",
+          "maxLength": 200
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        }
+      }
+    },
+    "remoteAuthorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "protectedResourceMetadata",
+        "wwwAuthenticateChallenge",
+        "audienceBound",
+        "authorizedClientValidated",
+        "realmValidated",
+        "noTokenPassthrough",
+        "exactHostPolicy",
+        "credentialedRedirectsDisabled",
+        "credentialedAmbientProxyDisabled",
+        "requestBodyMaxBytes",
+        "responseBodyMaxBytes"
+      ],
+      "properties": {
+        "authority": {
+          "const": "shared-auth"
+        },
+        "protectedResourceMetadata": {
+          "const": true
+        },
+        "wwwAuthenticateChallenge": {
+          "const": true
+        },
+        "audienceBound": {
+          "const": true
+        },
+        "authorizedClientValidated": {
+          "const": true
+        },
+        "realmValidated": {
+          "const": true
+        },
+        "noTokenPassthrough": {
+          "const": true
+        },
+        "exactHostPolicy": {
+          "const": true
+        },
+        "credentialedRedirectsDisabled": {
+          "const": true
+        },
+        "credentialedAmbientProxyDisabled": {
+          "const": true
+        },
+        "requestBodyMaxBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576
+        },
+        "responseBodyMaxBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finalRevision", "transports", "remoteAuthorization"],
+      "properties": {
+        "finalRevision": {
+          "const": "2025-11-25"
+        },
+        "transports": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/transport"
+          },
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "required": ["kind"],
+                "properties": {
+                  "kind": {
+                    "const": "stdio"
+                  }
+                }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": ["kind"],
+                "properties": {
+                  "kind": {
+                    "const": "streamable_http"
+                  }
+                }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
+        },
+        "remoteAuthorization": {
+          "$ref": "#/$defs/remoteAuthorization"
+        }
+      }
+    },
+    "client": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "transports", "evidence"],
+      "properties": {
+        "id": {
+          "enum": ["cursor", "openai", "anthropic", "gemini", "grok", "qwen"]
+        },
+        "role": {
+          "const": "mcp_client"
+        },
+        "transports": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["stdio", "streamable_http"]
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mode",
+        "description",
+        "organizationScope",
+        "timeoutMs",
+        "outputMaxBytes"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/portableName"
+        },
+        "mode": {
+          "enum": ["diagnostic", "read", "mutation"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 30,
+          "maxLength": 500
+        },
+        "organizationScope": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 300
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000
+        },
+        "outputMaxBytes": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 1048576
+        }
+      }
+    },
+    "integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "role",
+        "implementation",
+        "configurationKeys",
+        "allowedOrigins",
+        "scopes",
+        "stateModel",
+        "operations",
+        "evidence"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "github",
+            "aws",
+            "gcp",
+            "supabase",
+            "neon",
+            "cloudflare",
+            "k8s_cluster",
+            "nats"
+          ]
+        },
+        "role": {
+          "const": "upstream_service"
+        },
+        "implementation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["module", "symbol", "test"],
+          "properties": {
+            "module": {
+              "$ref": "#/$defs/sourcePath"
+            },
+            "symbol": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z_][A-Za-z0-9_:<>]*$"
+            },
+            "test": {
+              "$ref": "#/$defs/sourcePath"
+            }
+          }
+        },
+        "configurationKeys": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/environmentKey"
+          }
+        },
+        "allowedOrigins": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          }
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "stateModel": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ready",
+              "not_configured",
+              "degraded",
+              "unauthorized",
+              "forbidden"
+            ]
+          }
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        }
+      }
+    },
+    "toolAnnotations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"],
+      "properties": {
+        "readOnlyHint": {
+          "type": "boolean"
+        },
+        "destructiveHint": {
+          "type": "boolean"
+        },
+        "idempotentHint": {
+          "type": "boolean"
+        },
+        "openWorldHint": {
+          "type": "boolean"
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description",
+        "implementation",
+        "integrations",
+        "annotations",
+        "inputSchemaClosed",
+        "outputMaxBytes"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/portableName"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 700
+        },
+        "implementation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["module", "symbol", "test"],
+          "properties": {
+            "module": {
+              "$ref": "#/$defs/sourcePath"
+            },
+            "symbol": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 128
+            },
+            "test": {
+              "$ref": "#/$defs/sourcePath"
+            }
+          }
+        },
+        "integrations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "github",
+              "aws",
+              "gcp",
+              "supabase",
+              "neon",
+              "cloudflare",
+              "k8s_cluster",
+              "nats"
+            ]
+          }
+        },
+        "annotations": {
+          "$ref": "#/$defs/toolAnnotations"
+        },
+        "inputSchemaClosed": {
+          "const": true
+        },
+        "outputMaxBytes": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 1048576
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uri", "description", "mimeType"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 300,
+          "pattern": "^[a-z][a-z0-9+.-]*://\\S+$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 30,
+          "maxLength": 500
+        },
+        "mimeType": {
+          "enum": ["application/json", "text/markdown", "text/plain"]
+        }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "referencedTools"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/portableName"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 30,
+          "maxLength": 500
+        },
+        "referencedTools": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/portableName"
+          }
+        }
+      }
+    },
+    "organizationSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositories",
+        "services",
+        "kubernetesNamespaces",
+        "natsSubjects",
+        "runbooks",
+        "tools",
+        "resources",
+        "prompts",
+        "composedReadTool"
+      ],
+      "properties": {
+        "repositories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$",
+            "maxLength": 200
+          }
+        },
+        "services": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/portableName"
+          }
+        },
+        "kubernetesNamespaces": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+            "maxLength": 63
+          }
+        },
+        "natsSubjects": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_*>-]+)+$",
+            "maxLength": 300
+          }
+        },
+        "runbooks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 300
+          }
+        },
+        "tools": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "$ref": "#/$defs/tool"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/resource"
+          }
+        },
+        "prompts": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/prompt"
+          }
+        },
+        "composedReadTool": {
+          "$ref": "#/$defs/portableName"
+        }
+      }
+    },
+    "mutationGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultDenied",
+        "runtimeAuthorization",
+        "allowlistedTargets",
+        "dryRun",
+        "targetBoundConfirmation",
+        "idempotency",
+        "boundedAudit"
+      ],
+      "properties": {
+        "defaultDenied": {
+          "const": true
+        },
+        "runtimeAuthorization": {
+          "const": true
+        },
+        "allowlistedTargets": {
+          "const": true
+        },
+        "dryRun": {
+          "const": true
+        },
+        "targetBoundConfirmation": {
+          "const": true
+        },
+        "idempotency": {
+          "const": true
+        },
+        "boundedAudit": {
+          "const": true
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "secretsEnvironmentOnly",
+        "secretValuesExcluded",
+        "stdoutProtocolOnly",
+        "boundedLowCardinalityTelemetry",
+        "exactOriginAllowlists",
+        "credentialedRedirectsDisabled",
+        "credentialedAmbientProxyDisabled",
+        "mutationGate"
+      ],
+      "properties": {
+        "secretsEnvironmentOnly": {
+          "const": true
+        },
+        "secretValuesExcluded": {
+          "const": true
+        },
+        "stdoutProtocolOnly": {
+          "const": true
+        },
+        "boundedLowCardinalityTelemetry": {
+          "const": true
+        },
+        "exactOriginAllowlists": {
+          "const": true
+        },
+        "credentialedRedirectsDisabled": {
+          "const": true
+        },
+        "credentialedAmbientProxyDisabled": {
+          "const": true
+        },
+        "mutationGate": {
+          "$ref": "#/$defs/mutationGate"
+        }
+      }
+    },
+    "fleetEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryTests",
+        "testOrganization",
+        "sharedLibraryRevision",
+        "lockfileCommitted"
+      ],
+      "properties": {
+        "repositoryTests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "testOrganization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "productionRevision", "evidence"],
+          "properties": {
+            "repository": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]+-test/[A-Za-z0-9._-]+$",
+              "maxLength": 200
+            },
+            "productionRevision": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "evidence": {
+              "$ref": "#/$defs/evidence"
+            }
+          }
+        },
+        "sharedLibraryRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "lockfileCommitted": {
+          "const": true
+        }
+      }
+    }
+  }
+}

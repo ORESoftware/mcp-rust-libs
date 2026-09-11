@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ORESoftware/mcp-rust-libs/blob/main/fleet/consumer-inventory.schema.json",
+  "title": "MCP Rust fleet adoption inventory",
+  "type": "object",
+  "required": [
+    "schema",
+    "generated_at",
+    "repositories"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ores.mcp-rust-libs.fleet.v1"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repositories": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "$ref": "#/$defs/repository"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "repositoryName": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "packageName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "pattern": "^[A-Za-z0-9_.-]+$"
+    },
+    "repository": {
+      "type": "object",
+      "required": [
+        "repository",
+        "checkout",
+        "classification",
+        "status",
+        "expected_packages"
+      ],
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/repositoryName"
+        },
+        "checkout": {
+          "$ref": "#/$defs/repositoryName"
+        },
+        "classification": {
+          "enum": [
+            "mcp-server",
+            "mcp-library",
+            "mcp-gateway",
+            "mcp-test"
+          ]
+        },
+        "status": {
+          "enum": [
+            "adopted",
+            "pending",
+            "waived"
+          ]
+        },
+        "expected_packages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/packageName"
+          }
+        },
+        "tracking": {
+          "type": "string",
+          "pattern": "^DEN-[1-9][0-9]*$"
+        },
+        "waiver_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "waiver_expires": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "pending"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "tracking"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "waived"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "tracking",
+              "waiver_reason",
+              "waiver_expires"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

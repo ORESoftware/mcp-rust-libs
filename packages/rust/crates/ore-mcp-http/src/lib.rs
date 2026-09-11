@@ -3,8 +3,15 @@
 #![forbid(unsafe_code)]
 
 pub mod body;
+#[cfg(feature = "reqwest-client")]
+pub mod client;
 
 pub use body::{BodyLimitError, BoundedBody};
+#[cfg(feature = "reqwest-client")]
+pub use client::{
+    classify_status, BoundedResponse, CredentialHeaders, HardenedHttpClient, HttpClientError,
+    UpstreamHttpState,
+};
 use ore_mcp_safety::Bounds;
 use url::{Host, Url};
 

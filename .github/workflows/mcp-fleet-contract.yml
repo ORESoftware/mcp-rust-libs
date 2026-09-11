@@ -1,0 +1,77 @@
+name: MCP fleet adoption contract
+
+on:
+  pull_request:
+    paths:
+      - 'tools/audit_mcp_fleet.py'
+      - 'tools/audit_zed_mcp_contract.py'
+      - 'test/test_audit_mcp_fleet.py'
+      - 'test/test_audit_zed_mcp_contract.py'
+      - 'fleet/**'
+      - 'docs/fleet-adoption-audit.md'
+      - 'docs/zed-consumer-contract.md'
+      - '.github/workflows/mcp-fleet-contract.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/audit_mcp_fleet.py'
+      - 'tools/audit_zed_mcp_contract.py'
+      - 'test/test_audit_mcp_fleet.py'
+      - 'test/test_audit_zed_mcp_contract.py'
+      - 'fleet/**'
+      - 'docs/fleet-adoption-audit.md'
+      - 'docs/zed-consumer-contract.md'
+      - '.github/workflows/mcp-fleet-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-fleet-contract-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Compile audit utilities
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            tools/audit_zed_mcp_contract.py \
+            tools/audit_mcp_fleet.py \
+            test/test_audit_zed_mcp_contract.py \
+            test/test_audit_mcp_fleet.py
+
+      - name: Run per-consumer and fleet adversarial tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v \
+            test/test_audit_zed_mcp_contract.py \
+            test/test_audit_mcp_fleet.py
+
+      - name: Verify inventory JSON artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m json.tool fleet/consumer-inventory.schema.json >/dev/null
+          python3 -m json.tool fleet/consumer-inventory.example.json >/dev/null
+
+      - name: Prove the policy engine does not require network credentials
+        shell: bash
+        env:
+          GITHUB_TOKEN: ''
+          GH_TOKEN: ''
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v test/test_audit_mcp_fleet.py

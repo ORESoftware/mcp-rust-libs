@@ -1,0 +1,3182 @@
+{
+  "asOf": "2026-08-31",
+  "duplicateCheckouts": [
+    {
+      "authoritativeCheckout": "benefactor-cc/benefactor-cc-mcp-server.rs",
+      "checkout": "happy-wakey/benefactor-cc-mcp-server.rs",
+      "dirty": false,
+      "repository": "benefactor-cc/benefactor-cc-mcp-server.rs",
+      "revision": "0ac30f5e81c19f5346e3feff26ea025e6a824bf1"
+    },
+    {
+      "authoritativeCheckout": "canonical-cloud/canonical-mcp-server.rs",
+      "checkout": "canonical-cloud/canonical.cloud/canonical-mcp-server.rs",
+      "dirty": false,
+      "repository": "canonical-cloud/canonical-mcp-server.rs",
+      "revision": "760fca4ee37845ddb41a766216d94a0972f50ade"
+    }
+  ],
+  "findingCodeTotals": {
+    "bearer-host-policy": 16,
+    "bearer-proxy-policy": 15,
+    "bearer-redirect-policy": 1,
+    "checkout-credentials": 30,
+    "handwritten-jsonrpc": 4,
+    "http-auth-boundary": 2,
+    "http-host-boundary": 2,
+    "missing-ci": 2,
+    "missing-fleet-parity-profile": 51,
+    "missing-lock": 2,
+    "missing-process-conformance": 16,
+    "missing-rmcp": 13,
+    "missing-tests": 12,
+    "mutable-action-pin": 12,
+    "mutation-confirmation": 2,
+    "mutation-gate": 13,
+    "permissive-tool-schema": 18,
+    "stale-protocol": 6,
+    "stdout-pollution": 3,
+    "unbounded-http-body": 48,
+    "unbounded-subprocess-output": 16,
+    "unbounded-tool-output": 32,
+    "workflow-permissions": 5
+  },
+  "repositories": [
+    {
+      "branch": "agent/den-390-f2e-generated-env",
+      "checkout": "3FA-app/3FA-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-http-body": 5,
+        "unbounded-subprocess-output": 2,
+        "unbounded-tool-output": 1,
+        "workflow-permissions": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: apply_cli_flags, start_kill",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/domains.rs",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/cloudflare.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/domains.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/fiducia.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/github.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/supabase.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "workflow-permissions",
+          "message": "workflow has no explicit top-level permissions boundary",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "3FA-app/3FA-mcp-server.rs",
+      "revision": "28794da6edaa04373d231a6ade53b0d275597b70",
+      "summary": {
+        "high": 6,
+        "info": 0,
+        "low": 1,
+        "medium": 9
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "akrion-sim/akrion-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: create_dir_all",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "akrion-sim/akrion-mcp-server.rs",
+      "revision": "5cbb046a3524fad8e389f87cb2b0cb5ba72d97a8",
+      "summary": {
+        "high": 5,
+        "info": 0,
+        "low": 1,
+        "medium": 2
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "anticaptrad/act-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "checkout-credentials": 1,
+        "handwritten-jsonrpc": 1,
+        "missing-fleet-parity-profile": 1,
+        "stale-protocol": 2,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "handwritten-jsonrpc",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "stale-protocol",
+          "message": "production source hard-codes MCP 2025-03-26",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "stale-protocol",
+          "message": "production source hard-codes MCP 2025-06-18",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "anticaptrad/act-mcp-server.rs",
+      "revision": "78bbbc06b604d7e57a223c1d4e6ba002c80b7969",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 1,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "apostille-me/apme-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "apostille-me/apme-mcp-server.rs",
+      "revision": "52159ab5e08fec76477f813f93927e4c0a590d48",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "async-java/async-java-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "async-java/async-java-mcp-server.rs",
+      "revision": "0eb303d9d5408287e01d6d3cd0d8f17a8f005dde",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "athlet-o/athleto-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "checkout-credentials": 2,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-http-body": 7,
+        "unbounded-subprocess-output": 2,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/domains.rs",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/cloudflare.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/domains.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/fiducia.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/health.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/status.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/supabase.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/tools/cluster.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/den-957-bootstrap-finalize.yml",
+          "severity": "low"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "athlet-o/athleto-mcp-server.rs",
+      "revision": "9b3c9712819075b2d74467178a29fa560f6ac957",
+      "summary": {
+        "high": 4,
+        "info": 0,
+        "low": 2,
+        "medium": 10
+      }
+    },
+    {
+      "branch": "hardening/immutable-env-map-20260826",
+      "checkout": "benefactor-cc/benefactor-cc-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1,
+        "workflow-permissions": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: start_date",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "workflow-permissions",
+          "message": "workflow has no explicit top-level permissions boundary",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "benefactor-cc/benefactor-cc-mcp-server.rs",
+      "revision": "fe8d3eba82c1cf56d7de6a47fc9163f76f04e8aa",
+      "summary": {
+        "high": 5,
+        "info": 0,
+        "low": 1,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/den-390-f2e-generated-env",
+      "checkout": "happy-wakey/benefactor-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1,
+        "workflow-permissions": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: start_date",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "workflow-permissions",
+          "message": "workflow has no explicit top-level permissions boundary",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "benefactor-cc/benefactor-mcp-server.rs",
+      "revision": "fb5bd6e222ad1728426a3e39c11a6dd1e5d29558",
+      "summary": {
+        "high": 3,
+        "info": 0,
+        "low": 1,
+        "medium": 4
+      }
+    },
+    {
+      "branch": "agent/env-map-no-set-var",
+      "checkout": "canonical-cloud/canonical-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: apply_cli_flags",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "Command::output may buffer unbounded child output",
+          "path": "src/tools/k8s.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "canonical-cloud/canonical-mcp-server.rs",
+      "revision": "7360778cddff3d0c15e455e930603c36eb883d3b",
+      "summary": {
+        "high": 3,
+        "info": 0,
+        "low": 0,
+        "medium": 5
+      }
+    },
+    {
+      "branch": "agent/typed-route-idl",
+      "checkout": "chapter-publishing/chapter-publishing-mcp-server.rs",
+      "dirty": true,
+      "findingCodes": {
+        "checkout-credentials": 2,
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1,
+        "mutable-action-pin": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/route-map-sync.yml",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/route-map-sync.yml",
+          "severity": "low"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/route-map-sync.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "chapter-publishing/chapter-publishing-mcp-server.rs",
+      "revision": "ad571f06abb86fe20637f09d0e53c223aa2ab170",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 2,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "den-2053/claimgraph-runtime-foundation",
+      "checkout": "claimgraph/repos/claimgraph-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 1,
+        "handwritten-jsonrpc": 1,
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "mutation-gate": 1,
+        "stale-protocol": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "handwritten-jsonrpc",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: write_all",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "stale-protocol",
+          "message": "production source hard-codes MCP 2025-06-18",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/mcp.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "ClaimGraph/claimgraph-mcp-server.rs",
+      "revision": "02901d1f25c4573c23faf0f0280b17ce338c30bc",
+      "summary": {
+        "high": 4,
+        "info": 0,
+        "low": 1,
+        "medium": 4
+      }
+    },
+    {
+      "branch": "agent/den-390-f2e-generated-env",
+      "checkout": "claritas-viz/claritas-viz-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "missing-fleet-parity-profile": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-http-body": 7,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/cloudflare.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/dataviz.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/domains.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/fiducia.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/github.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/server.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/supabase.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "claritas-viz/claritas-viz-mcp-server.rs",
+      "revision": "fd2122658a99a2931a501fb5169691ee5b02c43a",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 0,
+        "medium": 10
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "cliptown/cliptown-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "cliptown/cliptown-mcp-server.rs",
+      "revision": "2a2699db1f8c4962a3c1eb839897ff8d43743a3f",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "daedalus-fab/daedalus-fab-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-http-body": 6,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: apply_cli_flags",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/cloudflare.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/domains.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/fabrication.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/fiducia.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/github.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/supabase.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "daedalus-fab/daedalus-fab-mcp-server.rs",
+      "revision": "d515521b6218b0063adcc99316bde7089e23f15e",
+      "summary": {
+        "high": 5,
+        "info": 0,
+        "low": 1,
+        "medium": 9
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "declarative-migrations/declarative-migrations-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "stale-protocol": 1,
+        "stdout-pollution": 1,
+        "unbounded-http-body": 5,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: write_all",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "stdout-pollution",
+          "message": "stdout writes can corrupt MCP stdio",
+          "path": "src/bin/wire-test.rs",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "stale-protocol",
+          "message": "production source hard-codes MCP 2025-06-18",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/domains.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/fiducia.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/release.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/release.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/supabase.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "declarative-migrations/declarative-migrations-mcp-server.rs",
+      "revision": "a87687f54cc4b28071acc358b586daf31cde0967",
+      "summary": {
+        "high": 5,
+        "info": 0,
+        "low": 0,
+        "medium": 9
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "discrete-event-systems/des-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-proxy-policy": 1,
+        "missing-fleet-parity-profile": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-http-body": 5,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/cloudflare.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/domains.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/fiducia.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/github.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/supabase.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "discrete-event-systems/des-mcp-server.rs",
+      "revision": "98e72f2baeacf198ff1837e69a402e5975ed23f1",
+      "summary": {
+        "high": 3,
+        "info": 0,
+        "low": 0,
+        "medium": 7
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "drone-mngr/drone-mngr-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "checkout-credentials": 2,
+        "missing-fleet-parity-profile": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/den-779-finalize-drone-authority.yml",
+          "severity": "low"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "drone-mngr/drone-mngr-mcp-server.rs",
+      "revision": "a2e78b30d915abc209d2b90ef50b8a0886c9e5d9",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 2,
+        "medium": 0
+      }
+    },
+    {
+      "branch": "agent/den-390-f2e-generated-env",
+      "checkout": "drone-mngr/laser-ptr-ctrl-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "checkout-credentials": 2,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/env-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/container.yaml",
+          "severity": "low"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/env-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "drone-mngr/laser-ptr-ctrl-mcp-server.rs",
+      "revision": "e28ba5b31ba00ee4b2252057f44867fc5256f2d5",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 2,
+        "medium": 0
+      }
+    },
+    {
+      "branch": "harden/audit-20260828",
+      "checkout": "ecma-d/ecmad-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: write_all",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "ecma-d/ecmad-mcp-server.rs",
+      "revision": "22b7c8d60e4ffb5b16b4940b8832dddcab29ded8",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 0,
+        "medium": 2
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "elenkos-systems/elenkos-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "http-auth-boundary": 1,
+        "http-host-boundary": 1,
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "http-auth-boundary",
+          "message": "Streamable HTTP transport has no obvious bearer authorization boundary",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "http-host-boundary",
+          "message": "Streamable HTTP transport has no obvious Host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "elenkos-systems/elenkos-mcp-server.rs",
+      "revision": "985ad98f8d0d2213ea357040610593ade4c8b540",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 0,
+        "medium": 2
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "embedded-alerts/eal-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "embedded-alerts/eal-mcp-server.rs",
+      "revision": "316529953cd5e8d555923a4ba534884664c27ff2",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "main",
+      "checkout": "evento-globolo/evgl-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "evento-globolo/evgl-mcp-server.rs",
+      "revision": "ebfe46fd1d93b1b3030d948b9265f1bc6da8ae37",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828",
+      "checkout": "fanwaave/fanwaave-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "fanwaave/fanwaave-mcp-server.rs",
+      "revision": "28eb5a9db2d6d300f5fd922166ae7465fd8c7a33",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828",
+      "checkout": "fiducia-cloud/fiducia-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 2,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-subprocess-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "Command::output may buffer unbounded child output",
+          "path": "src/k8s.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/den-957-bootstrap-finalize.yml",
+          "severity": "low"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "fiducia-cloud/fiducia-mcp-server.rs",
+      "revision": "6b6935f58fb68a403d56f4108a5fe9c3dcd33bd7",
+      "summary": {
+        "high": 3,
+        "info": 0,
+        "low": 2,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "den-3384-mcp-server-hardening",
+      "checkout": "file-tunnel/ftnl-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutation-gate": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: write_str",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "file-tunnel/ftnl-mcp-server.rs",
+      "revision": "5e55b53808c8add13fda7496ef19c27ef8d17718",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 1,
+        "medium": 2
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "flags-2-env/flags-2-env-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "flags-2-env/flags-2-env-mcp-server.rs",
+      "revision": "3bf66400804f1d76b6a763290a203eb86faac5b5",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "gha-indie-worker/gha-indie-worker-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "gha-indie-worker/gha-indie-worker-mcp-server.rs",
+      "revision": "4d856c7073c1563472446ddba8b7ef8286f2f7e9",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "main",
+      "checkout": "hacker-house-medellin/hhm-mcp-server.rs",
+      "dirty": true,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "hacker-house-medellin/hhm-mcp-server.rs",
+      "revision": "d3d53b102d00e5112f9367fc99833d381ef7ea0e",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "chore/agents-md-and-sops-env",
+      "checkout": "happy-wakey/happy-wakey-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "happy-wakey/happy-wakey-mcp-server.rs",
+      "revision": "27af986fa1d5c125811c318fab342e62495ffef4",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "main",
+      "checkout": "honeypot-r-us/repos/hnpt-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-rmcp": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "test",
+      "repository": "honeypot-r-us-test/hnpt-mcp-server.rs",
+      "revision": "8d6fd331b6920f6511d6ebd7cc9e15666cb52cc4",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "hypesiege/hypesiege-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutation-gate": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: publish_jobs",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "hypesiege/hypesiege-mcp-server.rs",
+      "revision": "978b3cd694a18e5915eab5acb0ab018d1dbb4b47",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 1,
+        "medium": 0
+      }
+    },
+    {
+      "branch": "main",
+      "checkout": "laser-ptr-ctrl/lpctrl-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-ci": 1,
+        "missing-fleet-parity-profile": 1,
+        "missing-lock": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1,
+        "stdout-pollution": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "stdout-pollution",
+          "message": "stdout writes can corrupt MCP stdio",
+          "path": "src/server.rs",
+          "severity": "high"
+        },
+        {
+          "code": "missing-ci",
+          "message": "no GitHub Actions workflow detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-lock",
+          "message": "Cargo.lock is absent for a deployable server",
+          "path": null,
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "laser-ptr-ctrl/lpctrl-mcp-server.rs",
+      "revision": "b9eeea6880ed12b5806412bb3c69be158580b13d",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 1,
+        "medium": 4
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "led-dynamo/leddy-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "led-dynamo/leddy-mcp-server.rs",
+      "revision": "8bacfe191e546a890a9fde70e2f41004d272a4ff",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "memebank/memebank-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "memebank/memebank-mcp-server.rs",
+      "revision": "9a684c80bd9cafa9a4ddec7fa4d815ae1f753387",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "messaging-intel/msgint-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "checkout-credentials": 2,
+        "missing-fleet-parity-profile": 1,
+        "workflow-permissions": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "workflow-permissions",
+          "message": "workflow has no explicit top-level permissions boundary",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/ores-lint.yml",
+          "severity": "low"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "messaging-intel/msgint-mcp-server.rs",
+      "revision": "a6d1c8c34eb3bc70a4fffb8ad7a40fe658357a3d",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 2,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "networking-components/networking-components-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "networking-components/networking-components-mcp-server.rs",
+      "revision": "36117a3376751b038dcdd5613f320340ea61b4a6",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "opto-sync/opto-sync-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "opto-sync/opto-sync-mcp-server.rs",
+      "revision": "cfffe641477f712f33041af61e8917e66759c682",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "agent/flesh-out-20260830",
+      "checkout": "ores-chat/ores-chat-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "checkout-credentials": 1,
+        "handwritten-jsonrpc": 1,
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "mutation-confirmation": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "handwritten-jsonrpc",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "mutation-confirmation",
+          "message": "mutating tools lack an obvious per-operation confirmation boundary",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/ci.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "ores-chat/ores-chat-mcp-server.rs",
+      "revision": "70701221226d35cb89da91276356d968f6d124a5",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 1,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/recover-den-4230-chacha20",
+      "checkout": "ores-otel/ores-otel-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "ores-otel/ores-otel-mcp-server.rs",
+      "revision": "aae5362687d4ad412e7894e38fa324fb0e69dff2",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "docs/agents-md-parent-contract",
+      "checkout": "praxonne/praxonne-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "http-auth-boundary": 1,
+        "http-host-boundary": 1,
+        "missing-fleet-parity-profile": 1
+      },
+      "findings": [
+        {
+          "code": "http-auth-boundary",
+          "message": "Streamable HTTP transport has no obvious bearer authorization boundary",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "http-host-boundary",
+          "message": "Streamable HTTP transport has no obvious Host allowlist",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "praxonne/praxonne-mcp-server.rs",
+      "revision": "6b3bb69528560bff53074804578ad93f0c372435",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 0,
+        "medium": 1
+      }
+    },
+    {
+      "branch": "main",
+      "checkout": "premarital-asset-protection/pmap-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-ci": 1,
+        "missing-fleet-parity-profile": 1,
+        "missing-lock": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1,
+        "stdout-pollution": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "stdout-pollution",
+          "message": "stdout writes can corrupt MCP stdio",
+          "path": "src/main.rs",
+          "severity": "high"
+        },
+        {
+          "code": "missing-ci",
+          "message": "no GitHub Actions workflow detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-lock",
+          "message": "Cargo.lock is absent for a deployable server",
+          "path": null,
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "premarital-asset-protection/pmap-mcp-server.rs",
+      "revision": "49cbba784085b7d6f471f8f9f275571dcae3a92f",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 1,
+        "medium": 4
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "quaestor-ledger/quaestor-ledger-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "mutation-confirmation": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-http-body": 4,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "mutation-confirmation",
+          "message": "mutating tools lack an obvious per-operation confirmation boundary",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/cloudflare.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/domains.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/github.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/supabase.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "quaestor-ledger/quaestor-mcp-server.rs",
+      "revision": "4bb1f5fed6e4df9c4cc4243a83708b444d8448f2",
+      "summary": {
+        "high": 4,
+        "info": 0,
+        "low": 1,
+        "medium": 8
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "rust-ssr-demos/rust-ssr-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "checkout-credentials": 1,
+        "handwritten-jsonrpc": 1,
+        "missing-fleet-parity-profile": 1,
+        "stale-protocol": 2,
+        "unbounded-http-body": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "handwritten-jsonrpc",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "stale-protocol",
+          "message": "production source hard-codes MCP 2025-03-26",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "stale-protocol",
+          "message": "production source hard-codes MCP 2025-06-18",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/lib.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "rust-ssr-demos/rust-ssr-mcp-server.rs",
+      "revision": "f33557d32b87e29ff365ca7df8df58afba01b69f",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 1,
+        "medium": 5
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "sagitta-stack/sagitta-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "sagitta-stack/sagitta-mcp-server.rs",
+      "revision": "5aac9557300fb47543ba97bd2f857cc413fa9df0",
+      "summary": {
+        "high": 4,
+        "info": 0,
+        "low": 1,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "scintilla-run/scintilla-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: write_str",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "scintilla-run/scintilla-mcp-server.rs",
+      "revision": "57b65f18ae60f0f916f18610a05895a6f7cd2dbc",
+      "summary": {
+        "high": 4,
+        "info": 0,
+        "low": 1,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828",
+      "checkout": "shared-auth/shared-auth-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "mutation-gate": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-tool-output": 1,
+        "workflow-permissions": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutation-gate",
+          "message": "mutating tool names are present without an obvious runtime gate, confirmation, idempotency, or dry-run boundary: apply_cli_flags",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "workflow-permissions",
+          "message": "workflow has no explicit top-level permissions boundary",
+          "path": ".github/workflows/gha-clone-rust.yml",
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/repository-policy.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "shared-auth/shared-auth-mcp-server.rs",
+      "revision": "eb66285a5ab0ffd76b40487059a4fae11337bcfc",
+      "summary": {
+        "high": 2,
+        "info": 0,
+        "low": 1,
+        "medium": 4
+      }
+    },
+    {
+      "branch": "wip/salvage-20260829",
+      "checkout": "sonus-auris/sonus-auris-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "checkout-credentials": 2,
+        "missing-fleet-parity-profile": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-http-body": 1,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/fiducia.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/den-383-source-cleanup.yml",
+          "severity": "low"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/den-957-bootstrap-finalize.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "sonus-auris/sonus-auris-mcp-server.rs",
+      "revision": "6b206c8439eb04990b41dd2dde1d674e9dd8d7de",
+      "summary": {
+        "high": 3,
+        "info": 0,
+        "low": 2,
+        "medium": 4
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "StreemPilot/streempilot-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "StreemPilot/streempilot-mcp-server.rs",
+      "revision": "729f01fbcbdffcb11f2d1ec8b9444b000a35c767",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "usa-acc/usa-acc-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "bearer-host-policy": 1,
+        "bearer-proxy-policy": 1,
+        "bearer-redirect-policy": 1,
+        "checkout-credentials": 1,
+        "missing-fleet-parity-profile": 1,
+        "mutable-action-pin": 1,
+        "permissive-tool-schema": 1,
+        "unbounded-http-body": 7,
+        "unbounded-subprocess-output": 1,
+        "unbounded-tool-output": 1
+      },
+      "findings": [
+        {
+          "code": "bearer-proxy-policy",
+          "message": "bearer client can inherit ambient HTTP proxy settings",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "bearer-redirect-policy",
+          "message": "bearer client lacks an obvious redirect-denial policy",
+          "path": null,
+          "severity": "high"
+        },
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "mutable-action-pin",
+          "message": "workflow uses a mutable branch or version tag instead of an immutable action revision",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "high"
+        },
+        {
+          "code": "unbounded-subprocess-output",
+          "message": "wait_with_output buffers complete child output",
+          "path": "src/util.rs",
+          "severity": "high"
+        },
+        {
+          "code": "bearer-host-policy",
+          "message": "configurable bearer origin has no obvious exact host allowlist",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "permissive-tool-schema",
+          "message": "tool input structs do not visibly reject unknown fields",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/backend.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/cloudflare.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response JSON is buffered before an obvious byte ceiling",
+          "path": "src/domains.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/fiducia.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/github.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/server.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-http-body",
+          "message": "response body is buffered before an obvious byte ceiling",
+          "path": "src/telemetry.rs",
+          "severity": "medium"
+        },
+        {
+          "code": "unbounded-tool-output",
+          "message": "serialized or text MCP results have no obvious final output ceiling",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "checkout-credentials",
+          "message": "a checkout step does not explicitly discard credentials",
+          "path": ".github/workflows/secrets-audit.yml",
+          "severity": "low"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "usa-acc/usa-acc-mcp-server.rs",
+      "revision": "49e297b385c3790c51d3f188f46fe209216acb76",
+      "summary": {
+        "high": 5,
+        "info": 0,
+        "low": 1,
+        "medium": 10
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828b",
+      "checkout": "voxletra/vxl-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "voxletra/vxl-mcp-server.rs",
+      "revision": "372950fe89600fdbab789664b0debb9b66e28630",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    },
+    {
+      "branch": "agent/ores-sops-ensure-dec-20260828",
+      "checkout": "zed-pkg/zed-mcp-server.rs",
+      "dirty": false,
+      "findingCodes": {
+        "missing-fleet-parity-profile": 1,
+        "missing-process-conformance": 1,
+        "missing-rmcp": 1,
+        "missing-tests": 1
+      },
+      "findings": [
+        {
+          "code": "missing-fleet-parity-profile",
+          "message": "repository has no machine-readable client/provider/org-specific parity profile",
+          "path": "mcp-fleet-profile.json",
+          "severity": "high"
+        },
+        {
+          "code": "missing-process-conformance",
+          "message": "no real-binary initialize/tools lifecycle test was detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-rmcp",
+          "message": "official rmcp transport is not detected",
+          "path": null,
+          "severity": "medium"
+        },
+        {
+          "code": "missing-tests",
+          "message": "no Rust tests detected",
+          "path": null,
+          "severity": "medium"
+        }
+      ],
+      "organizationClass": "production",
+      "repository": "zed-pkg/zed-mcp-server.rs",
+      "revision": "b83e7e47b2a1c972c67408f99bf450a7d1d0d9fd",
+      "summary": {
+        "high": 1,
+        "info": 0,
+        "low": 0,
+        "medium": 3
+      }
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "standalone local GitHub checkouts under the declared workspace root",
+  "summary": {
+    "authoritativeRepositories": 51,
+    "candidateCheckouts": 53,
+    "dirtyAuthoritativeCheckouts": 2,
+    "duplicateCheckouts": 2,
+    "findings": {
+      "high": 115,
+      "info": 0,
+      "low": 32,
+      "medium": 174
+    },
+    "productionOrganizations": 48,
+    "repositoriesWithHighFindings": 51,
+    "testOrganizations": 1,
+    "unclassifiedCheckouts": 0
+  },
+  "unclassifiedCheckouts": [],
+  "workspace": "."
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "ores.mcp-tjsv-pin/v1",
+  "repository": "ORESoftware/typespec-json-schema-validator",
+  "revision": "6d560db590cd1a9e03822697f91f6a3f78f6c22a",
+  "entrypoint": "src/index.mjs",
+  "languageBoundaryEntrypoint": "src/language-boundary-verification.mjs",
+  "typeSpecAuthority": "peer",
+  "jsonSchemaAuthority": "peer",
+  "generatedWitnessRole": "evidence_only",
+  "tracking": "DEN-970"
+}

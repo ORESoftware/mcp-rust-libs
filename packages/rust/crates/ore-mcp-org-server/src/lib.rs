@@ -3,17 +3,24 @@
 //! Product-specific servers remain free to expose richer diagnostics. This
 //! crate supplies the minimum safe server every GitHub organization can deploy:
 //! fleet identity, Zed dependency provenance, `ores-otel` telemetry status,
-//! Shared Auth boundary guidance, encrypted-environment policy, and the common
-//! security contract. It deliberately exposes no mutation or credential-taking
-//! tool.
+//! Shared Auth boundary guidance, encrypted-environment policy, the common
+//! security contract, and exact-scope provider posture for GitHub, AWS, GCP,
+//! Supabase, Neon, Cloudflare, Kubernetes, and NATS. It deliberately exposes no
+//! mutation or credential-taking tool.
 
 #![forbid(unsafe_code)]
+
+mod augment;
+mod catalog;
+mod providers;
+mod remote;
 
 use std::io;
 use std::pin::Pin;
 use std::task::{ready, Context, Poll};
 
 use ore_mcp_bootstrap::runtime::ServerIdentity;
+use ore_mcp_runtime::ExactProtocol;
 use ore_mcp_zed_graph::DependencyGraph;
 use ores_mcp_server_core_libs::observability::{
     self, TelemetryStatus, ToolClass, ToolMetrics, ToolOutcome,
@@ -21,10 +28,16 @@ use ores_mcp_server_core_libs::observability::{
 use rmcp::{
     handler::server::router::tool::ToolRouter,
     handler::server::wrapper::Parameters,
-    model::{Implementation, ServerCapabilities, ServerInfo},
+    model::{
+        GetPromptRequestParams, GetPromptResult, Implementation, ListPromptsResult,
+        ListResourcesResult, PaginatedRequestParams, Prompt, PromptMessage, ProtocolVersion,
+        ReadResourceRequestParams, ReadResourceResult, Resource, ResourceContents, Role,
+        ServerCapabilities, ServerInfo,
+    },
+    service::RequestContext,
     tool, tool_handler, tool_router,
     transport::stdio,
-    ServerHandler, ServiceExt,
+    ErrorData, RoleServer, ServerHandler, ServiceExt,
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -32,9 +45,14 @@ use serde_json::{json, Value};
 use tokio::io::{AsyncBufRead, AsyncRead, BufReader, ReadBuf};
 use tracing::Instrument;
 
+use providers::{ProviderContext, ProviderReport};
+
+pub use augment::{ParityAugmented, PARITY_TOOL_NAMES};
+pub use remote::{run_augmented_http, run_http};
+
 /// Maximum accepted JSON-RPC request frame on stdio.
 pub const MAX_STDIO_FRAME_BYTES: usize = 1024 * 1024;
-const MAX_TOOL_OUTPUT_BYTES: usize = 64 * 1024;
+const MAX_TOOL_OUTPUT_BYTES: usize = 512 * 1024;
 const ORES_OTEL_REVISION: &str = "e559a76f869c2c2d9bf939b510d358a3924abd81";
 
 /// Compile-time identity and dependency policy for one organization server.
@@ -59,6 +77,7 @@ pub struct OrgSpec {
 pub struct OrgMcpServer {
     spec: OrgSpec,
     dependency_graph: DependencyGraph,
+    providers: ProviderContext,
     telemetry: TelemetrySnapshot,
     metrics: ToolMetrics,
     tool_router: ToolRouter<Self>,
@@ -88,12 +107,34 @@ impl From<TelemetryStatus> for TelemetrySnapshot {
 }
 
 impl OrgMcpServer {
-    fn new(spec: OrgSpec, telemetry: TelemetryStatus) -> io::Result<Self> {
+    fn new(
+        spec: OrgSpec,
+        telemetry: TelemetryStatus,
+        providers: ProviderContext,
+    ) -> io::Result<Self> {
         let dependency_graph = validate_spec(spec)?;
         Ok(Self {
             spec,
             dependency_graph,
+            providers,
             telemetry: telemetry.into(),
+            metrics: ToolMetrics::global(),
+            tool_router: Self::tool_router(),
+        })
+    }
+
+    fn embedded(spec: OrgSpec) -> io::Result<Self> {
+        let dependency_graph = validate_spec(spec)?;
+        Ok(Self {
+            spec,
+            dependency_graph,
+            providers: ProviderContext::capture(spec),
+            telemetry: TelemetrySnapshot {
+                subscriber_installed: false,
+                trace_exporter: false,
+                metric_exporter: false,
+                log_exporter: false,
+            },
             metrics: ToolMetrics::global(),
             tool_router: Self::tool_router(),
         })
@@ -109,6 +150,12 @@ impl OrgMcpServer {
         }
         timer.finish(ToolOutcome::Ok);
         Ok(rendered)
+    }
+
+    fn provider_json(&self, report: ProviderReport) -> Result<String, String> {
+        let value = serde_json::to_value(report)
+            .map_err(|_| "failed to render bounded provider result".to_owned())?;
+        self.successful_json(ToolClass::Health, value)
     }
 }
 
@@ -128,7 +175,13 @@ fn validate_spec(spec: OrgSpec) -> io::Result<DependencyGraph> {
 impl OrgMcpServer {
     /// Return the canonical organization, repository, package, and access mode.
     #[tool(
-        description = "Return the immutable organization-server identity and read-only access contract."
+        description = "Return the immutable organization-server identity and read-only access contract.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "org_identity", mcp.tool.class = "inventory"))]
     fn org_identity(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -140,7 +193,9 @@ impl OrgMcpServer {
                 "service": self.spec.service_name,
                 "package": self.spec.package_name,
                 "version": self.spec.version,
-                "transport": "stdio",
+                "protocol": "2025-11-25",
+                "transports": ["stdio", "streamable_http"],
+                "clients": ["cursor", "openai_chatgpt", "anthropic_claude", "gemini", "grok", "qwen"],
                 "accessMode": "read_only",
             }),
         )
@@ -148,7 +203,13 @@ impl OrgMcpServer {
 
     /// Return the closed Zed package graph and materialization contract.
     #[tool(
-        description = "Return the canonical Zed dependency graph, immutable package coordinates, and .vendor/.zed materialization policy."
+        description = "Return the canonical Zed dependency graph, immutable package coordinates, and .vendor/.zed materialization policy.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "zed_dependency_graph", mcp.tool.class = "inventory"))]
     fn zed_dependency_graph(
@@ -163,7 +224,13 @@ impl OrgMcpServer {
 
     /// Return non-sensitive logging and OpenTelemetry initialization status.
     #[tool(
-        description = "Return non-sensitive ores-otel logging, traces, metrics, and logs initialization status without collector details."
+        description = "Return non-sensitive ores-otel logging, traces, metrics, and logs initialization status without collector details.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "telemetry_status", mcp.tool.class = "health"))]
     fn telemetry_status(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -187,7 +254,13 @@ impl OrgMcpServer {
 
     /// Return the Shared Auth integration boundary for product extensions.
     #[tool(
-        description = "Describe the fail-closed Shared Auth boundary and whether a public authority URL is configured; never accepts or inspects credentials."
+        description = "Describe the fail-closed Shared Auth boundary and whether a public authority URL is configured; never accepts or inspects credentials.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "shared_auth_policy", mcp.tool.class = "health"))]
     fn shared_auth_policy(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -208,7 +281,13 @@ impl OrgMcpServer {
 
     /// Return the SOPS, age, Just, and Nix environment-file policy.
     #[tool(
-        description = "Return the encrypted-environment contract: SOPS+age ciphertext in env/enc, plaintext only in ignored env/dec, and Just+Nix execution."
+        description = "Return the encrypted-environment contract: SOPS+age ciphertext in env/enc, plaintext only in ignored env/dec, and Just+Nix execution.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "environment_policy", mcp.tool.class = "details"))]
     fn environment_policy(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -229,7 +308,13 @@ impl OrgMcpServer {
 
     /// Return the minimum security guarantees inherited by the fleet server.
     #[tool(
-        description = "Return the common read-only, bounded-output, redaction, transport, telemetry, auth, and dependency-management guarantees."
+        description = "Return the common read-only, bounded-output, redaction, transport, telemetry, auth, and dependency-management guarantees.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     #[tracing::instrument(name = "mcp.tool", skip_all, fields(mcp.tool.name = "security_baseline", mcp.tool.class = "details"))]
     fn security_baseline(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
@@ -240,6 +325,8 @@ impl OrgMcpServer {
                 "toolInputs": "closed_no_argument_schemas",
                 "toolOutputBytesMax": MAX_TOOL_OUTPUT_BYTES,
                 "protocolStdoutOnly": true,
+                "remoteProtocol": "oauth_protected_streamable_http",
+                "credentialedHttp": "exact_host_no_proxy_no_redirect",
                 "logs": "structured_json_stderr",
                 "telemetry": "ores-otel_bounded_low_cardinality",
                 "authentication": "shared-auth_when_a_product_boundary_requires_it",
@@ -249,20 +336,274 @@ impl OrgMcpServer {
             }),
         )
     }
+
+    /// Read the exact GitHub organization and latest MCP-server workflow run.
+    #[tool(
+        description = "Read bounded metadata for this exact GitHub organization and its MCP repository's latest Actions run.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn github_posture(
+        &self,
+        Parameters(_): Parameters<NoArguments>,
+    ) -> Result<String, String> {
+        self.provider_json(self.providers.github().await)
+    }
+
+    /// Verify one configured AWS account and exact EKS cluster allowlist.
+    #[tool(
+        description = "Verify the configured organization AWS account and list only explicitly allowed EKS clusters; missing scope reports not_configured.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn aws_posture(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
+        self.provider_json(self.providers.aws().await)
+    }
+
+    /// Read one configured Google Cloud project and enabled services.
+    #[tool(
+        description = "Read the exact configured organization Google Cloud project and a bounded enabled-service projection.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn gcp_posture(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
+        self.provider_json(self.providers.gcp().await)
+    }
+
+    /// Read one exact Supabase project's auth settings and Data API shape.
+    #[tool(
+        description = "Read bounded public-auth settings and Data API path metadata for the exact configured organization Supabase project.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn supabase_posture(
+        &self,
+        Parameters(_): Parameters<NoArguments>,
+    ) -> Result<String, String> {
+        self.provider_json(self.providers.supabase().await)
+    }
+
+    /// Read organization-filtered Neon projects and optional exact branches.
+    #[tool(
+        description = "Read bounded organization-filtered Neon project and optional exact branch state without connection details.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn neon_posture(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
+        self.provider_json(self.providers.neon().await)
+    }
+
+    /// Read one exact Cloudflare zone and safe DNS metadata.
+    #[tool(
+        description = "Read the exact configured organization Cloudflare zone and optional bounded DNS metadata without record content.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn cloudflare_posture(
+        &self,
+        Parameters(_): Parameters<NoArguments>,
+    ) -> Result<String, String> {
+        self.provider_json(self.providers.cloudflare().await)
+    }
+
+    /// Inspect workloads in the exact organization Kubernetes namespace.
+    #[tool(
+        description = "Read bounded deployment and pod readiness from ORESoftware/k8s-cluster in this organization's exact namespace and part-of selector.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn k8s_posture(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
+        self.provider_json(self.providers.kubernetes().await)
+    }
+
+    /// Request read-only service and dependency snapshots over exact NATS subjects.
+    #[tool(
+        description = "Request bounded organization service and dependency snapshots over two exact NATS subjects; arbitrary subjects and wildcards are rejected.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn nats_posture(&self, Parameters(_): Parameters<NoArguments>) -> Result<String, String> {
+        self.provider_json(self.providers.nats().await)
+    }
+
+    /// Compose all eight provider reads into one organization readiness view.
+    #[tool(
+        description = "Compose GitHub, AWS, GCP, Supabase, Neon, Cloudflare, ORESoftware/k8s-cluster, and NATS posture using five honest states.",
+        annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn organization_posture(
+        &self,
+        Parameters(_): Parameters<NoArguments>,
+    ) -> Result<String, String> {
+        let (github, aws, gcp, supabase, neon, cloudflare, kubernetes, nats) = tokio::join!(
+            self.providers.github(),
+            self.providers.aws(),
+            self.providers.gcp(),
+            self.providers.supabase(),
+            self.providers.neon(),
+            self.providers.cloudflare(),
+            self.providers.kubernetes(),
+            self.providers.nats(),
+        );
+        let reports = vec![
+            github, aws, gcp, supabase, neon, cloudflare, kubernetes, nats,
+        ];
+        let ready = reports
+            .iter()
+            .filter(|report| report.state() == "ready")
+            .count();
+        let state = if ready == reports.len() {
+            "ready"
+        } else if reports
+            .iter()
+            .any(|report| matches!(report.state(), "unauthorized" | "forbidden"))
+        {
+            "blocked"
+        } else if reports.iter().any(|report| report.state() == "degraded") {
+            "degraded"
+        } else {
+            "not_configured"
+        };
+        self.successful_json(
+            ToolClass::Health,
+            json!({
+                "organization": self.spec.organization,
+                "repository": self.spec.repository,
+                "state": state,
+                "readyProviders": ready,
+                "providerCount": reports.len(),
+                "providers": reports,
+            }),
+        )
+    }
 }
 
 #[tool_handler(router = self.tool_router)]
 impl ServerHandler for OrgMcpServer {
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, ErrorData> {
+        Ok(ListResourcesResult::with_all_items(
+            catalog::resources(self.spec)
+                .into_iter()
+                .map(|resource| {
+                    Resource::new(resource.uri, resource.name)
+                        .with_description(resource.description)
+                        .with_mime_type(resource.mime)
+                })
+                .collect(),
+        ))
+    }
+
+    async fn read_resource(
+        &self,
+        request: ReadResourceRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResult, ErrorData> {
+        let resources = catalog::resources(self.spec);
+        match resources
+            .into_iter()
+            .find(|resource| resource.uri == request.uri)
+        {
+            Some(resource) => Ok(ReadResourceResult::new(vec![ResourceContents::text(
+                resource.body,
+                &request.uri,
+            )
+            .with_mime_type(resource.mime)])),
+            None => Err(ErrorData::resource_not_found(
+                "unknown organization resource",
+                None,
+            )),
+        }
+    }
+
+    async fn list_prompts(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListPromptsResult, ErrorData> {
+        Ok(ListPromptsResult::with_all_items(
+            catalog::prompts(self.spec)
+                .into_iter()
+                .map(|prompt| Prompt::new(prompt.name, Some(prompt.description), None))
+                .collect(),
+        ))
+    }
+
+    async fn get_prompt(
+        &self,
+        request: GetPromptRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<GetPromptResult, ErrorData> {
+        match catalog::prompts(self.spec)
+            .into_iter()
+            .find(|prompt| prompt.name == request.name)
+        {
+            Some(prompt) => Ok(GetPromptResult::new(vec![PromptMessage::new_text(
+                Role::User,
+                prompt.text,
+            )])
+            .with_description(prompt.description)),
+            None => Err(ErrorData::invalid_params(
+                "unknown organization prompt",
+                None,
+            )),
+        }
+    }
+
     fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+        ServerInfo::new(
+            ServerCapabilities::builder()
+                .enable_tools()
+                .enable_resources()
+                .enable_prompts()
+                .build(),
+        )
             .with_server_info(Implementation::new(
                 self.spec.service_name,
                 self.spec.version,
             ))
             .with_instructions(format!(
-                "Read-only organization diagnostics for {}. Start with org_identity; use \
-                 zed_dependency_graph, telemetry_status, shared_auth_policy, \
-                 environment_policy, and security_baseline for the inherited fleet contracts.",
+                "Read-only, organization-specific diagnostics for {} across Cursor, ChatGPT/OpenAI, Claude/Anthropic, Gemini, Grok, and Qwen. Start with organization_posture for GitHub, AWS, GCP, Supabase, Neon, Cloudflare, ORESoftware/k8s-cluster, and NATS; use org_identity and zed_dependency_graph for exact ownership and dependencies. Missing configuration is an explicit state, never success.",
                 self.spec.organization
             ))
     }
@@ -398,12 +739,45 @@ where
 pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> {
     validate_spec(spec)?;
     let telemetry_guard = observability::init(spec.service_name, spec.organization);
-    let server = OrgMcpServer::new(spec, telemetry_guard.status())?;
+    let providers = ProviderContext::capture(spec);
+    let server = OrgMcpServer::new(spec, telemetry_guard.status(), providers)?;
+    serve_stdio_handler(server, spec).await?;
+    drop(telemetry_guard);
+    Ok(())
+}
+
+/// Adds fleet parity to a richer organization handler and serves it over stdio.
+///
+/// The primary handler retains all domain tools, resources, prompts, and
+/// lifecycle hooks. The shared layer adds only non-colliding read-only parity
+/// tools and uses the final MCP protocol revision.
+///
+/// # Errors
+///
+/// Returns an error for invalid identity/dependencies, shared tool-name
+/// collisions, transport failures, or shutdown failures.
+pub async fn run_augmented_stdio<S>(
+    primary: S,
+    spec: OrgSpec,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    S: ServerHandler + Clone,
+{
+    let server = ParityAugmented::new(primary, spec)?;
+    serve_stdio_handler(server, spec).await
+}
+
+async fn serve_stdio_handler<S>(handler: S, spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>>
+where
+    S: ServerHandler,
+{
+    let server = ExactProtocol::new(handler, ProtocolVersion::V_2025_11_25);
     tracing::info!(
         service.name = spec.service_name,
         service.namespace = spec.organization,
         service.version = spec.version,
         transport = "stdio",
+        protocol = "2025-11-25",
         access.mode = "read_only",
         "starting organization MCP server"
     );
@@ -426,7 +800,6 @@ pub async fn run_stdio(spec: OrgSpec) -> Result<(), Box<dyn std::error::Error>> 
         .instrument(server_span.clone())
         .await?;
     service.waiting().instrument(server_span).await?;
-    drop(telemetry_guard);
     Ok(())
 }
 
@@ -476,7 +849,7 @@ mod tests {
             .iter()
             .map(|tool| tool.name.to_string())
             .collect::<Vec<_>>();
-        assert_eq!(names.len(), 6);
+        assert_eq!(names.len(), 15);
         for name in [
             "org_identity",
             "zed_dependency_graph",
@@ -484,6 +857,15 @@ mod tests {
             "shared_auth_policy",
             "environment_policy",
             "security_baseline",
+            "github_posture",
+            "aws_posture",
+            "gcp_posture",
+            "supabase_posture",
+            "neon_posture",
+            "cloudflare_posture",
+            "k8s_posture",
+            "nats_posture",
+            "organization_posture",
         ] {
             assert!(names.iter().any(|candidate| candidate == name));
         }
@@ -492,6 +874,18 @@ mod tests {
             assert_eq!(
                 descriptor.pointer("/inputSchema/additionalProperties"),
                 Some(&Value::Bool(false))
+            );
+            assert_eq!(
+                descriptor.pointer("/annotations/readOnlyHint"),
+                Some(&Value::Bool(true))
+            );
+            assert_eq!(
+                descriptor.pointer("/annotations/destructiveHint"),
+                Some(&Value::Bool(false))
+            );
+            assert_eq!(
+                descriptor.pointer("/annotations/idempotentHint"),
+                Some(&Value::Bool(true))
             );
         }
         assert!(serde_json::from_value::<NoArguments>(json!({})).is_ok());

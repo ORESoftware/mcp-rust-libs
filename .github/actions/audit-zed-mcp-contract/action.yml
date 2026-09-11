@@ -1,0 +1,25 @@
+name: Audit Zed-managed MCP Rust dependencies
+description: Verify pinned Rust dependency sources and the mcp-rust-libs Zed consumer evidence contract.
+
+inputs:
+  require-zed-contract:
+    description: Require .zed-pkg/mcp-rust-libs.json in the checked-out consumer repository.
+    required: false
+    default: 'true'
+  contract-path:
+    description: Repository-relative path to the companion Zed MCP evidence file.
+    required: false
+    default: '.zed-pkg/mcp-rust-libs.json'
+
+runs:
+  using: composite
+  steps:
+    - name: Audit consumer dependency integrity
+      shell: bash
+      env:
+        MCP_CONSUMER_ROOT: ${{ github.workspace }}
+        MCP_REQUIRE_ZED_CONTRACT: ${{ inputs.require-zed-contract }}
+        MCP_ZED_CONTRACT_PATH: ${{ inputs.contract-path }}
+      run: |
+        set -euo pipefail
+        python3 "${GITHUB_ACTION_PATH}/../../../tools/audit_zed_mcp_contract.py"

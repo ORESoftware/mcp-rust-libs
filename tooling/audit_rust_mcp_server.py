@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import importlib.util
 import json
 import re
 import sys
@@ -35,6 +36,8 @@ MUTATION_GATES = (
     "require_approval",
 )
 _CFG_TEST_ATTRIBUTE = re.compile(r"^\s*#\s*\[\s*cfg\s*\(\s*test\s*\)\s*\]\s*$")
+_TOOL_ATTRIBUTE = re.compile(r"#\s*\[\s*tool(?:\s*\(|\s*\])")
+_FUNCTION_NAME = re.compile(r"\b(?:async\s+)?fn\s+([A-Za-z_][A-Za-z0-9_]*)")
 _WORKFLOW_STEP_START = re.compile(
     r"^(?P<indent>\s*)-\s+(?:name|uses|run|id|if|shell)\s*:",
     re.IGNORECASE,
@@ -133,6 +136,29 @@ def production_text(path: Path) -> str:
     return "\n".join(production)
 
 
+def tool_function_names(text: str) -> list[str]:
+    """Extract names of functions explicitly registered with ``#[tool]``.
+
+    Mutation words elsewhere in a server (for example ``apply_cli_flags`` or
+    an adapter helper named ``create_client``) are not MCP operations. Keeping
+    this deliberately small extractor tied to the registration attribute
+    avoids treating ordinary implementation helpers as remotely callable.
+    """
+
+    names: list[str] = []
+    awaiting_function = False
+    for line in text.splitlines():
+        if _TOOL_ATTRIBUTE.search(line):
+            awaiting_function = True
+        if not awaiting_function:
+            continue
+        match = _FUNCTION_NAME.search(line)
+        if match:
+            names.append(match.group(1))
+            awaiting_function = False
+    return names
+
+
 def workflow_steps(text: str) -> list[str]:
     """Extract YAML step blocks without letting one checkout bless another."""
 
@@ -202,6 +228,54 @@ def workflow_findings(root: Path) -> list[Finding]:
     return findings
 
 
+def parity_profile_findings(root: Path) -> list[Finding]:
+    """Require and validate the exact-revision fleet parity profile."""
+
+    relative = "mcp-fleet-profile.json"
+    profile_path = root / relative
+    if not profile_path.is_file():
+        return [
+            Finding(
+                "high",
+                "missing-fleet-parity-profile",
+                "repository has no machine-readable client/provider/org-specific parity profile",
+                relative,
+            )
+        ]
+
+    validator_path = Path(__file__).with_name("validate_mcp_fleet_profile.py")
+    spec = importlib.util.spec_from_file_location("ore_mcp_fleet_profile_validator", validator_path)
+    if spec is None or spec.loader is None:
+        return [
+            Finding(
+                "high",
+                "fleet-parity-validator-unavailable",
+                "shared fleet parity validator could not be loaded",
+                relative,
+            )
+        ]
+    validator = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(validator)
+        profile = validator.load_json(profile_path)
+        errors = validator.validate_profile(profile, root)
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+        errors = [f"profile could not be loaded: {type(error).__name__}"]
+    if not errors:
+        return []
+    summary = "; ".join(errors[:3])
+    if len(errors) > 3:
+        summary += f"; and {len(errors) - 3} more"
+    return [
+        Finding(
+            "high",
+            "invalid-fleet-parity-profile",
+            summary,
+            relative,
+        )
+    ]
+
+
 def audit(root: Path) -> list[Finding]:
     findings: list[Finding] = []
     cargo = root / "Cargo.toml"
@@ -220,9 +294,13 @@ def audit(root: Path) -> list[Finding]:
         for token in ("transport-streamable-http", "StreamableHttpService", "streamable_http")
     )
     rmcp_present = "rmcp" in dependencies
+    trusted_rmcp_wrapper = "ore-mcp-org-server" in dependencies
+    trusted_http_boundary = trusted_rmcp_wrapper and any(
+        token in production for token in ("run_http(", "run_augmented_http(")
+    )
     rmcp_value = dependencies.get("rmcp")
     rmcp = dependency_version(rmcp_value)
-    if not rmcp_present:
+    if not rmcp_present and not trusted_rmcp_wrapper:
         code = "handwritten-jsonrpc" if "jsonrpc" in production.lower() else "missing-rmcp"
         findings.append(
             Finding(
@@ -231,7 +309,7 @@ def audit(root: Path) -> list[Finding]:
                 "official rmcp transport is not detected",
             )
         )
-    elif rmcp is None:
+    elif rmcp_present and rmcp is None:
         findings.append(
             Finding(
                 "medium",
@@ -239,7 +317,7 @@ def audit(root: Path) -> list[Finding]:
                 f"rmcp dependency {rmcp_value!r} has no statically comparable published version",
             )
         )
-    else:
+    elif rmcp_present:
         parsed = semver_tuple(rmcp)
         if parsed is None:
             findings.append(
@@ -331,7 +409,13 @@ def audit(root: Path) -> list[Finding]:
     proxy_disabled = ".no_proxy()" in production
     exact_host_policy = any(
         token in production.lower()
-        for token in ("allowed_hosts", "allowlisted_hosts", "host_allowlist", "exact host")
+        for token in (
+            "allowed_hosts",
+            "allowlisted_hosts",
+            "host_allowlist",
+            "exact host",
+            "parse_bearer_endpoint",
+        )
     )
     if bearer and not redirect_denied:
         findings.append(
@@ -358,7 +442,7 @@ def audit(root: Path) -> list[Finding]:
             )
         )
 
-    if streamable_http and not bearer:
+    if streamable_http and not bearer and not trusted_http_boundary:
         findings.append(
             Finding(
                 "high",
@@ -366,7 +450,7 @@ def audit(root: Path) -> list[Finding]:
                 "Streamable HTTP transport has no obvious bearer authorization boundary",
             )
         )
-    if streamable_http and not any(
+    if streamable_http and not trusted_http_boundary and not any(
         token in production for token in ("allowed_hosts", "with_allowed_hosts")
     ):
         findings.append(
@@ -387,7 +471,9 @@ def audit(root: Path) -> list[Finding]:
             )
         )
 
-    mutation_names = sorted(set(match.group(0) for match in MUTATION_WORDS.finditer(production)))
+    mutation_names = sorted(
+        name for name in set(tool_function_names(production)) if MUTATION_WORDS.fullmatch(name)
+    )
     if mutation_names and not any(gate in production.lower() for gate in MUTATION_GATES):
         findings.append(
             Finding(
@@ -412,7 +498,14 @@ def audit(root: Path) -> list[Finding]:
     )
     output_bounded = any(
         token in production.lower()
-        for token in ("max_tool_output", "output_limit", "bounded_output", "truncate_utf8", "max_output_bytes")
+        for token in (
+            "max_tool_output",
+            "output_limit",
+            "bounded_output",
+            "truncate_output",
+            "truncate_utf8",
+            "max_output_bytes",
+        )
     )
     if renders_json and not output_bounded:
         findings.append(
@@ -425,6 +518,7 @@ def audit(root: Path) -> list[Finding]:
 
     if not (root / "Cargo.lock").is_file():
         findings.append(Finding("low", "missing-lock", "Cargo.lock is absent for a deployable server"))
+    findings.extend(parity_profile_findings(root))
     findings.extend(workflow_findings(root))
     if "#[cfg(test)]" not in combined and not (root / "tests").is_dir():
         findings.append(Finding("medium", "missing-tests", "no Rust tests detected"))

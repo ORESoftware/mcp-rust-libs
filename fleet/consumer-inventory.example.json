@@ -1,0 +1,39 @@
+{
+  "$schema": "./consumer-inventory.schema.json",
+  "schema": "ores.mcp-rust-libs.fleet.v1",
+  "generated_at": "2026-09-01T12:00:00Z",
+  "repositories": [
+    {
+      "repository": "example-org/example-mcp-server",
+      "checkout": "example-org/example-mcp-server",
+      "classification": "mcp-server",
+      "status": "adopted",
+      "expected_packages": [
+        "mcp-core",
+        "mcp-transport"
+      ]
+    },
+    {
+      "repository": "example-org/pending-mcp-gateway",
+      "checkout": "example-org/pending-mcp-gateway",
+      "classification": "mcp-gateway",
+      "status": "pending",
+      "expected_packages": [
+        "mcp-core"
+      ],
+      "tracking": "DEN-612"
+    },
+    {
+      "repository": "example-org/temporarily-waived-mcp-test",
+      "checkout": "example-org/temporarily-waived-mcp-test",
+      "classification": "mcp-test",
+      "status": "waived",
+      "expected_packages": [
+        "mcp-core"
+      ],
+      "tracking": "DEN-612",
+      "waiver_reason": "Synthetic example of a time-bounded compatibility waiver.",
+      "waiver_expires": "2026-09-30"
+    }
+  ]
+}
