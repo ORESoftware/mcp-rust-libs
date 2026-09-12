@@ -1,0 +1,50 @@
+name: shared MCP dependency provenance
+
+on:
+  pull_request:
+    paths:
+      - tooling/audit_shared_dependency_provenance.py
+      - tooling/test_audit_shared_dependency_provenance.py
+      - docs/shared-dependency-provenance.md
+      - fleet/dependency-provenance-audit-2026-09-01.json
+      - .github/workflows/shared-dependency-provenance.yml
+  push:
+    branches: [main]
+    paths:
+      - tooling/audit_shared_dependency_provenance.py
+      - tooling/test_audit_shared_dependency_provenance.py
+      - docs/shared-dependency-provenance.md
+      - fleet/dependency-provenance-audit-2026-09-01.json
+      - .github/workflows/shared-dependency-provenance.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shared-mcp-dependency-provenance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          show-progress: false
+
+      - name: Compile and test dependency-provenance audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            tooling/audit_shared_dependency_provenance.py \
+            tooling/test_audit_shared_dependency_provenance.py
+          python3 -m unittest -v tooling/test_audit_shared_dependency_provenance.py
+          python3 tooling/audit_shared_dependency_provenance.py --help >/dev/null
