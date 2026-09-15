@@ -1,0 +1,41 @@
+[package]
+org = "oresoftware"
+name = "mcp-rust-libs"
+version = "0.1.0"
+description = "Canonical reusable Rust MCP runtime workspace for ORESoftware MCP servers"
+license = "MIT OR Apache-2.0"
+keywords = ["mcp", "rust", "runtime", "tooling"]
+language = "rust"
+
+[package.repository]
+vcs = "git"
+url = "https://github.com/ORESoftware/mcp-rust-libs"
+
+[publish]
+include_readme = true
+tag_format = "v{version}"
+smoke_test = "cargo test --manifest-path \"$ZED_PKG_TEST_TARGET/packages/rust/Cargo.toml\" --workspace --all-targets --locked"
+exclude = [
+  ".env",
+  ".env.*",
+  ".direnv/**",
+  ".zed/**",
+  ".zed-pack/**",
+  "packages/rust/target/**",
+  "target/**",
+  "tmp/**",
+  "**/*.log",
+  ".DS_Store",
+]
+
+# Cargo workspace metadata remains the native Rust authority. This Zed target
+# names the repository/workspace boundary used by existing consumer provenance
+# audits; it does not create a Cargo-registry publication route or a release tag.
+[targets.rust]
+dir = "packages/rust"
+adapter = "rust"
+
+[scripts]
+test = "cargo test --manifest-path packages/rust/Cargo.toml --workspace --all-targets --locked"
+lint = "cargo clippy --manifest-path packages/rust/Cargo.toml --workspace --all-targets --locked -- -D warnings"
+format = "cargo fmt --manifest-path packages/rust/Cargo.toml --all --check"

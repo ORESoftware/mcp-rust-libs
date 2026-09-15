@@ -46,6 +46,7 @@ CREDENTIAL_PREFIXES = (
     "lin" + "_api_",
     "AKIA",
 )
+ERROR_MESSAGE_LIMIT = 240
 
 
 def parse_args() -> argparse.Namespace:
@@ -66,6 +67,33 @@ def append_line(path: str | None, line: str) -> None:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise RuntimeError(message)
+
+
+def safe_error_message(error: BaseException | str) -> str:
+    message = " ".join(str(error).split())
+    if any(prefix in message for prefix in CREDENTIAL_PREFIXES):
+        return "credential-shaped diagnostic redacted"
+    if len(message) <= ERROR_MESSAGE_LIMIT:
+        return message
+    return message[: ERROR_MESSAGE_LIMIT - 3] + "..."
+
+
+def write_evidence(path: Path, evidence: dict[str, Any]) -> None:
+    serialized = json.dumps(evidence, indent=2, sort_keys=True) + "\n"
+    for prefix in CREDENTIAL_PREFIXES:
+        require(prefix not in serialized, f"credential-shaped value found in {path}")
+
+    temporary = path.with_name(f".{path.name}.tmp")
+    temporary.write_text(serialized, encoding="utf-8")
+    temporary.replace(path)
+
+
+def write_outputs(evidence: dict[str, Any]) -> None:
+    output_path = os.environ.get("GITHUB_OUTPUT")
+    append_line(output_path, f"all_ready={str(evidence['allReady']).lower()}")
+    append_line(output_path, f"ready_count={evidence['readyCount']}")
+    append_line(output_path, f"blocked_count={evidence['blockedCount']}")
+    append_line(output_path, f"probe_error_count={evidence['probeErrorCount']}")
 
 
 def package_closure(
@@ -252,24 +280,67 @@ def probe_package(
         if error.code == 404:
             item.update({"state": "not-published", "compatibleVersions": []})
             return item, "not-published"
-        raise RuntimeError(f"{coordinate}: unexpected HTTP {error.code}") from error
+        item.update(
+            {
+                "state": "probe-error",
+                "compatibleVersions": [],
+                "error": {
+                    "kind": "unexpected-http-status",
+                    "message": f"unexpected HTTP {error.code}",
+                },
+            }
+        )
+        return item, "probe-error"
     except (urllib.error.URLError, TimeoutError, OSError) as error:
-        raise RuntimeError(
-            f"{coordinate}: registry transport failed ({type(error).__name__})"
-        ) from error
-    except json.JSONDecodeError as error:
-        raise RuntimeError(f"{coordinate}: registry returned malformed JSON") from error
+        item.update(
+            {
+                "state": "probe-error",
+                "compatibleVersions": [],
+                "error": {
+                    "kind": "registry-transport",
+                    "message": f"registry transport failed ({type(error).__name__})",
+                },
+            }
+        )
+        return item, "probe-error"
+    except (json.JSONDecodeError, UnicodeError):
+        item.update(
+            {
+                "state": "probe-error",
+                "compatibleVersions": [],
+                "error": {
+                    "kind": "malformed-registry-json",
+                    "message": "registry returned malformed JSON",
+                },
+            }
+        )
+        return item, "probe-error"
 
-    require(isinstance(payload, dict), f"{coordinate}: registry payload must be an object")
-    require(
-        payload.get("org") == org and payload.get("name") == name,
-        f"{coordinate}: registry identity mismatch",
-    )
-    versions = payload.get("versions", [])
-    require(
-        isinstance(versions, list) and all(isinstance(value, str) for value in versions),
-        f"{coordinate}: versions must be a string array",
-    )
+    try:
+        require(isinstance(payload, dict), f"{coordinate}: registry payload must be an object")
+        require(
+            payload.get("org") == org and payload.get("name") == name,
+            f"{coordinate}: registry identity mismatch",
+        )
+        versions = payload.get("versions", [])
+        require(
+            isinstance(versions, list)
+            and all(isinstance(value, str) for value in versions),
+            f"{coordinate}: versions must be a string array",
+        )
+    except RuntimeError as error:
+        item.update(
+            {
+                "state": "probe-error",
+                "compatibleVersions": [],
+                "error": {
+                    "kind": "invalid-registry-payload",
+                    "message": safe_error_message(error),
+                },
+            }
+        )
+        return item, "probe-error"
+
     compatible = sorted(value for value in versions if COMPATIBLE_VERSION.fullmatch(value))
     item.update(
         {
@@ -306,6 +377,13 @@ def write_summary(evidence: dict[str, Any]) -> None:
             f"{package.get('httpStatus', '—')} | `{package['state']}` | {versions} |"
         )
 
+    if evidence["probeErrors"]:
+        lines.extend(["", "### Probe failures", ""])
+        for error in evidence["probeErrors"]:
+            lines.append(
+                f"- `{error['coordinate']}`: `{error['kind']}` — {error['message']}"
+            )
+
     lines.extend(["", "### Consumer recursive gates", ""])
     for consumer in evidence["consumers"]:
         state = (
@@ -326,8 +404,7 @@ def write_summary(evidence: dict[str, Any]) -> None:
     append_line(summary_path, "\n".join(lines))
 
 
-def main() -> int:
-    args = parse_args()
+def run(args: argparse.Namespace) -> int:
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     require(isinstance(manifest, dict), "manifest root must be an object")
     packages, consumers, dependencies_by_package, closure_by_consumer, topological_order = validate_manifest(manifest)
@@ -348,19 +425,47 @@ def main() -> int:
         "packageCount": len(packages),
         "readyCount": 0,
         "blockedCount": 0,
+        "probeErrorCount": 0,
         "allReady": False,
         "topologicalOrder": topological_order,
         "packages": [],
         "consumers": [],
         "blocked": [],
+        "probeErrors": [],
     }
 
     for package in sorted(packages, key=lambda item: item["coordinate"]):
-        item, blocked_reason = probe_package(registry, package, requirement)
+        try:
+            item, blocked_reason = probe_package(registry, package, requirement)
+        except Exception as error:
+            coordinate = package["coordinate"]
+            org, name = coordinate.split("/", 1)
+            item = {
+                "coordinate": coordinate,
+                "sourceRepository": package["sourceRepository"],
+                "sourceVisibility": package["sourceVisibility"],
+                "dependencies": package["dependencies"],
+                "requirement": requirement,
+                "url": (
+                    f"{registry}/v1/packages/"
+                    f"{urllib.parse.quote(org, safe='')}/{urllib.parse.quote(name, safe='')}"
+                ),
+                "state": "probe-error",
+                "compatibleVersions": [],
+                "error": {
+                    "kind": "unexpected-probe-error",
+                    "message": safe_error_message(error),
+                },
+            }
+            blocked_reason = "probe-error"
         evidence["packages"].append(item)
         if blocked_reason:
             evidence["blocked"].append(
                 {"coordinate": item["coordinate"], "reason": blocked_reason}
+            )
+        if item["state"] == "probe-error":
+            evidence["probeErrors"].append(
+                {"coordinate": item["coordinate"], **item["error"]}
             )
 
     package_states = {
@@ -386,30 +491,64 @@ def main() -> int:
         item["state"] == "ready" for item in evidence["packages"]
     )
     evidence["blockedCount"] = len(evidence["blocked"])
-    evidence["allReady"] = evidence["blockedCount"] == 0
-
-    args.evidence.write_text(
-        json.dumps(evidence, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+    evidence["probeErrorCount"] = len(evidence["probeErrors"])
+    evidence["allReady"] = (
+        evidence["blockedCount"] == 0 and evidence["probeErrorCount"] == 0
     )
-    serialized = args.evidence.read_text(encoding="utf-8")
-    for prefix in CREDENTIAL_PREFIXES:
-        require(prefix not in serialized, f"credential-shaped value found in {args.evidence}")
+    evidence["status"] = "failed" if evidence["probeErrors"] else "complete"
 
-    append_line(os.environ.get("GITHUB_OUTPUT"), f"all_ready={str(evidence['allReady']).lower()}")
-    append_line(os.environ.get("GITHUB_OUTPUT"), f"ready_count={evidence['readyCount']}")
-    append_line(os.environ.get("GITHUB_OUTPUT"), f"blocked_count={evidence['blockedCount']}")
+    write_evidence(args.evidence, evidence)
+    write_outputs(evidence)
     write_summary(evidence)
     print(
         f"registry probe completed: {evidence['readyCount']} ready, "
-        f"{evidence['blockedCount']} blocked, {evidence['packageCount']} recursive packages"
+        f"{evidence['blockedCount']} blocked, {evidence['probeErrorCount']} probe errors, "
+        f"{evidence['packageCount']} recursive packages"
     )
-    return 0
+    for error in evidence["probeErrors"]:
+        print(
+            f"error: {error['coordinate']}: {error['kind']}: {error['message']}",
+            file=sys.stderr,
+        )
+    return 1 if evidence["probeErrors"] else 0
+
+
+def setup_failure_evidence(error: BaseException) -> dict[str, Any]:
+    return {
+        "schemaVersion": 2,
+        "issue": "DEN-957",
+        "blockingIssue": "DEN-3036",
+        "observedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "status": "failed",
+        "packageCount": 0,
+        "readyCount": 0,
+        "blockedCount": 0,
+        "probeErrorCount": 1,
+        "allReady": False,
+        "packages": [],
+        "consumers": [],
+        "blocked": [],
+        "probeErrors": [
+            {
+                "coordinate": "<probe-setup>",
+                "kind": "probe-setup-error",
+                "message": safe_error_message(error),
+            }
+        ],
+    }
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        return run(args)
+    except Exception as error:
+        evidence = setup_failure_evidence(error)
+        write_evidence(args.evidence, evidence)
+        write_outputs(evidence)
+        print(f"error: {safe_error_message(error)}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
-    try:
-        raise SystemExit(main())
-    except (RuntimeError, ValueError, OSError, json.JSONDecodeError) as error:
-        print(f"error: {error}", file=sys.stderr)
-        raise SystemExit(1)
+    raise SystemExit(main())

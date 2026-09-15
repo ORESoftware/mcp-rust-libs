@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "ore.mcp.dependency-provenance-audit.v1",
+  "auditedAt": "2026-09-01",
+  "canonicalRuntimeRepository": "ORESoftware/mcp-rust-libs",
+  "canonicalZedCoordinate": "oresoftware/mcp-rust-libs",
+  "publicationClosure": {
+    "linearIssue": "DEN-3036",
+    "requiredPackages": 23,
+    "publishedPackages": 0,
+    "frozenInstallVerified": false,
+    "status": "blocked"
+  },
+  "repositories": [
+    {
+      "repository": "gha-indie-worker/gha-indie-worker-mcp-server.rs",
+      "defaultBranch": "main",
+      "cargoSharedCrate": "ore-mcp-org-server",
+      "cargoRevision": "f470ca5be6389bb20c2291acdfc3a382cb9b39b2",
+      "revisionReachableFromCanonicalMain": false,
+      "revisionCompareStatus": "diverged",
+      "zedManifestEdgeDeclared": true,
+      "zedLockState": "absent",
+      "frozenInstallVerified": false,
+      "requiredAction": "repin to one reviewed commit reachable from canonical main after preserving the consumer lock and conformance suite"
+    },
+    {
+      "repository": "zed-pkg/zed-mcp-server.rs",
+      "defaultBranch": "main",
+      "cargoSharedCrate": "ore-mcp-org-server",
+      "cargoRevision": "f470ca5be6389bb20c2291acdfc3a382cb9b39b2",
+      "revisionReachableFromCanonicalMain": false,
+      "revisionCompareStatus": "diverged",
+      "zedManifestEdgeDeclared": true,
+      "zedLockState": "absent",
+      "frozenInstallVerified": false,
+      "requiredAction": "repin to one reviewed commit reachable from canonical main; retain manifest-only Zed wording until the recursive closure resolves"
+    },
+    {
+      "repository": "fiducia-cloud/fiducia-mcp-server.rs",
+      "defaultBranch": "main",
+      "cargoSharedCrate": "ore-mcp-bootstrap",
+      "cargoRevision": "a5c1ba9c50493ac625dd2fb175af21263d0d2801",
+      "revisionReachableFromCanonicalMain": true,
+      "revisionCompareStatus": "ahead",
+      "zedManifestEdgeDeclared": false,
+      "zedLockState": "metadata-only-placeholder",
+      "frozenInstallVerified": false,
+      "requiredAction": "declare the canonical Zed edge and replace the version-only lock with resolver output after publication closure is available"
+    },
+    {
+      "repository": "shared-auth/shared-auth-mcp-server.rs",
+      "defaultBranch": "main",
+      "cargoSharedCrate": null,
+      "cargoRevision": null,
+      "revisionReachableFromCanonicalMain": null,
+      "revisionCompareStatus": "not-applicable",
+      "zedManifestEdgeDeclared": false,
+      "zedLockState": "absent",
+      "frozenInstallVerified": false,
+      "candidatePullRequest": {
+        "number": 34,
+        "head": "2f2d886cb6497f5308803402696f903f6847d763",
+        "cargoSharedCrate": "ore-mcp-org-server",
+        "cargoRevision": "7db434c7849ad153342e0daaac8a8f6f1d2dea5e",
+        "revisionReachableFromCanonicalMain": false,
+        "revisionCompareStatus": "diverged",
+        "fleetProfileAdded": true,
+        "zedManifestEdgeDeclared": false,
+        "draft": true
+      },
+      "requiredAction": "refresh the existing migration PR onto a canonical-main runtime revision, add the Zed edge, and clear draft only after exact-head checks"
+    }
+  ],
+  "claimBoundary": {
+    "cargoRuntimeAdoptionMayBeClaimedPerPassingRepository": true,
+    "zedGraphDeclarationMayBeClaimedPerPassingRepository": true,
+    "zedFrozenResolutionMayBeClaimed": false,
+    "fleetMigrationCompleteMayBeClaimed": false
+  }
+}

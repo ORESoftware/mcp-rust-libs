@@ -1,0 +1,10 @@
+schemaVersion = "ores.organization-source-of-truth-pointer.v1"
+organization = "ORESoftware"
+authorityRepository = "ORESoftware/.github"
+canonicalPath = "governance/source-of-truth.toml"
+canonicalRevision = 1
+observedAt = "2026-09-07T21:38:42Z"
+status = "unverified"
+mirrorRepository = "ORESoftware/mcp-rust-libs"
+mirrorMode = "pointer"
+note = "This shared runtime does not replace the missing owner-level ores-mcp-server.rs. Canonical revision 1 is proposed by ORESoftware/.github#31 and remains unverified until merged and digest-checked."
