@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: ORESoftware/mcp-rust-libs
-          ref: ccdb56bedb7877dffc33c40f87cfed620c9aaba9
+          ref: 562867e8be9b3e9c27b77f19aae64e001da96287
           path: .ore-mcp-runtime
           persist-credentials: false
 
