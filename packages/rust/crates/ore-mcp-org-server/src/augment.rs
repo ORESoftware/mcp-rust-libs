@@ -33,7 +33,13 @@ pub const PARITY_TOOL_NAMES: &[&str] = &[
     "zed_dependency_graph",
 ];
 
-const PARITY_PROMPT_NAMES: &[&str] = &["dependency_review", "deploy_readiness", "provider_triage"];
+const PARITY_PROMPT_NAMES: &[&str] = &[
+    "contract_review",
+    "dependency_review",
+    "deploy_readiness",
+    "ecosystem_review",
+    "provider_triage",
+];
 
 /// A handler that preserves an org-specific MCP surface and adds fleet parity.
 ///
@@ -88,8 +94,7 @@ where
 
     fn parity_resource(&self, uri: &str) -> bool {
         uri == format!("orgmap://{}", self.organization)
-            || uri == format!("contract://{}/mcp-clients", self.organization)
-            || uri == format!("contract://{}/providers", self.organization)
+            || uri.starts_with(&format!("contract://{}/", self.organization))
     }
 }
 
@@ -467,9 +472,12 @@ mod tests {
     fn parity_names_and_scopes_are_exact() {
         assert!(parity_tool("organization_posture"));
         assert!(!parity_tool("domain_tool"));
+        assert!(parity_prompt("contract_review"));
         assert!(parity_prompt("provider_triage"));
         let server = ParityAugmented::new(DomainServer, spec()).expect("compose handlers");
         assert!(server.parity_resource("orgmap://example-org"));
+        assert!(server.parity_resource("contract://example-org/api-docs"));
+        assert!(!server.parity_resource("contract://other/api-docs"));
         assert!(!server.parity_resource("orgmap://other"));
     }
 }
