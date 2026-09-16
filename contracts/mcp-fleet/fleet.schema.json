@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oresoftware.com/schemas/ores-mcp-fleet-v1.schema.json",
+  "title": "ORE MCP Fleet Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "serverClass",
+    "authorities",
+    "security",
+    "contracts"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "ores.mcp-fleet.v1" },
+    "serverClass": { "enum": ["regular", "admin"] },
+    "authorities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interfaces", "apiDocs", "schemaValidator", "sharedRuntime", "telemetryCore", "ecosystemPrefix"],
+      "properties": {
+        "interfaces": { "const": "ORESoftware/ores-interfaces" },
+        "apiDocs": { "const": "ORESoftware/api-docs" },
+        "schemaValidator": { "const": "ORESoftware/typespec-json-schema-validator" },
+        "sharedRuntime": { "const": "ORESoftware/mcp-rust-libs" },
+        "telemetryCore": { "const": "ores-otel/ores-mcp-server-core-libs.rs" },
+        "ecosystemPrefix": { "const": "ORESoftware/ores-" }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["closedToolSchemas", "boundedOutputs", "secretToolArguments", "adminSeparateDeployable", "clientRoleGrantsAdmin", "genericExecutionAllowed"],
+      "properties": {
+        "closedToolSchemas": { "const": true },
+        "boundedOutputs": { "const": true },
+        "secretToolArguments": { "const": false },
+        "adminSeparateDeployable": { "const": true },
+        "clientRoleGrantsAdmin": { "const": false },
+        "genericExecutionAllowed": { "const": false }
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["jsonSchemaDraft", "apiDocsSchema", "typeSpecAuthority", "jsonSchemaAuthority", "failClosedEvidence"],
+      "properties": {
+        "jsonSchemaDraft": { "const": "2020-12" },
+        "apiDocsSchema": { "const": "ore.api-docs.v1" },
+        "typeSpecAuthority": { "const": "independent" },
+        "jsonSchemaAuthority": { "const": "independent" },
+        "failClosedEvidence": { "const": true }
+      }
+    },
+    "admin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mutationsDelegateToAdminApi": { "const": true },
+        "auditReasonRequired": { "type": "boolean" },
+        "stepUpRequired": { "type": "boolean" },
+        "crossTenantByDefault": { "const": false }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "serverClass": { "const": "admin" } }, "required": ["serverClass"] },
+      "then": {
+        "required": ["admin"],
+        "properties": {
+          "admin": { "required": ["mutationsDelegateToAdminApi", "auditReasonRequired", "stepUpRequired", "crossTenantByDefault"] }
+        }
+      }
+    }
+  ]
+}
