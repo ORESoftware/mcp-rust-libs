@@ -178,15 +178,77 @@ pub fn audit(repo: &Path) -> Result<Vec<Finding>, AuditError> {
     sources.sort();
 
     let mut findings = Vec::new();
+    let mut literal_count = 0usize;
+    let mut corpus = String::new();
     for path in sources {
         let Ok(text) = fs::read_to_string(&path) else {
             continue;
         };
         let relative = path.strip_prefix(repo).unwrap_or(&path).to_path_buf();
+        literal_count += literal_schemas(&text).len();
+        corpus.push_str(&text);
         findings.extend(audit_text(&text, &relative, claims));
     }
+
+    if claims.closed_tool_schemas {
+        if let Some(detail) = unverified_surface(repo, literal_count, &corpus) {
+            findings.push(Finding {
+                file: PathBuf::from("Cargo.toml"),
+                line: 1,
+                claim: "closedToolSchemas",
+                detail,
+            });
+        }
+    }
+
     findings.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
     Ok(findings)
+}
+
+/// Reports why a repository's schema closure could not be verified, if so.
+///
+/// Absence of a literal schema is not compliance. A repository either writes
+/// schemas here, delegates its whole tool surface to a reviewed shared runtime
+/// that is audited in its own repository, or derives schemas from Rust types —
+/// in which case closure comes from `#[serde(deny_unknown_fields)]`. Anything
+/// else is unverified, and `failClosedEvidence` in the fleet contract means
+/// unverified is reported rather than waved through.
+fn unverified_surface(repo: &Path, literal_count: usize, corpus: &str) -> Option<String> {
+    let manifest = fs::read_to_string(repo.join("Cargo.toml")).unwrap_or_default();
+    unverified_surface_in(&manifest, literal_count, corpus)
+}
+
+/// Filesystem-free core of [`unverified_surface`].
+fn unverified_surface_in(manifest: &str, literal_count: usize, corpus: &str) -> Option<String> {
+    if literal_count > 0 {
+        return None;
+    }
+    if manifest.contains("ore-mcp-org-server") || manifest.contains("ore-mcp-bootstrap") {
+        return None;
+    }
+    if manifest.contains("rmcp") {
+        return if corpus.contains("deny_unknown_fields") {
+            None
+        } else {
+            Some(
+                "tool schemas are derived by rmcp/schemars, but no argument type uses \
+                 #[serde(deny_unknown_fields)], so unknown properties are accepted"
+                    .to_owned(),
+            )
+        };
+    }
+    if corpus.trim().is_empty() {
+        return Some(
+            "this repository declares fleet security claims but implements no tool surface yet; \
+             implement the server or remove contracts/mcp-fleet.json until it exists"
+                .to_owned(),
+        );
+    }
+    Some(
+        "no tool schema evidence found: this repository writes no literal schema, depends on no \
+         reviewed shared runtime, and derives no schema from types"
+            .to_owned(),
+    )
 }
 
 /// Audits a single source file's text. Exposed for tests and reuse.
@@ -406,6 +468,44 @@ mod tests {
     fn nested_braces_do_not_truncate_a_schema() {
         let text = r#"json!({"inputSchema":{"type":"object","properties":{"a":{"type":"string"}},"additionalProperties":false}})"#;
         assert!(audit_text(text, Path::new("src/main.rs"), STRICT).is_empty());
+    }
+
+    #[test]
+    fn a_repository_with_no_schema_evidence_fails_closed() {
+        // Absence of a literal schema is not compliance: this is the case that
+        // made a first version of this auditor pass 31 repositories vacuously.
+        let detail = unverified_surface_in(
+            "[dependencies]\nserde_json = \"1\"\n",
+            0,
+            "fn main() { serve(); }",
+        );
+        assert!(detail.is_some_and(|text| text.contains("no tool schema evidence")));
+    }
+
+    #[test]
+    fn an_unimplemented_server_says_so() {
+        // Several enrolled repositories are empty scaffolds. They still fail,
+        // but the message has to name the real fix rather than imply the
+        // schemas are wrong.
+        let detail = unverified_surface_in("[dependencies]\nserde_json = \"1\"\n", 0, "   \n");
+        assert!(detail.is_some_and(|text| text.contains("implements no tool surface yet")));
+    }
+
+    #[test]
+    fn delegating_to_the_shared_runtime_is_verified_elsewhere() {
+        let manifest = "[dependencies]\nore-mcp-org-server = { git = \"...\" }\n";
+        assert!(unverified_surface_in(manifest, 0, "").is_none());
+    }
+
+    #[test]
+    fn derived_schemas_need_deny_unknown_fields() {
+        let manifest = "[dependencies]\nrmcp = \"2.2\"\nschemars = \"1\"\n";
+        assert!(unverified_surface_in(manifest, 0, "#[derive(JsonSchema)]")
+            .is_some_and(|text| text.contains("deny_unknown_fields")));
+        assert!(
+            unverified_surface_in(manifest, 0, "#[serde(deny_unknown_fields)]").is_none(),
+            "a type that denies unknown fields is closed"
+        );
     }
 
     #[test]
