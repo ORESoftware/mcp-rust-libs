@@ -2098,6 +2098,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ore-mcp-fleet-audit"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "ore-mcp-http"
 version = "0.1.0"
 dependencies = [

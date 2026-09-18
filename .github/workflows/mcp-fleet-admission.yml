@@ -47,3 +47,13 @@ jobs:
           --schema .ore-mcp-runtime/contracts/mcp-fleet/fleet.schema.json
           --instance contracts/mcp-fleet.json
           --mode build
+
+      - name: Audit declared security claims against consumer source
+        # The schema above proves the manifest SAYS the right words; every
+        # security property is a `const` in fleet.schema.json. This step proves
+        # the words are true of the code, so a repository cannot declare
+        # closed tool schemas while shipping open ones.
+        run: >-
+          cargo run --quiet
+          --manifest-path .ore-mcp-runtime/packages/rust/Cargo.toml
+          -p ore-mcp-fleet-audit -- --repo .

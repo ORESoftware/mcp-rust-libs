@@ -12,6 +12,7 @@ members = [
   "crates/ore-mcp-safety",
   "crates/ore-mcp-telemetry",
   "crates/ore-mcp-testkit",
+  "crates/ore-mcp-fleet-audit",
   "crates/ore-mcp-zed-graph",
 ]
 
