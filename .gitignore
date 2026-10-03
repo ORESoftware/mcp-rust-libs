@@ -3,3 +3,7 @@ target/
 __pycache__/
 *.pyc
 artifacts/
+
+# Local temporary directories and repository-owned worktrees
+tmp/
+temp/
